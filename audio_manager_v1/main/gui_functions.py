@@ -18,12 +18,16 @@ import shutil
 
 from parameters import *
 
+import shlex
+
 
 import glob
 
 import numpy as np
 import soundfile as sf
 import librosa
+import subprocess
+from subprocess import PIPE, run
 
 # from soundfile import SoundFile
 
@@ -48,7 +52,7 @@ search_path = '/home/tim/Work/Cacophony/opensmile_weka/TestAudioInput'
 arff_path = '/home/tim/Work/Cacophony/opensmile_weka/TestAudioOutput'
 
 
-db_file = "audio_analysis_db"
+db_file = "/home/tim/Work/Cacophony/eclipse-workspace/audio_manager_v1/audio_analysis_db2.db"
 conn = None
 
 def get_database_connection():
@@ -892,9 +896,79 @@ def choose_clip_folder(base_folder, run_folder):
     clip_folder =  parts[len(parts)-1]     
     return clip_folder      
 
-   
+def run_model(model_folder):
+    #https://stackoverflow.com/questions/21406887/subprocess-changing-directory
+    # https://stackoverflow.com/questions/1996518/retrieving-the-output-of-subprocess-call
 
- 
+    os.chdir(model_folder)  
+    command = ['java', '-jar', 'run.jar', 'shell=True']    
+    
+    result = run(command, stdout=PIPE, stderr=PIPE, text=True)
+#     if result.returncode == 0:
+#         return result.stdout
+#     else:
+#         return result.stderr
+    return result
+
+
+def test_run_model():
+    base_folder = '/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs'
+    run_folder = '2019_09_17_1'
+    model_folder = base_folder + '/' + run_folder + '/model_run'
+    
+    result = run_model(model_folder)
+    if result.returncode == 0:
+        print(result.stdout)
+    else:
+        print(result.stderr)
+    
+#     print(run_model(model_folder) )   
+    
+def process_arff_folder(base_folder, run_folder, arff_files, modelRunName):
+    folder_to_process = base_folder + '/' + run_folder + '/' + arff_files
+    model_folder = base_folder + '/' + run_folder + '/model_run'
+    for arffFile in os.listdir(folder_to_process):
+        
+        fileparts = arffFile.replace('_','.').split('.')
+        recording_id = fileparts[0]       
+        startTime = fileparts[1] + '.' + fileparts[2]       
+        duration = fileparts[3] + '.' + fileparts[4]    
+        
+        arff_input_file = folder_to_process + '/' + arffFile
+        arff_file_in_model_folder = model_folder + '/input.arff'       
+        shutil.copy(arff_input_file, arff_file_in_model_folder)
+        prediction = run_model(model_folder)
+        if prediction.returncode == 0:
+            model_prediction = json.loads(prediction.stdout)
+            actual = model_prediction.get('actual')
+            predictedByModel = model_prediction.get('predicted')
+            print(prediction.stdout)
+            print('actual ', actual)
+            print('predictedByModel ', predictedByModel)
+            
+            insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel)
+        else:
+            print(prediction.stderr)
+        
+            
+    
        
-       
+def test_process_arff_folder():
+    base_folder = '/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs'
+    run_folder = '2019_09_17_1'
+    arff_files_to_process = 'arff_files_to_process'
+    modelRunName = '2019_09_17_1'
+    process_arff_folder(base_folder, run_folder, arff_files_to_process, modelRunName)
+    
+def insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel):
+    # Use this for tags that have been downloaded from the server
+    try:
+        sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel)
+                  VALUES(?,?,?,?,?,?) '''
+        cur = get_database_connection().cursor()
+        cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel))
+        get_database_connection().commit()
+    except Exception as e:
+        print(e, '\n')
+        print('\t\tUnable to insert result' + str(recording_id) + ' ' + str(startTime), '\n')               
     
