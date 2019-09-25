@@ -11,6 +11,11 @@ from tkinter import *
 import re
 from scipy.io import wavfile
 import shutil
+import send2trash
+import sounddevice as sd
+
+from pydub import AudioSegment
+from pydub.playback import play
 # import scikits.audiolab
 # import sckikits as sc
 # 
@@ -28,6 +33,9 @@ import soundfile as sf
 import librosa
 import subprocess
 from subprocess import PIPE, run
+
+from playsound import playsound
+from librosa.output import write_wav
 
 # from soundfile import SoundFile
 
@@ -928,27 +936,31 @@ def process_arff_folder(base_folder, run_folder, arff_files, modelRunName):
     folder_to_process = base_folder + '/' + run_folder + '/' + arff_files
     model_folder = base_folder + '/' + run_folder + '/model_run'
     for arffFile in os.listdir(folder_to_process):
-        
-        fileparts = arffFile.replace('_','.').split('.')
-        recording_id = fileparts[0]       
-        startTime = fileparts[1] + '.' + fileparts[2]       
-        duration = fileparts[3] + '.' + fileparts[4]    
-        
-        arff_input_file = folder_to_process + '/' + arffFile
-        arff_file_in_model_folder = model_folder + '/input.arff'       
-        shutil.copy(arff_input_file, arff_file_in_model_folder)
-        prediction = run_model(model_folder)
-        if prediction.returncode == 0:
-            model_prediction = json.loads(prediction.stdout)
-            actual = model_prediction.get('actual')
-            predictedByModel = model_prediction.get('predicted')
-            print(prediction.stdout)
-            print('actual ', actual)
-            print('predictedByModel ', predictedByModel)
+        try:
+            fileparts = arffFile.replace('_','.').split('.')
+            recording_id = fileparts[0]       
+            startTime = fileparts[1] + '.' + fileparts[2]       
+            duration = fileparts[3] + '.' + fileparts[4]    
             
-            insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel)
-        else:
-            print(prediction.stderr)
+            arff_input_file = folder_to_process + '/' + arffFile
+            arff_file_in_model_folder = model_folder + '/input.arff'       
+            shutil.copy(arff_input_file, arff_file_in_model_folder)
+            prediction = run_model(model_folder)
+            if prediction.returncode == 0:
+                model_prediction = json.loads(prediction.stdout)
+                actual = model_prediction.get('actual')
+                predictedByModel = model_prediction.get('predicted')
+                print(prediction.stdout)
+                print('actual ', actual)
+                print('predictedByModel ', predictedByModel)
+                
+                insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel)
+#                 send2trash.send2trash(arff_input_file)
+            else:
+                print(prediction.stderr)
+        except Exception as e:
+            print(e, '\n')
+    print('Finished processing arff folder')   
         
             
     
@@ -970,5 +982,84 @@ def insert_model_run_result_into_database(modelRunName, recording_id, startTime,
         get_database_connection().commit()
     except Exception as e:
         print(e, '\n')
-        print('\t\tUnable to insert result' + str(recording_id) + ' ' + str(startTime), '\n')               
+        print('\t\tUnable to insert result' + str(recording_id) + ' ' + str(startTime), '\n')   
+        
+def play_clip(recording_id, start_time, duration):
+    audio_in_path = getRecordingsFolder() + '/' + recording_id + '.m4a'
+    audio_out_path = '/home/tim/Temp/temp.wav'
+#     audio_in_path = '/home/tim/Temp/dog.wav'
+    print('audio_in_path ', audio_in_path)
+#     playsound(audio_in_path)
+#     song = AudioSegment.from_wav(audio_in_path)
+#     play(song)
+#     os.system("play " + audio_in_path)
+
+   
+    y, sr = librosa.load(audio_in_path, sr=None) 
+    
+#     print('sr ', sr)
+#     print(y)
+#     print(y.shape)
+    y_amplified = np.int16(y/np.max(np.abs(y)) * 32767)
+    print(y_amplified)
+    y_amplified_start = sr * start_time
+    y_amplified_end = y_amplified_start + (sr * duration)
+    y_amplified_to_play = y_amplified[int(y_amplified_start):int(y_amplified_end)]
+    y_to_play = y[int(y_amplified_start):int(y_amplified_end)]
+#     librosa.output.write_wav(audio_out_path, y_amplified_to_play, sr)
+    os.system("play " + audio_out_path)
+# #     sd.play(y_amplified_to_play, sr)
+# #     sd.play(y_amplified, sr)
+#     sd.play(y, sr)
+    print('finished')
+    
+def play_clip2():
+    start_time = 18
+    duration = 2
+    audio_in_path = getRecordingsFolder() + '/218113.m4a'
+    audio_out_path = '/home/tim/Temp/temp.wav'
+    y, sr = librosa.load(audio_in_path, sr=None) 
+    y_amplified = np.int16(y/np.max(np.abs(y)) * 32767)
+    y_amplified_start = sr * start_time
+    y_amplified_end = (sr * start_time) + (sr * duration)
+    y_amplified_to_play = y_amplified[int(y_amplified_start):int(y_amplified_end)]
+    y_to_play = y[int(y_amplified_start):int(y_amplified_end)]
+#     sf.write(audio_out_path, y_to_play, sr, 'PCM_24')
+    sf.write(audio_out_path, y_to_play, sr)
+    os.system("play " + audio_out_path)
+    
+def play_clip3():
+    start_time = 14.5
+    duration = 1.5
+    audio_in_path = getRecordingsFolder() + '/218113.m4a'
+    audio_out_path = '/home/tim/Temp/temp.wav'
+    y, sr = librosa.load(audio_in_path, sr=None) 
+    y_amplified = np.int16(y/np.max(np.abs(y)) * 32767)
+    y_amplified_start = sr * start_time
+    y_amplified_end = (sr * start_time) + (sr * duration)
+    y_amplified_to_play = y_amplified[int(y_amplified_start):int(y_amplified_end)]
+#     y_to_play = y[int(y_amplified_start):int(y_amplified_end)]
+    sf.write(audio_out_path, y_amplified_to_play, sr)
+    song = AudioSegment.from_wav(audio_out_path)
+    play(song)  
+    
+def play_clip4():
+    start_time = 17
+    duration = 3
+    audio_in_path = getRecordingsFolder() + '/218113.m4a'
+    audio_out_path = '/home/tim/Temp/temp.wav'
+    y, sr = librosa.load(audio_in_path, sr=None) 
+    y_amplified = np.int16(y/np.max(np.abs(y)) * 32767)
+    y_amplified_start = sr * start_time
+    y_amplified_end = (sr * start_time) + (sr * duration)
+#     y_amplified_to_play = y_amplified[int(y_amplified_start):int(y_amplified_end)]
+    y_to_play = y[int(y_amplified_start):int(y_amplified_end)]
+    sd.play(y, 44100)
+    
+    
+def test_play_clip():
+#     play_clip('218113', 4.5, 1.5)
+    play_clip2()
+    
+                
     

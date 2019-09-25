@@ -40,7 +40,7 @@ class Main_GUI(tk.Tk):
        
         self.frames = {}
         
-        for F in (HomePage, SettingsPage, RecordingsPage, TaggingPage, ClipsPage, ArffPage, ConfirmModelPredictionsPage):
+        for F in (HomePage, SettingsPage, RecordingsPage, TaggingPage, ClipsPage, ArffPage, CreateWekaModelPage, EvaluateWekaModelPage):
         
             frame = F(container, self)
             self.frames[F] = frame
@@ -72,21 +72,25 @@ class HomePage(tk.Frame):
                             command=lambda: controller.show_frame(TaggingPage))        
         tagging_button.pack()
         
-        recordings_button = ttk.Button(self, text="Recordings Page",
+        recordings_button = ttk.Button(self, text="Recordings",
                             command=lambda: controller.show_frame(RecordingsPage))        
         recordings_button.pack()
         
-        clips_button = ttk.Button(self, text="Clips Page",
+        clips_button = ttk.Button(self, text="Create audio clips",
                             command=lambda: controller.show_frame(ClipsPage))        
         clips_button.pack()
         
-        arff_button = ttk.Button(self, text="Arff Page",
+        arff_button = ttk.Button(self, text="Create Weka arff files",
                             command=lambda: controller.show_frame(ArffPage))        
         arff_button.pack()
         
-        confirm_model_predictions_button = ttk.Button(self, text="Confirm model predictions Page",
-                            command=lambda: controller.show_frame(ConfirmModelPredictionsPage))        
-        confirm_model_predictions_button.pack()
+        createWekaModelPage_button = ttk.Button(self, text="Create Weka Model",
+                            command=lambda: controller.show_frame(CreateWekaModelPage))        
+        createWekaModelPage_button.pack()
+        
+        evaluateWekaModelPage_button = ttk.Button(self, text="Evaluate Weka model",
+                            command=lambda: controller.show_frame(EvaluateWekaModelPage))        
+        evaluateWekaModelPage_button.pack()
         
 class SettingsPage(tk.Frame):
     
@@ -280,16 +284,9 @@ class ArffPage(tk.Frame):
                             command=lambda: gui_functions.merge_arffs(base_folder.get(), run_folder.get(), arff_template_file.get())).grid(column=0, columnspan=1, row=7)
         
         back_to_home_button = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=8)                
-        
-class ConfirmModelPredictionsPage(tk.Frame):
-    
-    
-    def choose_clip_folder(self, base_folder, run_folder):
-        choosen_folder = gui_functions.choose_clip_folder(base_folder, run_folder)
-        # https://stackoverflow.com/questions/50227577/update-label-in-tkinter-when-calling-function
-        self.clip_folder.set(choosen_folder)
-        
+                            command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=8)   
+                            
+class CreateWekaModelPage(tk.Frame):    
     
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -297,44 +294,90 @@ class ConfirmModelPredictionsPage(tk.Frame):
         openSmile_config_files = gui_functions.getOpenSmileConfigFiles()
         arffTemplateFiles = gui_functions.getArffTemplateFiles()
              
-        title_label = ttk.Label(self, text="Confirm model predictions Page", font=LARGE_FONT)
-        title_label.grid(column=0, columnspan=1, row=0)    
+        title_label = ttk.Label(self, text="Using Weka", font=LARGE_FONT)
+        title_label.grid(column=0, columnspan=1, row=0)   
         
-        base_folder_label = ttk.Label(self, text="Base folder (e.g. /home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs)").grid(column=0, columnspan=1, row=1)        
-        base_folder = StringVar(value='/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs')
-        base_folder_entry = tk.Entry(self,  textvariable=base_folder, width=80).grid(column=1, columnspan=1,row=1)    
+        weka_instructions = "To create a Weka model you will need to use the Weka program https://www.cs.waikato.ac.nz/ml/weka/downloading.html\n\
+        Once Weka has been installed, you can run it from the weka directory (e.g. weka-3-8-3) using the command weka - jar weka.jar\n\
+        These instructions are for how I originally used Weka, but may change in future.\n\
+        In Weka, open Explorer, open the merged arff file that you previously created and stored (e.g. at /home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs/mfcc_merge_morepork_unknown.arff)\
+        Change to the Classify tab, press the choose button and select the model type e.g. Trees LMT.\
+        Choose Cross validation, folds 10. Press the start button.\n\
+        When finished, right click on the result and choose 'Save Model (e.g. in ... audio_classifier_runs/2019-09-17-1/model_run/model) The file extension is automatically .model.\n\
+        You can now use this model in the next page"
+        msg = tk.Message(self, text = weka_instructions)
+        msg.config(bg='lightgreen', font=('times', 16), width=1200)
+        msg.grid(column=0, columnspan=6, row=1)    
         
-        run_folder_label = ttk.Label(self, text="Run folder (e.g. 2019_09_17_1)").grid(column=0, columnspan=1, row=2)    
-        run_folder = StringVar(value='2019_09_17_1')
-        run_folder_entry = tk.Entry(self,  textvariable=run_folder, width=80).grid(column=1, columnspan=1,row=2) 
-        
-
-        choose_clip_folder_button = ttk.Button(self, text="Choose clip folder",
-                            command=lambda: self.choose_clip_folder(base_folder.get(), run_folder.get())).grid(column=0, columnspan=1, row=3)
-        self.clip_folder_entry = tk.Entry(self,  textvariable=self.clip_folder, width=80).grid(column=1, columnspan=1,row=3)  
-
-          
-        openSmile_config_file_label = ttk.Label(self, text="Name of openSMILE configuration file (e.g. morepork_unknown_label_morpork.conf)").grid(column=0, columnspan=1, row=4)      
-        openSmile_config_file = StringVar()
-        openSmile_config_combo = ttk.Combobox(self, textvariable=openSmile_config_file, values=openSmile_config_files, width=80)
-        openSmile_config_combo.current(0)
-        openSmile_config_combo.grid(column=1, columnspan=2,row=4) 
-        
-        create_arff_button = ttk.Button(self, text="Create Individual Arff Files for each audio file",
-                            command=lambda: gui_functions.create_arff_file(base_folder.get(), run_folder.get(), self.clip_folder.get(), openSmile_config_file.get())).grid(column=0, columnspan=1, row=5)
-          
-        arff_template_file_label = ttk.Label(self, text="Name of openSMILE template arff file (e.g. arff_template.mfcc.arff)").grid(column=0, columnspan=1, row=6)     
-        arff_template_file = StringVar()
-        arff_template_combo = ttk.Combobox(self, textvariable=arff_template_file, values=arffTemplateFiles, width=80)
-        arff_template_combo.current(0)
-        arff_template_combo.grid(column=1, columnspan=2,row=6)
-
-        
-        merge_arffs_button = ttk.Button(self, text="Merge Arffs",
-                            command=lambda: gui_functions.merge_arffs(base_folder.get(), run_folder.get(), arff_template_file.get())).grid(column=0, columnspan=1, row=7)
         
         back_to_home_button = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=8)                
+        
+class EvaluateWekaModelPage(tk.Frame):
+    
+    
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.clip_folder = StringVar(value='')
+        openSmile_config_files = gui_functions.getOpenSmileConfigFiles()
+        arffTemplateFiles = gui_functions.getArffTemplateFiles()
+             
+        title_label = ttk.Label(self, text="Evaluate a Weka model", font=LARGE_FONT)
+        title_label.grid(column=0, columnspan=1, row=0)    
+        
+        weka_instructions = "The Weka model was created using arff files.  You can now run the model against the same training arff files \
+        and save the results in the database.  Because the training arff files contained the expected result, you will be able to look at \
+        individual instances to determine if the model got it correct.  You will be able to update the tag in the database with your new \
+        determination."
+        msg = tk.Message(self, text = weka_instructions)
+        msg.config(bg='lightgreen', font=('times', 16), width=1200)
+        msg.grid(column=0, columnspan=6, row=1)   
+        
+        base_folder_label = ttk.Label(self, text="Base folder (e.g. /home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs)").grid(column=0, columnspan=1, row=2)        
+        base_folder = StringVar(value='/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs')
+        base_folder_entry = tk.Entry(self,  textvariable=base_folder, width=80).grid(column=1, columnspan=1,row=2)    
+        
+        run_folder_label = ttk.Label(self, text="Run folder (e.g. 2019_09_17_1)").grid(column=0, columnspan=1, row=3)    
+        run_folder = StringVar(value='2019_09_17_1')
+        run_folder_entry = tk.Entry(self,  textvariable=run_folder, width=80).grid(column=1, columnspan=1,row=3) 
+        
+        arff_folder_label = ttk.Label(self, text="Arff folder - that has the same arff files that were used to create this model (e.g. )").grid(column=0, columnspan=1, row=4)    
+        arff_folder = StringVar(value='arff_files')
+        arff_folder_entry = tk.Entry(self,  textvariable=arff_folder, width=80).grid(column=1, columnspan=1,row=4) 
+        
+        modelRunName_label = ttk.Label(self, text="Model run name (usually same as run folder e.g. 2019_09_17_1)").grid(column=0, columnspan=1, row=5)    
+        modelRunName = StringVar(value='2019_09_17_1')
+        modelRunName_entry = tk.Entry(self,  textvariable=modelRunName, width=80).grid(column=1, columnspan=1,row=5) 
+        
+        evaluate_button = ttk.Button(self, text="Evaluate Model",
+                            command=lambda: gui_functions.process_arff_folder(base_folder.get(), run_folder.get(), arff_folder.get(), modelRunName.get())).grid(column=0, columnspan=1, row=7)
+        
+        sqlite_instructions = "Once you have completed the previous step, use the separate 'DB Browser for SQLite' program to find interesting examples by using the 'Browse Data' tab in the 'model_run_result' table.\
+        For example, can filter the results, by typing unknown in the actual column filter, and morepork in the predictedByModel column filter.\
+        Then enter the enter recording id and start time in the fields below to play that clip"
+        msg = tk.Message(self, text = sqlite_instructions)
+        msg.config(bg='lightgreen', font=('times', 16), width=1200)
+        msg.grid(column=0, columnspan=6, row=8)   
+        
+        recording_id_label = ttk.Label(self, text="Recording ID (e.g. 240631").grid(column=0, columnspan=1, row=9)        
+        recording_id = StringVar(value='240631')
+        recording_id_entry = tk.Entry(self,  textvariable=recording_id, width=80).grid(column=1, columnspan=1,row=9)   
+        
+        start_time_label = ttk.Label(self, text="Start time (seconds) (e.g. 4.2").grid(column=0, columnspan=1, row=10)        
+        start_time = StringVar(value='4.2')
+        start_time_entry = tk.Entry(self,  textvariable=start_time, width=80).grid(column=1, columnspan=1,row=10) 
+        
+        duration_label = ttk.Label(self, text="Duration (seconds) e.g. 1.5").grid(column=0, columnspan=1, row=11)        
+        duration = StringVar(value='1.5')
+        duration_entry = tk.Entry(self,  textvariable=duration, width=80).grid(column=1, columnspan=1,row=11)  
+        
+        play_clip_button = ttk.Button(self, text="Play clip",
+                            command=lambda: gui_functions.play_clip(recording_id.get(), start_time.get(), duration.get())).grid(column=0, columnspan=1, row=12)
+         
+ 
+
+        back_to_home_button = ttk.Button(self, text="Back to Home",
+                            command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=15)                
                
         
 app = Main_GUI()
