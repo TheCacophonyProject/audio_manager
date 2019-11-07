@@ -17,8 +17,10 @@ from tkinter import ttk
 from tkinter import *
 import os
 
-# from gui_functions import *
-import gui_functions
+
+
+import main.functions as functions
+
 
 LARGE_FONT= ("Verdana", 12)
 
@@ -40,7 +42,9 @@ class Main_GUI(tk.Tk):
        
         self.frames = {}
         
-        for F in (HomePage, SettingsPage, RecordingsPage, TaggingPage, ClipsPage, ArffPage, CreateWekaModelPage, EvaluateWekaModelPage):
+#         for F in (HomePage, SettingsPage, RecordingsPage, TaggingPage, ClipsPage, ArffPage, CreateWekaModelPage, EvaluateWekaModelPage, CreateOnsetsPage):
+        for F in (HomePage, RecordingsPage, TaggingPage, ClipsPage, ArffPage, CreateWekaModelPage, EvaluateWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage):
+        
         
             frame = F(container, self)
             self.frames[F] = frame
@@ -64,9 +68,9 @@ class HomePage(tk.Frame):
         label = tk.Label(self, text="Home Page", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
         
-        settings_button = ttk.Button(self, text="Settings",
-                            command=lambda: controller.show_frame(SettingsPage))    
-        settings_button.pack()
+#         settings_button = ttk.Button(self, text="Settings",
+#                             command=lambda: controller.show_frame(SettingsPage))    
+#         settings_button.pack()
         
         tagging_button = ttk.Button(self, text="Tagging",
                             command=lambda: controller.show_frame(TaggingPage))        
@@ -92,36 +96,46 @@ class HomePage(tk.Frame):
                             command=lambda: controller.show_frame(EvaluateWekaModelPage))        
         evaluateWekaModelPage_button.pack()
         
-class SettingsPage(tk.Frame):
-    
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+        createOnsetsPage_button = ttk.Button(self, text="Create onsets",
+                            command=lambda: controller.show_frame(CreateOnsetsPage))        
+        createOnsetsPage_button.pack()
         
-#         recordings_Folder = gui_functions.getRecordingsFolderWithOutHome()
-        recordings_Folder = gui_functions.getRecordingsFolderWithOutHome()
+        createSpectrogramsPage_button = ttk.Button(self, text="Create Spectrograms",
+                            command=lambda: controller.show_frame(CreateSpectrogramsPage))        
+        createSpectrogramsPage_button.pack()
         
-        # https://www.python-course.eu/tkinter_entry_widgets.php        
-        tk.Label(self,text="Recordings location").grid(column=0, columnspan=1, row=0)
-
-        #https://stackoverflow.com/questions/16373887/how-to-set-the-text-value-content-of-an-entry-widget-using-a-button-in-tkinter
-        entryText = tk.StringVar()
-        recordings_folder_entry = tk.Entry(self, textvariable=entryText, width=80)
-        recordings_folder_entry.grid(row=0, column=1, columnspan=1)
-        entryText.set( recordings_Folder )
-        
-
-        tk.Button(self, 
-                  text='Save', command=lambda: gui_functions.saveSettings(recordings_folder_entry.get())).grid(row=6, 
-                                                               column=0, 
-                                                               sticky=tk.W, 
-                                                               pady=4)     
-
-        tk.Button(self, 
-                  text='Back to Home', 
-                  command=lambda: controller.show_frame(HomePage)).grid(row=6, 
-                                            column=1, 
-                                            sticky=tk.W, 
-                                            pady=4)                  
+# class SettingsPage(tk.Frame):
+#     
+#     def __init__(self, parent, controller):
+#         tk.Frame.__init__(self, parent)
+#         
+# 
+# #         recordings_Folder = gui_functions.getRecordingsFolderWithOutHome()
+# #         recordings_Folder = functions.getRecordingsFolderWithOutHome()
+#         
+#         
+#         # https://www.python-course.eu/tkinter_entry_widgets.php        
+#         tk.Label(self,text="Recordings location").grid(column=0, columnspan=1, row=0)
+# 
+#         #https://stackoverflow.com/questions/16373887/how-to-set-the-text-value-content-of-an-entry-widget-using-a-button-in-tkinter
+#         entryText = tk.StringVar()
+#         recordings_folder_entry = tk.Entry(self, textvariable=entryText, width=80)
+#         recordings_folder_entry.grid(row=0, column=1, columnspan=1)
+#         entryText.set( recordings_Folder )
+#         
+# 
+#         tk.Button(self, 
+#                   text='Save', command=lambda: functions.saveSettings(recordings_folder_entry.get())).grid(row=6, 
+#                                                                column=0, 
+#                                                                sticky=tk.W, 
+#                                                                pady=4)     
+# 
+#         tk.Button(self, 
+#                   text='Back to Home', 
+#                   command=lambda: controller.show_frame(HomePage)).grid(row=6, 
+#                                             column=1, 
+#                                             sticky=tk.W, 
+#                                             pady=4)                  
 
         
 class TaggingPage(tk.Frame):
@@ -132,7 +146,7 @@ class TaggingPage(tk.Frame):
         label.pack(pady=10,padx=10)
         
         get_tags_button = ttk.Button(self, text="Get tags from server",
-                            command=lambda: gui_functions.get_all_tags_for_all_devices_in_local_database())
+                            command=lambda: functions.get_all_tags_for_all_devices_in_local_database())
         get_tags_button.pack()  
         
         button1 = ttk.Button(self, text="Back to Home",
@@ -162,22 +176,22 @@ class RecordingsPage(tk.Frame):
         
         
         get_recordings_button = ttk.Button(self, text="Load Recordings from local folder",
-                            command=lambda: gui_functions.load_recordings_from_local_folder(device_name.get(), device_super_name.get())).grid(column=0, columnspan=2, row=2)
+                            command=lambda: functions.load_recordings_from_local_folder(device_name.get(), device_super_name.get())).grid(column=0, columnspan=2, row=2)
 #         get_recordings_button = ttk.Button(self, text="Load Recordings from local folder",
 #                             command=lambda: gui_functions.load_recordings_from_local_folder(device_super_name.get())).grid(column=0, columnspan=1, row=2)
  
 
         get_recording_information_from_server_button = ttk.Button(self, text="Get Recording Information for recordings imported from local file system",
-                            command=lambda: gui_functions.update_recording_information_for_all_local_database_recordings()).grid(column=0, columnspan=2, row=3)
+                            command=lambda: functions.update_recording_information_for_all_local_database_recordings()).grid(column=0, columnspan=2, row=3)
               
         
         get_new_recordings_from_server_button = ttk.Button(self, text="Get New Recordings From Server",
-                            command=lambda: gui_functions.get_recordings_from_server(device_name.get(), device_super_name.get())).grid(column=0, columnspan=2, row=4)
+                            command=lambda: functions.get_recordings_from_server(device_name.get(), device_super_name.get())).grid(column=0, columnspan=2, row=4)
         get_new_recordings_from_server_label = ttk.Label(self, text="This will get the recordings for the device in the device name box. It will also assign a super name from the Super Name box").grid(column=2, columnspan=3, row=4)  
                                                
         
         scan_local_folder_for_recordings_not_in_local_db_and_update_button = ttk.Button(self, text="Scan recordings folder for recordings not in local db and update",
-                            command=lambda: gui_functions.scan_local_folder_for_recordings_not_in_local_db_and_update(device_name.get(), device_super_name.get())).grid(column=0, columnspan=2, row=5)
+                            command=lambda: functions.scan_local_folder_for_recordings_not_in_local_db_and_update(device_name.get(), device_super_name.get())).grid(column=0, columnspan=2, row=5)
                                                 
         scan_label = ttk.Label(self, text="If you do NOT know the device name or super name enter unknown in the fields. The device name will be updated automatically").grid(column=2, columnspan=3, row=5)                   
                        
@@ -190,7 +204,7 @@ class ClipsPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         
-        unique_tags = gui_functions.get_unique_whats_from_local_db()
+        unique_tags = functions.get_unique_whats_from_local_db()
                 
         title_label = ttk.Label(self, text="Clips Page", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)        
@@ -225,7 +239,7 @@ class ClipsPage(tk.Frame):
 #                             command=lambda: gui_functions.create_clips(device_super_name.get(), what.get(), version.get(), run_base_folder_folder.get(),run_folder.get() )).grid(column=0, columnspan=2, row=6)
 # 
         create_clips_button = ttk.Button(self, text="Create Clips",
-                            command=lambda: gui_functions.create_clips(device_super_name.get(), what.get(), version.get(), run_base_folder_folder.get(),run_folder.get() )).grid(column=0, columnspan=2, row=6)
+                            command=lambda: functions.create_clips(device_super_name.get(), what.get(), version.get(), run_base_folder_folder.get(),run_folder.get() )).grid(column=0, columnspan=2, row=6)
 
                  
         back_to_home_button = ttk.Button(self, text="Back to Home",
@@ -236,7 +250,7 @@ class ArffPage(tk.Frame):
     
     
     def choose_clip_folder(self, base_folder, run_folder):
-        choosen_folder = gui_functions.choose_clip_folder(base_folder, run_folder)
+        choosen_folder = functions.choose_clip_folder(base_folder, run_folder)
         # https://stackoverflow.com/questions/50227577/update-label-in-tkinter-when-calling-function
         self.clip_folder.set(choosen_folder)
         
@@ -244,8 +258,8 @@ class ArffPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.clip_folder = StringVar(value='')
-        openSmile_config_files = gui_functions.getOpenSmileConfigFiles()
-        arffTemplateFiles = gui_functions.getArffTemplateFiles()
+        openSmile_config_files = functions.getOpenSmileConfigFiles()
+        arffTemplateFiles = functions.getArffTemplateFiles()
              
         title_label = ttk.Label(self, text="Create Arff Page", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)    
@@ -271,7 +285,7 @@ class ArffPage(tk.Frame):
         openSmile_config_combo.grid(column=1, columnspan=2,row=4) 
         
         create_arff_button = ttk.Button(self, text="Create Individual Arff Files for each audio file",
-                            command=lambda: gui_functions.create_arff_file(base_folder.get(), run_folder.get(), self.clip_folder.get(), openSmile_config_file.get())).grid(column=0, columnspan=1, row=5)
+                            command=lambda: functions.create_arff_file(base_folder.get(), run_folder.get(), self.clip_folder.get(), openSmile_config_file.get())).grid(column=0, columnspan=1, row=5)
           
         arff_template_file_label = ttk.Label(self, text="Name of openSMILE template arff file (e.g. arff_template.mfcc.arff)").grid(column=0, columnspan=1, row=6)     
         arff_template_file = StringVar()
@@ -281,7 +295,7 @@ class ArffPage(tk.Frame):
 
         
         merge_arffs_button = ttk.Button(self, text="Merge Arffs",
-                            command=lambda: gui_functions.merge_arffs(base_folder.get(), run_folder.get(), arff_template_file.get())).grid(column=0, columnspan=1, row=7)
+                            command=lambda: functions.merge_arffs(base_folder.get(), run_folder.get(), arff_template_file.get())).grid(column=0, columnspan=1, row=7)
         
         back_to_home_button = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=8)   
@@ -291,8 +305,8 @@ class CreateWekaModelPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.clip_folder = StringVar(value='')
-        openSmile_config_files = gui_functions.getOpenSmileConfigFiles()
-        arffTemplateFiles = gui_functions.getArffTemplateFiles()
+        openSmile_config_files = functions.getOpenSmileConfigFiles()
+        arffTemplateFiles = functions.getArffTemplateFiles()
              
         title_label = ttk.Label(self, text="Using Weka", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)   
@@ -319,8 +333,8 @@ class EvaluateWekaModelPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.clip_folder = StringVar(value='')
-        openSmile_config_files = gui_functions.getOpenSmileConfigFiles()
-        arffTemplateFiles = gui_functions.getArffTemplateFiles()
+        openSmile_config_files = functions.getOpenSmileConfigFiles()
+        arffTemplateFiles = functions.getArffTemplateFiles()
              
         title_label = ttk.Label(self, text="Evaluate a Weka model", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)    
@@ -350,7 +364,7 @@ class EvaluateWekaModelPage(tk.Frame):
         modelRunName_entry = tk.Entry(self,  textvariable=modelRunName, width=80).grid(column=1, columnspan=1,row=5) 
         
         evaluate_button = ttk.Button(self, text="Evaluate Model",
-                            command=lambda: gui_functions.process_arff_folder(base_folder.get(), run_folder.get(), arff_folder.get(), modelRunName.get())).grid(column=0, columnspan=1, row=7)
+                            command=lambda: functions.process_arff_folder(base_folder.get(), run_folder.get(), arff_folder.get(), modelRunName.get())).grid(column=0, columnspan=1, row=7)
         
         sqlite_instructions = "Once you have completed the previous step, use the separate 'DB Browser for SQLite' program to find interesting examples by using the 'Browse Data' tab in the 'model_run_result' table.\
         For example, can filter the results, by typing unknown in the actual column filter, and morepork in the predictedByModel column filter.\
@@ -372,13 +386,71 @@ class EvaluateWekaModelPage(tk.Frame):
         duration_entry = tk.Entry(self,  textvariable=duration, width=80).grid(column=1, columnspan=1,row=11)  
         
         play_clip_button = ttk.Button(self, text="Play clip",
-                            command=lambda: gui_functions.play_clip(recording_id.get(), start_time.get(), duration.get())).grid(column=0, columnspan=1, row=12)
+                            command=lambda: functions.play_clip(recording_id.get(), start_time.get(), duration.get())).grid(column=0, columnspan=1, row=12)
          
  
 
         back_to_home_button = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=15)                
-               
+                            command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=15)   
+                            
+class CreateOnsetsPage(tk.Frame):    
+    
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.clip_folder = StringVar(value='')
+       
+             
+        title_label = ttk.Label(self, text="Create Onsets", font=LARGE_FONT)
+        title_label.grid(column=0, columnspan=1, row=0)    
+        
+        onset_instructions = "Use this page to run the create onsets function that will create locations of  \
+        interest in the db"
+        msg = tk.Message(self, text = onset_instructions)
+        msg.config(bg='lightgreen', font=('times', 16), width=1200)
+        msg.grid(column=0, columnspan=6, row=1)   
+        
+        
+        
+        run_button = ttk.Button(self, text="Run",
+                            command=lambda: functions.create_onsets()).grid(column=0, columnspan=1, row=2)
+        
+       
+        
+       
+ 
+
+        back_to_home_button = ttk.Button(self, text="Back to Home",
+                            command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=3)                  
+
+class CreateSpectrogramsPage(tk.Frame):    
+    
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.clip_folder = StringVar(value='')
+       
+             
+        title_label = ttk.Label(self, text="Create Spectrograms", font=LARGE_FONT)
+        title_label.grid(column=0, columnspan=1, row=0)    
+        
+        onset_instructions = "Use this page to run the create spectrogram function that will create spectrograms  \
+        in the spectrogram folder"
+        msg = tk.Message(self, text = onset_instructions)
+        msg.config(bg='lightgreen', font=('times', 16), width=1200)
+        msg.grid(column=0, columnspan=6, row=1)   
+        
+        
+        
+        run_button = ttk.Button(self, text="Run",
+                            command=lambda: functions.create_focused_mel_spectrogram_jps_using_onset_pairs()).grid(column=0, columnspan=1, row=2)
+        
+       
+        
+       
+ 
+
+        back_to_home_button = ttk.Button(self, text="Back to Home",
+                            command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=3)                  
+                              
         
 app = Main_GUI()
 app.mainloop() 
