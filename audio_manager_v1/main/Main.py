@@ -16,6 +16,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import *
 import os
+from PIL import ImageTk,Image 
 
 
 
@@ -43,7 +44,7 @@ class Main_GUI(tk.Tk):
         self.frames = {}
         
 #         for F in (HomePage, SettingsPage, RecordingsPage, TaggingPage, ClipsPage, ArffPage, CreateWekaModelPage, EvaluateWekaModelPage, CreateOnsetsPage):
-        for F in (HomePage, RecordingsPage, TaggingPage, ClipsPage, ArffPage, CreateWekaModelPage, EvaluateWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage):
+        for F in (HomePage, RecordingsPage, TaggingPage, ClipsPage, ArffPage, CreateWekaModelPage, EvaluateWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage, CreateTagsFromOnsetsPage):
         
         
             frame = F(container, self)
@@ -103,6 +104,12 @@ class HomePage(tk.Frame):
         createSpectrogramsPage_button = ttk.Button(self, text="Create Spectrograms",
                             command=lambda: controller.show_frame(CreateSpectrogramsPage))        
         createSpectrogramsPage_button.pack()
+        
+        createTagsFromOnsetsPage_button = ttk.Button(self, text="Create Tags from Onsets",
+                            command=lambda: controller.show_frame(CreateTagsFromOnsetsPage))        
+        createTagsFromOnsetsPage_button.pack()
+        
+        
         
 # class SettingsPage(tk.Frame):
 #     
@@ -198,6 +205,8 @@ class RecordingsPage(tk.Frame):
         
         back_to_home_button = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=6)
+                            
+                   
         
 class ClipsPage(tk.Frame):
     
@@ -217,8 +226,9 @@ class ClipsPage(tk.Frame):
                                     
         what = StringVar()
         what_combo = ttk.Combobox(self, textvariable=what, values=unique_tags)
-        what_combo.current(0)
-        what_combo.grid(column=1, columnspan=1,row=2) 
+        if len(unique_tags) > 0:
+            what_combo.current(0)
+            what_combo.grid(column=1, columnspan=1,row=2) 
                 
                 
         version_label = ttk.Label(self, text="Versions (e.g. morepork_base)").grid(column=0, columnspan=1, row=3)        
@@ -403,16 +413,19 @@ class CreateOnsetsPage(tk.Frame):
         title_label = ttk.Label(self, text="Create Onsets", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)    
         
-        onset_instructions = "Use this page to run the create onsets function that will create locations of  \
-        interest in the db"
+        onset_instructions = "Use this page to run the create onsets function that will create locations of \
+interest in the db"
         msg = tk.Message(self, text = onset_instructions)
         msg.config(bg='lightgreen', font=('times', 16), width=1200)
         msg.grid(column=0, columnspan=6, row=1)   
         
+        existing_tag_type_label = ttk.Label(self, text="Enter the name of an existing tag type - onsets will only be created from recordings that already been tagged with this type").grid(column=0, columnspan=1, row=2)        
+        existing_tag_type = StringVar(value='more pork - classic')
+        existing_tag_type_entry = tk.Entry(self,  textvariable=existing_tag_type, width=30).grid(column=1, columnspan=1,row=2)    
         
-        
+               
         run_button = ttk.Button(self, text="Run",
-                            command=lambda: functions.create_onsets()).grid(column=0, columnspan=1, row=2)
+                            command=lambda: functions.create_onsets(existing_tag_type.get())).grid(column=0, columnspan=1, row=3)
         
        
         
@@ -420,7 +433,7 @@ class CreateOnsetsPage(tk.Frame):
  
 
         back_to_home_button = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=3)                  
+                            command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=4)                  
 
 class CreateSpectrogramsPage(tk.Frame):    
     
@@ -450,7 +463,88 @@ class CreateSpectrogramsPage(tk.Frame):
 
         back_to_home_button = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=3)                  
-                              
+
+class CreateTagsFromOnsetsPage(tk.Frame):  
+    global image_label
+    
+    def get_spectrogram_image(self): 
+        image = Image.open('/home/tim/Work/Cacophony/image.jpg')
+        [imageSizeWidth, imageSizeHeight] = image.size
+        image = image.resize((int(imageSizeWidth/2),int(imageSizeHeight/2)), Image.ANTIALIAS)
+        spectrogram_image = ImageTk.PhotoImage(image)
+        return spectrogram_image
+
+    
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        
+                     
+        title_label = ttk.Label(self, text="Create Tags From Onsets", font=LARGE_FONT)
+        title_label.grid(column=0, columnspan=1, row=0)    
+        
+        onset_instructions = "Use this page to create Tags from onsets"
+        
+        msg = tk.Message(self, text = onset_instructions)
+        msg.config(bg='lightgreen', font=('times', 16), width=1200)
+        msg.grid(column=0, columnspan=6, row=1)   
+        
+        onset_version_label = ttk.Label(self, text="The version of the onset (field in onset table").grid(column=0, columnspan=1, row=2)        
+        onset_version = StringVar(value='5')
+        onset_version_entry = tk.Entry(self,  textvariable=onset_version, width=30).grid(column=1, columnspan=1,row=2)
+        
+        recording_id_label = ttk.Label(self, text="Recording Id").grid(column=0, columnspan=1, row=3)             
+        self.recording_id = StringVar(value='0000000')
+        self.recording_id_entry = tk.Entry(self,  textvariable=self.recording_id, width=30).grid(column=1, columnspan=1, row=3)
+        
+        start_time_label = ttk.Label(self, text="Start Time").grid(column=2, columnspan=1, row=3)        
+        self.start_time = StringVar(value='0.0')
+        self.start_time_entry = tk.Entry(self,  textvariable=self.start_time, width=30).grid(column=3, columnspan=1,row=3)
+        
+        load_onsets_button = ttk.Button(self, text="Load Onsets",
+                            command=lambda: get_onsets()).grid(column=0, columnspan=1, row=4)
+                            
+#         image = Image.open('/home/tim/Work/Cacophony/image.jpg')
+#         [imageSizeWidth, imageSizeHeight] = image.size
+#         image = image.resize((int(imageSizeWidth/2),int(imageSizeHeight/2)), Image.ANTIALIAS)
+# #         self.spectrogram_image = ImageTk.PhotoImage(Image.open('/home/tim/Work/Cacophony/image.jpg'))
+#         self.spectrogram_image = ImageTk.PhotoImage(image)
+#        
+#         self.image_label = tk.Label(self, image=self.spectrogram_image).grid(column=0, columnspan=1, row=5) 
+
+        self.image_label = tk.Label(self, image=self.get_spectrogram_image()).grid(column=0, columnspan=1, row=5) 
+       
+
+        back_to_home_button = ttk.Button(self, text="Back to Home",
+                            command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=6)    
+                            
+        def get_onsets():
+            print('booooooooooo') 
+            self.onsets = functions.get_onsets_stored_locally(onset_version.get())
+            first_onset = self.onsets[0]
+             
+            first_onset_recording_id = first_onset[1]      
+            self.recording_id.set(first_onset_recording_id)
+             
+            first_onset_start_time = first_onset[2]
+            self.start_time.set(first_onset_start_time)
+             
+#             self.spectrogram_image2 = ImageTk.PhotoImage(Image.open('/home/tim/Work/Cacophony/image2.jpg'))   
+#             tk.Label(self, image=self.spectrogram_image2).grid(column=0, columnspan=1, row=5)
+            
+            get_spectrogram_image(self)
+
+              
+            print(first_onset)
+            print(first_onset_recording_id)   
+            
+        def get_spectrogram_image(): 
+            image = Image.open('/home/tim/Work/Cacophony/image.jpg')
+            [imageSizeWidth, imageSizeHeight] = image.size
+            image = image.resize((int(imageSizeWidth/2),int(imageSizeHeight/2)), Image.ANTIALIAS)
+            spectrogram_image = ImageTk.PhotoImage(image)
+            return spectrogram_image
+            
+                                                     
         
 app = Main_GUI()
 app.mainloop() 

@@ -33,7 +33,7 @@ import subprocess
 from subprocess import PIPE, run
 from playsound import playsound
 from librosa.output import write_wav
-from librosa import display
+from librosa import display, onset
 import matplotlib.pyplot as plt
 import acoustid
 import chromaprint
@@ -261,8 +261,14 @@ def get_device_id_using_device_name(device_name):
                 return device_id     
             
 def get_cacophony_user_token():
+    global cacophony_user_token
+    global cacophony_user_name
+    global cacophony_user_password 
     if cacophony_user_token:
         return cacophony_user_token
+
+#     if cacophony_user_token is not None:
+#         return cacophony_user_token
     
     print('About to get user_token from server')
     username = cacophony_user_name
@@ -599,6 +605,18 @@ def get_unique_devices_stored_locally():
     cur.execute("SELECT DISTINCT deviceId, device_name, device_super_name FROM recordings") 
     rows = cur.fetchall()
     return rows   
+
+def get_unique_recording_ids_that_have_been_tagged_with_this_tag_stored_locally(tag):
+    print('tag', tag)
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT DISTINCT recording_id FROM tags WHERE what = ?", (tag,)) 
+    rows = cur.fetchall()
+    return rows 
+
+def test_get_unique_recording_ids_that_have_been_tagged_with_this_tag_stored_locally():
+    recording_ids = get_unique_recording_ids_that_have_been_tagged_with_this_tag_stored_locally("more pork - classic")  
+    for recording_id in recording_ids:
+        print(recording_id)
     
      
 def test_get_unique_devices_stored_locally():
@@ -606,9 +624,15 @@ def test_get_unique_devices_stored_locally():
     for unique_device in unique_devices:
         print(unique_device, '\n')
         
-def get_onsets_stored_locally():
+def get_onsets_stored_locally(onset_version):
+    global version
+    if onset_version:
+        version_to_use = onset_version
+    else:
+        version_to_use = version
+        
     cur = get_database_connection().cursor()
-    cur.execute("SELECT version, recording_id, start_time_seconds, duration_seconds FROM onsets WHERE version = ?", (version)) 
+    cur.execute("SELECT version, recording_id, start_time_seconds, duration_seconds FROM onsets WHERE version = ? ORDER BY recording_id", (version_to_use)) 
     rows = cur.fetchall()
     return rows 
 
@@ -1270,12 +1294,22 @@ def librosaFeatureExtraction():
 def test_librosaFeatureExtraction():
     librosaFeatureExtraction()
     
-def create_onsets():
+def create_onsets(existing_tag_type):
     print("create_onsets")
-    create_squawk_pairs(base_folder, downloaded_recordings_folder, run_folder)
-    
+    if existing_tag_type is None:
+        create_onsets_in_local_db_using_recordings_folder()
+    else:
+        create_onsets_in_local_db_using_existing_tag_type(existing_tag_type)
+        
+def test_create_onsets_with_existing_tag():
+    create_onsets("more pork - classic")  
+      
+def test_create_onsets_with_null_existing_tag():
+#     This should use the recordings folder
+    create_onsets(None)     
 
 def insert_onset_into_database(version, recording_id, start_time_seconds, duration_seconds):
+    print('duration_seconds', duration_seconds)
     # Use this is the tag was created in this application, rather than being downloaded from the server - becuase some fiels are mission e.g. server_Id
     try:     
         sql = ''' INSERT INTO onsets(version, recording_id, start_time_seconds, duration_seconds)
@@ -1347,73 +1381,99 @@ def apply_band_pass_filter(y, sr):
     y = apply_lowpass_filter(y, sr)    
     return y
     
-
-    
-def create_squawk_pairs(base_folder, recordings_folder, run_folder):
-#     inputFolder = base_folder + '/' + recordings_to_process_folder
-#     onset_pairs_output_folder = base_folder + '/' + run_folder + '/' + onset_pairs_folder
-    recordings_folder_with_path = base_folder + '/' + recordings_folder
-    
-#     if not os.path.exists(onset_pairs_output_folder):
-#         os.makedirs(onset_pairs_output_folder)
-   
-    count_of_onset_pairs_including_more_than_20 = 0
-    count_of_onset_pairs_including_not_including_more_20 = 0
-    
+def create_onsets_in_local_db_using_existing_tag_type(existing_tag_type):
+    # Get recording names that have already been tagged with existing_tag_type e.g somewhere in the recording a morepork tag has already been created
+    recording_ids_with_tag_type = get_unique_recording_ids_that_have_been_tagged_with_this_tag_stored_locally(existing_tag_type)
     count = 0
-    total_number_of_files = len(os.listdir(recordings_folder_with_path))
-#    for filename in os.listdir(input_folder):
-    with os.scandir(recordings_folder_with_path) as entries:
-        for entry in entries:
-            try:
-                print(entry.name)
-                if entry.is_file():                  
-                    filename = entry.name
-                else:
-                    continue
-            
-                count+=1
-                print('Processing file ', count, ' of ', total_number_of_files, ' files.')
-        #    filename = '225217.wav'
-           
-                audio_in_path = recordings_folder_with_path + "/" + filename
-                
-                y, sr = librosa.load(audio_in_path)
-                y = apply_band_pass_filter(y, sr)            
-            
-                paired_squawks_sec = find_paired_squawks_in_single_recordings(y, sr)
-                #print('paired_squawks_sec', paired_squawks_sec)
-                number_of_paired_squawks = len(paired_squawks_sec)
-                if not number_of_paired_squawks == 0:
-                    if number_of_paired_squawks > 20:
-                        count_of_onset_pairs_including_more_than_20 += number_of_paired_squawks
-                    else:
-                        count_of_onset_pairs_including_more_than_20 += number_of_paired_squawks
-                        count_of_onset_pairs_including_not_including_more_20 += number_of_paired_squawks                        
-                   
-                        recording_id = filename.split('.')[0]  
-                        print('recording_id', recording_id)
-#                         output_filename = onset_pairs_output_folder +'/' + filename.split('.')[0] + '.txt'
-#                         print('output_filename', output_filename)
-                       
-#                         f = open(output_filename, 'w')
-#                         json.dump(paired_squawks_sec, f)
-#                         f.close()
-                        
-                        insert_paird_squawks_into_db(version, recording_id, paired_squawks_sec)
-                        
-                print('count_of_onset_pairs_including_more_than_20 ', count_of_onset_pairs_including_more_than_20)
-                print('count_of_onset_pairs_including_not_including_more_20 ', count_of_onset_pairs_including_not_including_more_20)
-        
-            except Exception as e:
-                print(e, '\n')
-                print('Error processing file ', filename)
-                
-def insert_paird_squawks_into_db(version, recording_id, paired_squawks_sec):
-    for paired_squawk_sec in paired_squawks_sec:
-        print("paired_squawk_sec " , paired_squawk_sec)
+    number_of_recordings = len(recording_ids_with_tag_type)
+    total_onset_pairs_including_more_than_20 = 0
+    total_onset_pairs_including_not_including_more_20 = 0
+    for recording_id_with_tag_type in recording_ids_with_tag_type:
+        count+=1
+        print('Processing recording ', count, ' of ', number_of_recordings, ' recordings.')
+        recording_filename = str(recording_id_with_tag_type[0]) + '.m4a'
+        count_of_onset_pairs_including_more_than_20, count_of_onset_pairs_including_not_including_more_20 = create_onsets_in_local_db(recording_filename)
+        total_onset_pairs_including_more_than_20 += count_of_onset_pairs_including_more_than_20
+        total_onset_pairs_including_not_including_more_20 += count_of_onset_pairs_including_not_including_more_20
+        print('total_onset_pairs_including_more_than_20:', total_onset_pairs_including_more_than_20)
+        print('total_onset_pairs_including_not_including_more_20:', total_onset_pairs_including_not_including_more_20, '\n')
     
-    insert_onset_into_database(version, recording_id, paired_squawk_sec, squawk_duration_seconds)
+    
+def create_onsets_in_local_db_using_recordings_folder():
+    recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+    total_number_of_files = len(os.listdir(recordings_folder_with_path))
+    total_onset_pairs_including_more_than_20 = 0
+    total_onset_pairs_including_not_including_more_20 = 0
+    
+    with os.scandir(recordings_folder_with_path) as entries:
+        count = 0
+        for entry in entries:           
+            print(entry.name)
+            if entry.is_file():                  
+                filename = entry.name
+            else:
+                continue
+            
+            count+=1
+            print('Processing recording ', count, ' of ', total_number_of_files, ' recordings.')
+            count_of_onset_pairs_including_more_than_20, count_of_onset_pairs_including_not_including_more_20 = create_onsets_in_local_db(filename)
+            total_onset_pairs_including_more_than_20 += count_of_onset_pairs_including_more_than_20
+            total_onset_pairs_including_not_including_more_20 += count_of_onset_pairs_including_not_including_more_20
+            print('total_onset_pairs_including_more_than_20:', total_onset_pairs_including_more_than_20)
+            print('total_onset_pairs_including_not_including_more_20:', total_onset_pairs_including_not_including_more_20, '\n')
+    
+    
+def create_onsets_in_local_db(filename): 
+    try:
+        recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+        
+        count_of_onset_pairs_including_more_than_20 = 0
+        count_of_onset_pairs_including_not_including_more_20 = 0
+        
+        audio_in_path = recordings_folder_with_path + "/" + filename
+        
+        y, sr = librosa.load(audio_in_path)
+        y = apply_band_pass_filter(y, sr)            
+    
+        onsets = find_paired_squawks_in_single_recordings(y, sr) # Its now time to call the pair_squawks onsets
+        #print('paired_squawks_sec', paired_squawks_sec)
+        number_of_onsets = len(onsets)
+        if not number_of_onsets == 0:
+            if number_of_onsets > 20:
+                count_of_onset_pairs_including_more_than_20 += number_of_onsets
+            else:                
+                
+                count_of_onset_pairs_including_more_than_20 += number_of_onsets
+                count_of_onset_pairs_including_not_including_more_20 += number_of_onsets                        
+           
+                recording_id = filename.split('.')[0]  
+#                 print('recording_id', recording_id)
+                
+                insert_onset_list_into_db(version, recording_id, onsets)
+                
+#         print('count_of_onset_pairs_including_more_than_20 ', count_of_onset_pairs_including_more_than_20)
+#         print('count_of_onset_pairs_including_not_including_more_20 ', count_of_onset_pairs_including_not_including_more_20)
+        return count_of_onset_pairs_including_more_than_20, count_of_onset_pairs_including_not_including_more_20 
+
+    except Exception as e:
+        print(e, '\n')
+        print('Error processing file ', filename)
+                
+def insert_onset_list_into_db(version, recording_id, onsets):
+    global squawk_duration_seconds
+    prev_onset = -1
+    for onset in onsets:
+        if prev_onset == -1:
+            print("onset " , onset)    
+            insert_onset_into_database(version, recording_id, onset, squawk_duration_seconds)
+            prev_onset =  onset
+        else:
+            if (onset - prev_onset) < (squawk_duration_seconds + 0.1):
+                print("Onset too close to previous, not inserting into database " , onset) 
+            else:
+                prev_onset = onset 
+                insert_onset_into_database(version, recording_id, onset, squawk_duration_seconds )
+                print("Inserting onset into database " , onset)
                 
 def find_paired_squawks_in_single_recordings(y, sr):
 #    y, sr = librosa.load(audio_in_path)
@@ -1490,7 +1550,7 @@ def create_focused_mel_spectrogram_jps_using_onset_pairs():
     count = 0
 #     total_number_of_files = len(os.listdir(onset_pairs_folder_path))
 
-    onsets = get_onsets_stored_locally()   
+    onsets = get_onsets_stored_locally('')   
        
     
 #     for entry in os.scandir(onset_pairs_folder_path): 
@@ -1527,7 +1587,7 @@ def create_focused_mel_spectrogram_jps_using_onset_pairs():
             y_part = y[start_position_array:end_position_array]  
             #                 mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_fft=int(sr/10), hop_length=int(sr/10), n_mels=10, fmin=650,fmax=900)
             #                 mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_fft=int(sr/10), hop_length=int(sr/10), n_mels=10, fmin=650,fmax=900)
-            mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=650,fmax=900)
+            mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
             
             pylab.axis('off') # no axis
             pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
@@ -1540,9 +1600,11 @@ def create_focused_mel_spectrogram_jps_using_onset_pairs():
             print('Error processing onset ', onset)
                 
 
-
-
-
+# def load_onsets(onset_version):
+#     print('version ', version)
+# #     onsets = get_onsets_stored_locally():
+#     return 'tttttttt'
+    
 
 
 
