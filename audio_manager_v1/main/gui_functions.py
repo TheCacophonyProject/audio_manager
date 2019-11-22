@@ -16,12 +16,22 @@ import sounddevice as sd
 
 from pydub import AudioSegment
 from pydub.playback import play
+
 # import scikits.audiolab
 # import sckikits as sc
 # 
 # from sc import Sndfile, Format
 
-from parameters import *
+import parameters_5
+# from parameters_5 import *
+
+import Analysis_5
+#from Analysis_5 import *
+
+import parameters
+# from parameters import *
+#from Main import *
+#import Main
 
 import shlex
 
@@ -36,6 +46,19 @@ from subprocess import PIPE, run
 
 from playsound import playsound
 from librosa.output import write_wav
+from librosa import display
+
+from scipy import signal
+from scipy.signal import butter, lfilter, freqz
+import matplotlib.pyplot as plt
+
+import acoustid
+import chromaprint
+
+from pyAudioAnalysis import audioBasicIO
+from pyAudioAnalysis import audioFeatureExtraction
+
+import pywt
 
 # from soundfile import SoundFile
 
@@ -1061,5 +1084,249 @@ def test_play_clip():
 #     play_clip('218113', 4.5, 1.5)
     play_clip2()
     
-                
+def create_arff_file_headder(output_folder, arff_filename, comments, relation, attribute_labels, attribute_features): 
+   
+         
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)  
+        
+    output_path_filename = output_folder + "/" + arff_filename
+        
+    f= open(output_path_filename,"w+")   
+    f.write(comments)
+    f.write("\n") 
+    f.write(relation)
+    f.write("\n") 
+    f.write("\n") 
+    for attribute_label in attribute_labels:
+        f.write(attribute_label)
+        f.write("\n")   
+    for attribute_feature in attribute_features:
+        f.write(attribute_feature)
+        f.write("\n")   
+        
+    f.write("\n")    
+    
+    f.write("@data")  
+    f.write("\n")  
+    f.write("\n")  
+        
+    f.close()
+    
+        
+def test_create_arff_file_header():
+    run_base_folder = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs"
+    run_folder = "/test_run"
+    arff_filename = "test_arff.arff"
+    arff_output_folder = "/arff_folder"
+    output_folder = run_base_folder + run_folder + arff_output_folder
+    comments = "% Multi-label test"
+    relation = "@relation \'Audio: -C 3\'"
+    attribute_labels = []
+    attribute_labels.append("@attribute morepork-classic {0,1}")
+    attribute_labels.append("@attribute cicada {0,1}")
+    attribute_labels.append("@attribute dog {0,1}")
+    
+    attribute_features = []
+    attribute_features.append("@attribute mel1 numeric")
+    attribute_features.append("@attribute mel2 numeric")
+    
+    
+    create_arff_file_headder(output_folder, arff_filename, comments, relation, attribute_labels, attribute_features)
+
+def append_data_to_arff_file(output_path_filename, data):
+    f=open(output_path_filename, "a")    
+    
+    for line in data:
+        f.write(line)
+        f.write("\n")  
+        
+    f.close()
+        
+def test_append_data_to_arff_file():
+    run_base_folder = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs"
+    run_folder = "/test_run"
+    arff_filename = "test_arff.arff"
+    arff_output_folder = "/arff_folder"
+    output_folder = run_base_folder + run_folder + arff_output_folder
+    output_path_filename = output_folder + "/" + arff_filename
+    
+    data = []
+      
+    data.append("0,1,1,0.9,0.7")
+    data.append("0,1,0,0.6,0.7")
+    data.append("0,0,1,0.1,0.3")
+    append_data_to_arff_file(output_path_filename, data)
+        
+
+    
+#https://dsp.stackexchange.com/questions/41184/high-pass-filter-in-python-scipy/41185#41185
+def highpass_filter_with_parameters(y, sr, filter_stop_freq, filter_pass_freq ):
+    filter_order = 1001
+
+    # High-pass filter
+    nyquist_rate = sr / 2.
+    desired = (0, 0, 1, 1)
+    bands = (0, filter_stop_freq, filter_pass_freq, nyquist_rate)
+    filter_coefs = signal.firls(filter_order, bands, desired, nyq=nyquist_rate)
+    
+    # Apply high-pass filter
+    filtered_audio = signal.filtfilt(filter_coefs, [1], y)
+    return filtered_audio
+
+# https://stackoverflow.com/questions/25191620/creating-lowpass-filter-in-scipy-understanding-methods-and-units
+def butter_lowpass(cutoff, fs, order=5):
+    nyq = 0.5 * fs
+    normal_cutoff = cutoff / nyq
+    b, a = butter(order, normal_cutoff, btype='low', analog=False)
+    return b, a
+
+def butter_lowpass_filter(data, cutoff, fs, order=5):
+    b, a = butter_lowpass(cutoff, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
+
+def apply_lowpass_filter(y, sr):
+    # Filter requirements.
+    order = 6
+   
+    cutoff = 1000  # desired cutoff frequency of the filter, Hz
+    
+    y = butter_lowpass_filter(y, cutoff, sr, order)
+    
+    return y
+def apply_band_pass_filter(y, sr):
+    y = highpass_filter_with_parameters(y=y, sr=sr, filter_stop_freq=750, filter_pass_freq=800 )
+    y = apply_lowpass_filter(y, sr)    
+    return y
+
+def extract_melspectrogram(audio_in):
+#     y, sr = librosa.load(audio_in, res_type='kaiser_fast') 
+#     y, sr = librosa.load(audio_in, mono=True, duration=30)
+    y, sr = librosa.load(audio_in, mono=True, duration=3) 
+#     y_filtered = apply_band_pass_filter(y, sr)
+#     y = apply_band_pass_filter(y, sr)
+    print(sr)
+    print("\n")
+#     print(y)
+#     mel_spectrogram = librosa.feature.melspectrogram(y=y_filtered, sr=sr, fmin=100, fmax=2000)
+#     mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr)
+#     mel_spectrogram = librosa.feature.melspectrogram(y=y_filtered, sr=sr)
+
+#     mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, fmin=500, fmax=1000)
+#     mel_spectrogram_800_1000_freq = librosa.feature.melspectrogram(y=y_part, sr=sr, n_fft=int(sr/10), hop_length=int(sr/10), n_mels=10, fmin=800,fmax=1000)
+    mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, n_fft=int(sr/10), hop_length=int(sr/10), n_mels=10, fmin=600,fmax=1000)
+    print("mel_spectrogram \n")
+    print(mel_spectrogram.shape)
+    np.set_printoptions(threshold=np.inf)
+    print(mel_spectrogram)
+    
+   
+#     librosa.display.specshow(mel_spectrogram, x_axis='time', y_axis='mel', sr=sr,fmax=2000)
+    librosa.display.specshow(mel_spectrogram, x_axis='time', y_axis='mel')
+    plt.colorbar(format='%+2.0f dB')
+    plt.title('Mel-frequency spectrogram')
+    plt.tight_layout()
+    plt.show()
+    
+def test_extract_melspectrogram():
+#     audio_in = "/home/tim/Work/Cacophony/Audio_Analysis/temp/151837_bird_27.18.wav"
+    audio_in = "/home/tim/Work/Cacophony/Audio_Analysis/temp/235980.m4a"
+    extract_melspectrogram(audio_in) 
+    
+# def mono_to_color(X, mean=None, std=None, norm_max=None, norm_min=None, eps=1e-6):
+#     # Stack X as [X,X,X]
+#     X = np.stack([X, X, X], axis=-1)
+# 
+#     # Standardize
+#     mean = mean or X.mean()
+#     std = std or X.std()
+#     Xstd = (X - mean) / (std + eps)
+#     _min, _max = Xstd.min(), Xstd.max()
+#     norm_max = norm_max or _max
+#     norm_min = norm_min or _min
+#     if (_max - _min) > eps:
+#         # Scale to [0, 255]
+#         V = Xstd
+#         V[V < norm_min] = norm_min
+#         V[V > norm_max] = norm_max
+#         V = 255 * (V - norm_min) / (norm_max - norm_min)
+#         V = V.astype(np.uint8)
+#     else:
+#         # Just zero
+#         V = np.zeros_like(Xstd, dtype=np.uint8)
+#     return V
+
+def fingerprint():
+    duration, fp_encoded = acoustid.fingerprint_file("/home/tim/Work/Cacophony/Audio_Analysis/temp/morepork.mp3")
+    fingerprint, version = chromaprint.decode_fingerprint(fp_encoded)
+    print(fingerprint)
+    
+#     fig = plt.figure()
+#     bitmap = np.transpose(np.array([[b == '1' for b in list('{:32b}'.format(i & 0xffffffff))] for i in fingerprint]))
+#     plt.imshow(bitmap)
+
+    librosa.display.specshow(fingerprint)
+#     plt.colorbar(format='%+2.0f dB')
+    plt.title('Finger print')
+    plt.tight_layout()
+    plt.show()
+    
+def test_fingerprint():
+    fingerprint()
+    
+def featureExtraction():
+    w = pywt.Wavelet('db3')
+    print(w)
+    
+def test_featureExtraction():
+    featureExtraction()
+    
+def pyAudioAnalysisFeatureExtraction():
+    audio_in = "/home/tim/Work/Cacophony/Audio_Analysis/temp/235980.m4a"
+    y, sr = librosa.load(audio_in, mono=True, duration=3) 
+    F, f_names = audioFeatureExtraction.stFeatureExtraction(y, sr, 0.050*sr, 0.025*sr);
+    print(f_names)
+    print(F[1])
+    
+    mt_features, st_features, mid_feature_names = audioFeatureExtraction.mtFeatureExtraction(y, ar, mt_win, mt_step, st_win, st_step)
+    
+def test_pyAudioAnalysisFeatureExtraction():
+    pyAudioAnalysisFeatureExtraction()
+    
+def librosaFeatureExtraction():
+    audio_in = "/home/tim/Work/Cacophony/Audio_Analysis/temp/235980.m4a"
+    y, sr = librosa.load(audio_in, mono=True) 
+#     tempo, beats = librosa.beat.beat_track(y=y, sr=sr, units="time")
+#     print(tempo)
+#     print(beats)    
+    S = np.abs(librosa.stft(y))
+    comps, acts = librosa.decompose.decompose(S, n_components=1)
+    np.set_printoptions(threshold=np.inf)
+    print(comps)
+#     print(acts)
+    
+   
+def test_librosaFeatureExtraction():
+    librosaFeatureExtraction()
+    
+def create_onsets():
+    print("create_onsets")
+    create_squawk_pairs(parameters_5.base_folder, parameters_5.downloaded_recordings_folder, parameters_5.onset_pairs_folder)
+    
+def insert_onset_into_database(version, recording_id, start_time_seconds, duration_seconds):
+   # Use this is the tag was created in this application, rather than being downloaded from the server - becuase some fiels are mission e.g. server_Id
+   try:        
+
+       sql = ''' INSERT INTO onsets(version, recording_id, start_time_seconds, duration_seconds)
+                 VALUES(?,?,?,?) '''
+       cur = get_database_connection().cursor()
+       cur.execute(sql, (version, recording_id, start_time_seconds, duration_seconds))
+       get_database_connection().commit()
+   except Exception as e:
+       print(e, '\n')
+       print('\t\tUnable to insert onest ' + str(recording_id), '\n')   
+       
+def test_insert_onset_into_database():
+    insert_onset_into_database('Analysis_5', 1234, 3.2, 0.6)
     

@@ -13,14 +13,18 @@ HEIGHT = 600
 WIDTH = 1400
 
 import tkinter as tk
+
 from tkinter import ttk
 from tkinter import *
+from tkinter.ttk import *
+# from tkinter import ttk
+# from tkinter import *
+
 import os
 from PIL import ImageTk,Image 
 
-
-
 import main.functions as functions
+import threading
 
 
 LARGE_FONT= ("Verdana", 12)
@@ -465,19 +469,10 @@ class CreateSpectrogramsPage(tk.Frame):
                             command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=3)                  
 
 class CreateTagsFromOnsetsPage(tk.Frame):  
-    global image_label
-    
-    def get_spectrogram_image(self): 
-        image = Image.open('/home/tim/Work/Cacophony/image.jpg')
-        [imageSizeWidth, imageSizeHeight] = image.size
-        image = image.resize((int(imageSizeWidth/2),int(imageSizeHeight/2)), Image.ANTIALIAS)
-        spectrogram_image = ImageTk.PhotoImage(image)
-        return spectrogram_image
-
     
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        
+        self.current_onset_array_pos = 0
                      
         title_label = ttk.Label(self, text="Create Tags From Onsets", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)    
@@ -488,62 +483,107 @@ class CreateTagsFromOnsetsPage(tk.Frame):
         msg.config(bg='lightgreen', font=('times', 16), width=1200)
         msg.grid(column=0, columnspan=6, row=1)   
         
-        onset_version_label = ttk.Label(self, text="The version of the onset (field in onset table").grid(column=0, columnspan=1, row=2)        
+        onset_version_label = ttk.Label(self, text="The version of the onset (field in onset table") 
+        onset_version_label.grid(column=0, columnspan=1, row=2)       
         onset_version = StringVar(value='5')
-        onset_version_entry = tk.Entry(self,  textvariable=onset_version, width=30).grid(column=1, columnspan=1,row=2)
+        onset_version_entry = tk.Entry(self,  textvariable=onset_version, width=30)
+        onset_version_entry.grid(column=1, columnspan=1,row=2)
         
-        recording_id_label = ttk.Label(self, text="Recording Id").grid(column=0, columnspan=1, row=3)             
+        recording_id_label = ttk.Label(self, text="Recording Id") 
+        recording_id_label.grid(column=0, columnspan=1, row=3)            
         self.recording_id = StringVar(value='0000000')
         self.recording_id_entry = tk.Entry(self,  textvariable=self.recording_id, width=30).grid(column=1, columnspan=1, row=3)
         
-        start_time_label = ttk.Label(self, text="Start Time").grid(column=2, columnspan=1, row=3)        
+        start_time_label = ttk.Label(self, text="Start Time")
+        start_time_label.grid(column=2, columnspan=1, row=3)        
         self.start_time = StringVar(value='0.0')
         self.start_time_entry = tk.Entry(self,  textvariable=self.start_time, width=30).grid(column=3, columnspan=1,row=3)
         
-        load_onsets_button = ttk.Button(self, text="Load Onsets",
-                            command=lambda: get_onsets()).grid(column=0, columnspan=1, row=4)
+        load_onsets_button = ttk.Button(self, text="Load Onsets",command=lambda: get_onsets())
+        load_onsets_button.grid(column=0, columnspan=1, row=4)                        
+
+        self.spectrogram_label = ttk.Label(self, image=None)
+        self.spectrogram_label.grid(column=0, columnspan=1, row=5)
+        
+        self.waveform_label = ttk.Label(self, image=None)
+        self.waveform_label.grid(column=1, columnspan=1, row=5)
+
+        
+        
+        
+        previous_button = ttk.Button(self, text="Previous", command=lambda: previous_onset())
+        previous_button.grid(column=0, columnspan=1, row=6)
                             
-#         image = Image.open('/home/tim/Work/Cacophony/image.jpg')
-#         [imageSizeWidth, imageSizeHeight] = image.size
-#         image = image.resize((int(imageSizeWidth/2),int(imageSizeHeight/2)), Image.ANTIALIAS)
-# #         self.spectrogram_image = ImageTk.PhotoImage(Image.open('/home/tim/Work/Cacophony/image.jpg'))
-#         self.spectrogram_image = ImageTk.PhotoImage(image)
-#        
-#         self.image_label = tk.Label(self, image=self.spectrogram_image).grid(column=0, columnspan=1, row=5) 
-
-        self.image_label = tk.Label(self, image=self.get_spectrogram_image()).grid(column=0, columnspan=1, row=5) 
-       
-
-        back_to_home_button = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=6)    
+        play_button = ttk.Button(self, text="Play", command=lambda: functions.play_clip(str(self.current_onset_recording_id), float(self.current_onset_start_time),self.current_onset_duration))
+        play_button.grid(column=1, columnspan=1, row=6)
+                            
+        next_button = ttk.Button(self, text="Next", command=lambda: next_onset())
+        next_button.grid(column=2, columnspan=1, row=6)
+                            
+                             
+        back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
+        back_to_home_button.grid(column=0, columnspan=1, row=7)    
                             
         def get_onsets():
-            print('booooooooooo') 
-            self.onsets = functions.get_onsets_stored_locally(onset_version.get())
-            first_onset = self.onsets[0]
-             
-            first_onset_recording_id = first_onset[1]      
-            self.recording_id.set(first_onset_recording_id)
-             
-            first_onset_start_time = first_onset[2]
-            self.start_time.set(first_onset_start_time)
-             
-#             self.spectrogram_image2 = ImageTk.PhotoImage(Image.open('/home/tim/Work/Cacophony/image2.jpg'))   
-#             tk.Label(self, image=self.spectrogram_image2).grid(column=0, columnspan=1, row=5)
             
-            get_spectrogram_image(self)
-
-              
-            print(first_onset)
-            print(first_onset_recording_id)   
+            self.onsets = functions.get_onsets_stored_locally(onset_version.get())            
+            load_current_onset()          
+          
             
-        def get_spectrogram_image(): 
-            image = Image.open('/home/tim/Work/Cacophony/image.jpg')
-            [imageSizeWidth, imageSizeHeight] = image.size
-            image = image.resize((int(imageSizeWidth/2),int(imageSizeHeight/2)), Image.ANTIALIAS)
-            spectrogram_image = ImageTk.PhotoImage(image)
-            return spectrogram_image
+        def next_onset():
+            if self.current_onset_array_pos < (len(self.onsets)) -1:
+                self.current_onset_array_pos +=1
+                load_current_onset()
+#                 functions.play_clip(str(self.current_onset_recording_id), float(self.current_onset_start_time),self.current_onset_duration)
+                
+        def previous_onset():
+            if self.current_onset_array_pos > 0:
+                self.current_onset_array_pos -=1
+                load_current_onset()
+                
+        def play_clip():
+            functions.play_clip(str(self.current_onset_recording_id), float(self.current_onset_start_time),self.current_onset_duration)
+                     
+        def display_images():
+            self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram(self.current_onset_recording_id, self.current_onset_start_time, self.current_onset_duration)
+            self.waveform_image = functions.get_single_waveform_image(self.current_onset_recording_id, self.current_onset_start_time, self.current_onset_duration)            
             
+            self.spectrogram_label.config(image=self.spectrogram_image)
+            self.waveform_label.config(image=self.waveform_image)
+            
+        def load_current_onset():
+            
+            current_onset = self.onsets[self.current_onset_array_pos]
+             
+            self.current_onset_recording_id = current_onset[1]      
+            self.recording_id.set(self.current_onset_recording_id)
+             
+            self.current_onset_start_time = current_onset[2]
+            self.start_time.set(self.current_onset_start_time)
+            
+            self.current_onset_duration = current_onset[3] 
+            
+#             self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram(self.current_onset_recording_id, self.current_onset_start_time, self.current_onset_duration)
+#             self.waveform_image = functions.get_single_waveform_image(self.current_onset_recording_id, self.current_onset_start_time, self.current_onset_duration)            
+#             
+#             self.spectrogram_label.config(image=self.spectrogram_image)
+#             self.waveform_label.config(image=self.waveform_image)
+            
+            
+#             tk.Label(self, image=self.sectrogram_image).grid(column=0, columnspan=1, row=5)
+#             tk.Label(self, image=self.waveform_image).grid(column=1, columnspan=1, row=5)
+            # https://realpython.com/intro-to-python-threading/
+#             x = threading.Thread(target=load_pics(), args=(1,))
+#             x.start()
+#             x.join()
+            
+            
+            threading.Thread(target=play_clip(), args=(1,)).start()
+            threading.Thread(target=display_images(), args=(1,)).start()
+           
+         
+            
+#             functions.play_clip(str(self.current_onset_recording_id), float(self.current_onset_start_time),self.current_onset_duration)
                                                      
         
 app = Main_GUI()

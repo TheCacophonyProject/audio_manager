@@ -41,6 +41,8 @@ from pyAudioAnalysis import audioBasicIO
 from pyAudioAnalysis import audioFeatureExtraction
 import pywt
 import shlex
+from PIL import ImageTk,Image 
+
 
 
 
@@ -1014,7 +1016,7 @@ def insert_model_run_result_into_database(modelRunName, recording_id, startTime,
         print(e, '\n')
         print('\t\tUnable to insert result' + str(recording_id) + ' ' + str(startTime), '\n')   
         
-def play_clip(recording_id, start_time, duration):
+def play_clip1(recording_id, start_time, duration):
     audio_in_path = getRecordingsFolder() + '/' + recording_id + '.m4a'
     audio_out_path = '/home/tim/Temp/temp.wav'
 #     audio_in_path = '/home/tim/Temp/dog.wav'
@@ -1026,6 +1028,7 @@ def play_clip(recording_id, start_time, duration):
 
    
     y, sr = librosa.load(audio_in_path, sr=None) 
+    sd.play(y, sr)
     
 #     print('sr ', sr)
 #     print(y)
@@ -1035,28 +1038,42 @@ def play_clip(recording_id, start_time, duration):
     y_amplified_start = sr * start_time
     y_amplified_end = y_amplified_start + (sr * duration)
     y_amplified_to_play = y_amplified[int(y_amplified_start):int(y_amplified_end)]
-    y_to_play = y[int(y_amplified_start):int(y_amplified_end)]
+#     y_to_play = y[int(y_amplified_start):int(y_amplified_end)]
 #     librosa.output.write_wav(audio_out_path, y_amplified_to_play, sr)
-    os.system("play " + audio_out_path)
+
+#     os.system("play " + audio_out_path)
 # #     sd.play(y_amplified_to_play, sr)
 # #     sd.play(y_amplified, sr)
 #     sd.play(y, sr)
     print('finished')
     
-def play_clip2():
-    start_time = 18
-    duration = 2
-    audio_in_path = getRecordingsFolder() + '/218113.m4a'
-    audio_out_path = '/home/tim/Temp/temp.wav'
+def play_clip(recording_id, start_time, duration):
+    audio_in_path = getRecordingsFolder() + '/' + recording_id + '.m4a'
+    print('audio_in_path ', audio_in_path)
+    print('start_time ', start_time)
+    print('duration ', duration)
+#     start_time = 18
+#     duration = 2
+#     audio_in_path = getRecordingsFolder() + '/218113.m4a'
+#     audio_out_path = '/home/tim/Temp/temp2.wav'
+    audio_out_path = base_folder + '/' + run_folder + '/' + 'temp.wav'
+    print('audio_out_path ', audio_out_path)
     y, sr = librosa.load(audio_in_path, sr=None) 
     y_amplified = np.int16(y/np.max(np.abs(y)) * 32767)
     y_amplified_start = sr * start_time
-    y_amplified_end = (sr * start_time) + (sr * duration)
+    y_amplified_end = (sr * start_time) + (sr * duration * 5)
     y_amplified_to_play = y_amplified[int(y_amplified_start):int(y_amplified_end)]
     y_to_play = y[int(y_amplified_start):int(y_amplified_end)]
 #     sf.write(audio_out_path, y_to_play, sr, 'PCM_24')
-    sf.write(audio_out_path, y_to_play, sr)
-    os.system("play " + audio_out_path)
+    sf.write(audio_out_path, y_amplified_to_play, sr)
+#     os.system("aplay " + audio_out_path + " -N")
+    os.system("aplay " + audio_out_path + " &")
+    
+# def test_play_clip2():
+#     audio_in_path = getRecordingsFolder() + '/218113.m4a'
+#     start_time = 18
+#     duration = 2
+#     play_clip2(audio_in_path, start_time, duration)
     
 def play_clip3():
     start_time = 14.5
@@ -1087,9 +1104,9 @@ def play_clip4():
     sd.play(y, 44100)
     
     
-def test_play_clip():
-#     play_clip('218113', 4.5, 1.5)
-    play_clip2()
+# def test_play_clip():
+# #     play_clip('218113', 4.5, 1.5)
+#     play_clip2()
     
 def create_arff_file_headder(output_folder, arff_filename, comments, relation, attribute_labels, attribute_features): 
    
@@ -1598,13 +1615,156 @@ def create_focused_mel_spectrogram_jps_using_onset_pairs():
         except Exception as e:
             print(e, '\n')
             print('Error processing onset ', onset)
-                
 
+def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, duration_seconds):
+
+    mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + mel_spectrograms_folder 
+    if not os.path.exists(mel_spectrograms_out_folder_path):
+        os.makedirs(mel_spectrograms_out_folder_path)         
+
+    try:
+        
+        audio_filename = str(recording_id) + '.m4a'
+        audio_in_path = base_folder + '/' + downloaded_recordings_folder + '/' +  audio_filename 
+        image_out_name = 'temp_spectrogram.jpg'
+        print('image_out_name', image_out_name)           
+       
+        image_out_path = mel_spectrograms_out_folder_path + '/' + image_out_name
+        
+        y, sr = librosa.load(audio_in_path, sr=None)      
+               
+        start_time_seconds_float = float(start_time_seconds)            
+        
+        start_position_array = int(sr * start_time_seconds_float)              
+                   
+        end_position_array = start_position_array + int((sr * duration_seconds))                  
+                    
+        y_part = y[start_position_array:end_position_array]  
+        mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
+        
+        pylab.axis('off') # no axis
+        pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+        librosa.display.specshow(mel_spectrogram, cmap='binary') #https://matplotlib.org/examples/color/colormaps_reference.html
+        pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+        pylab.close()
+        
+        return get_image(image_out_path)
+        
+    except Exception as e:
+        print(e, '\n')
+        print('Error processing onset ', onset)
+        
+def get_single_waveform_image(recording_id, start_time_seconds, duration_seconds):
+
+    mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + mel_spectrograms_folder 
+    if not os.path.exists(mel_spectrograms_out_folder_path):
+        os.makedirs(mel_spectrograms_out_folder_path)         
+
+    try:
+        
+        audio_filename = str(recording_id) + '.m4a'
+        audio_in_path = base_folder + '/' + downloaded_recordings_folder + '/' +  audio_filename 
+        image_out_name = 'temp_waveform.jpg'
+        print('image_out_name', image_out_name)           
+       
+        image_out_path = mel_spectrograms_out_folder_path + '/' + image_out_name
+        
+        y, sr = librosa.load(audio_in_path, sr=None) 
+        
+        start_time_seconds_float = float(start_time_seconds)            
+        
+        start_position_array = int(sr * start_time_seconds_float)              
+                   
+        end_position_array = start_position_array + int((sr * duration_seconds))                  
+                    
+        y_part = y[start_position_array:end_position_array]  
+        
+        
+        
+        pylab.axis('off') # no axis
+        pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+        librosa.display.waveplot(y=y_part, sr=sr)
+        pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+        pylab.close()
+        
+        return get_image(image_out_path)
+        
+    except Exception as e:
+        print(e, '\n')
+        print('Error processing onset ', onset)
+                
+def get_image(image_name_path): 
+#     image_name_path = base_folder + '/' +
+        
+    image = Image.open(image_name_path)
+    [imageSizeWidth, imageSizeHeight] = image.size
+    image = image.resize((int(imageSizeWidth/2),int(imageSizeHeight/2)), Image.ANTIALIAS)
+    spectrogram_image = ImageTk.PhotoImage(image)
+    return spectrogram_image
 # def load_onsets(onset_version):
 #     print('version ', version)
 # #     onsets = get_onsets_stored_locally():
 #     return 'tttttttt'
     
+
+
+def play_array(recording_id, start_time, duration):
+    audio_in_path = getRecordingsFolder() + '/' + recording_id + '.m4a'
+    audio_out_path = '/home/tim/Temp/temp.wav'
+#     audio_in_path = '/home/tim/Temp/dog.wav'
+    print('audio_in_path ', audio_in_path)
+#     playsound(audio_in_path)
+#     song = AudioSegment.from_wav(audio_in_path)
+#     play(song)
+    os.system("play " + audio_out_path)
+
+   
+#     y, sr = librosa.load(audio_in_path, sr=None) 
+#     print(y)
+#     print('sr ', sr)
+#     sd.default.samplerate = sr
+#     sd.play(y)
+    
+    
+
+def test_play_array():
+    play_array("161943", "1", "2.2")
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
