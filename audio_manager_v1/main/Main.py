@@ -48,7 +48,7 @@ class Main_GUI(tk.Tk):
         self.frames = {}
         
 #         for F in (HomePage, SettingsPage, RecordingsPage, TaggingPage, ClipsPage, ArffPage, CreateWekaModelPage, EvaluateWekaModelPage, CreateOnsetsPage):
-        for F in (HomePage, RecordingsPage, TaggingPage, ClipsPage, ArffPage, CreateWekaModelPage, EvaluateWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage, CreateTagsFromOnsetsPage):
+        for F in (HomePage, RecordingsPage, TaggingPage, ClipsPage, ArffPage, CreateWekaModelPage, EvaluateWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage, CreateTagsFromOnsetsPage, EvaluateWekaModelRunResultPage):
         
         
             frame = F(container, self)
@@ -110,8 +110,13 @@ class HomePage(tk.Frame):
         createSpectrogramsPage_button.pack()
         
         createTagsFromOnsetsPage_button = ttk.Button(self, text="Create Tags from Onsets",
-                            command=lambda: controller.show_frame(CreateTagsFromOnsetsPage))        
+                            command=lambda: controller.show_frame(CreateTagsFromOnsetsPage))            
+        
         createTagsFromOnsetsPage_button.pack()
+        
+        evaluateWekaModelRunResultPage_button = ttk.Button(self, text="Evaluate Weka model Run Result",
+                            command=lambda: controller.show_frame(EvaluateWekaModelRunResultPage))        
+        evaluateWekaModelRunResultPage_button.pack()
         
         
         
@@ -524,14 +529,13 @@ class CreateTagsFromOnsetsPage(tk.Frame):
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=7)    
                             
-        def get_onsets():
-            
+        def get_onsets():            
             self.onsets = functions.get_onsets_stored_locally(onset_version.get())            
             load_current_onset()          
           
             
         def next_onset():
-            if self.current_onset_array_pos < (len(self.onsets)) -1:
+            if self.current_onset_array_pos < (len(self.onsets)) -1:                        
                 self.current_onset_array_pos +=1
                 load_current_onset()
 #                 functions.play_clip(str(self.current_onset_recording_id), float(self.current_onset_start_time),self.current_onset_duration)
@@ -563,19 +567,7 @@ class CreateTagsFromOnsetsPage(tk.Frame):
             
             self.current_onset_duration = current_onset[3] 
             
-#             self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram(self.current_onset_recording_id, self.current_onset_start_time, self.current_onset_duration)
-#             self.waveform_image = functions.get_single_waveform_image(self.current_onset_recording_id, self.current_onset_start_time, self.current_onset_duration)            
-#             
-#             self.spectrogram_label.config(image=self.spectrogram_image)
-#             self.waveform_label.config(image=self.waveform_image)
-            
-            
-#             tk.Label(self, image=self.sectrogram_image).grid(column=0, columnspan=1, row=5)
-#             tk.Label(self, image=self.waveform_image).grid(column=1, columnspan=1, row=5)
-            # https://realpython.com/intro-to-python-threading/
-#             x = threading.Thread(target=load_pics(), args=(1,))
-#             x.start()
-#             x.join()
+
             
             
             threading.Thread(target=play_clip(), args=(1,)).start()
@@ -583,8 +575,204 @@ class CreateTagsFromOnsetsPage(tk.Frame):
            
          
             
-#             functions.play_clip(str(self.current_onset_recording_id), float(self.current_onset_start_time),self.current_onset_duration)
-                                                     
+class EvaluateWekaModelRunResultPage(tk.Frame):    
+    
+    
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        
+        self.current_model_run_result_array_pos = 0
+        self.current_model_run_name_ID = 0        
+        
+        self.unique_model_run_names = functions.get_unique_model_run_names()            
+                    
+        title_label = ttk.Label(self, text="Evaluate Model Run Results", font=LARGE_FONT)
+        title_label.grid(column=0, columnspan=1, row=0)   
+        
+        run_names_label = ttk.Label(self, text="Run Names")
+        run_names_label.grid(column=0, columnspan=1, row=1)      
+                                    
+        self.run_name = StringVar()
+        self.run_names_combo = ttk.Combobox(self, textvariable=self.run_name, values=self.unique_model_run_names)
+        
+        if len(self.unique_model_run_names) > 0:
+            self.run_names_combo.current(0)
+            self.run_names_combo.grid(column=1, columnspan=1,row=1)  
+        
+#         run_name.set('tim was here')
+            
+        refresh_model_run_names_button = ttk.Button(self, text="Refresh Unique Model Run Names",command=lambda: refresh_unique_model_run_names())
+        refresh_model_run_names_button.grid(column=2, columnspan=1, row=1)         
+        
+        load_run_results_button = ttk.Button(self, text="Load Run Results",command=lambda: get_run_results())
+        load_run_results_button.grid(column=0, columnspan=1, row=2)   
+        
+        recording_id_label = ttk.Label(self, text="Recording Id") 
+        recording_id_label.grid(column=0, columnspan=1, row=3)            
+        self.recording_id = StringVar(value='0000000')
+        self.recording_id_entry = tk.Entry(self,  textvariable=self.recording_id, width=30).grid(column=1, columnspan=1, row=3)
+        
+        start_time_label = ttk.Label(self, text="Start Time")
+        start_time_label.grid(column=2, columnspan=1, row=3)        
+        self.start_time = StringVar(value='0.0')
+        self.start_time_entry = tk.Entry(self,  textvariable=self.start_time, width=30).grid(column=3, columnspan=1,row=3)
+        
+        
+        self.spectrogram_label = ttk.Label(self, image=None)
+        self.spectrogram_label.grid(column=0, columnspan=1, row=4)
+        
+        self.waveform_label = ttk.Label(self, image=None)
+        self.waveform_label.grid(column=1, columnspan=1, row=4)        
+        
+        actual_label = ttk.Label(self, text="Actual", font=LARGE_FONT)
+        actual_label.grid(column=0, columnspan=1, row=5) 
+        
+        self.actual_label_value = tk.StringVar()
+        actual_label_for_value = ttk.Label(self, textvariable=self.actual_label_value)
+        actual_label_for_value.grid(column=0, columnspan=1, row=6) 
+#         self.actual_label_value.set('tim was here')
+        
+        actual_label_confirmed = ttk.Label(self, text="Actual Confirmed (On first view, it will be Actual - select to change and save)")
+        actual_label_confirmed.grid(column=1, columnspan=1, row=5) 
+        
+        self.actual_confirmed = tk.StringVar()
+#         self.actual.set('')
+        actual_confirmed_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork-classic', variable=self.actual_confirmed, value='morepork - classic',command=lambda: confirm_actual())
+        actual_confirmed_radio_button_morepork_classic.grid(column=1, columnspan=1, row=6)   
+                      
+        actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_confirmed, value='unknown',command=lambda: confirm_actual())
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=7)   
+        
+       
+        predicted_label = ttk.Label(self, text="Predicted", font=LARGE_FONT)
+        predicted_label.grid(column=2, columnspan=1, row=5) 
+        
+#         self.predicted = tk.StringVar()
+#         predicted_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork-classic', variable=self.predicted, value='morepork - classic')
+#         predicted_radio_button_morepork_classic.grid(column=2, columnspan=1, row=6)   
+#                       
+#         predicted_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.predicted, value='unknown')
+#         predicted_radio_button_unknown.grid(column=2, columnspan=1, row=7) 
+        
+        self.predicted_label_value = tk.StringVar()
+        predicted_label_value_for_value = ttk.Label(self, textvariable=self.predicted_label_value)
+        predicted_label_value_for_value.grid(column=2, columnspan=1, row=6) 
+        
+        
+        previous_button = ttk.Button(self, text="Previous", command=lambda: previous_run_result())
+        previous_button.grid(column=0, columnspan=1, row=10)
+                            
+        play_button = ttk.Button(self, text="Play", command=lambda: functions.play_clip(str(self.current_model_run_name_recording_id), float(self.current_model_run_name_start_time),self.current_model_run_name_duration))
+        play_button.grid(column=1, columnspan=1, row=10)
+                            
+        next_button = ttk.Button(self, text="Confirm Actual and move Next", command=lambda: next_run_result())
+        next_button.grid(column=2, columnspan=1, row=10)
+        
+        
+        back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
+        back_to_home_button.grid(column=0, columnspan=1, row=15) 
+        
+
+        def confirm_actual():
+            print('self.actual_confirmed.get() ', self.actual_confirmed.get())
+            functions.update_model_run_result(self.current_model_run_name_ID, self.actual_confirmed.get())
+           
+        
+        def refresh_unique_model_run_names():
+            self.unique_model_run_names = functions.get_unique_model_run_names()
+            self.run_names_combo['values'] = self.unique_model_run_names  
+            
+        def get_run_result():    
+            self.run_result = functions.get_model_run_result(int(self.current_model_run_name_ID))   
+            self.current_model_run_result_array_pos = 0      
+            load_current_model_run_result() 
+      
+        def get_run_results():    
+            print('run_names_combo.get()', self.run_names_combo.get())        
+            self.run_results = functions.get_model_run_results(self.run_names_combo.get())
+            first_result = self.run_results[0]
+            self.current_model_run_name_ID = first_result[0]
+            print('self.current_model_run_name_ID ', self.current_model_run_name_ID)
+#             print(self.run_results)   
+                     
+            load_current_model_run_result() 
+#             get_run_result()
+            
+       
+
+        def next_run_result(): 
+            confirm_actual()           
+          
+            if self.current_model_run_result_array_pos < (len(self.run_results)) -1:
+#                 self.confirm_actual()
+                self.current_model_run_result_array_pos +=1
+                self.current_model_run_name_ID = self.run_results[self.current_model_run_result_array_pos][0]
+                load_current_model_run_result()
+             
+        def previous_run_result():
+            if self.current_model_run_result_array_pos > 0:
+                self.current_model_run_result_array_pos -=1
+                self.current_model_run_name_ID = self.run_results[self.current_model_run_result_array_pos][0]
+                load_current_model_run_result()
+                
+        def play_clip():
+            functions.play_clip(str(self.current_model_run_name_recording_id), float(self.current_model_run_name_start_time),self.current_model_run_name_duration)
+                     
+        def display_images():
+            self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram(self.current_model_run_name_recording_id, self.current_model_run_name_start_time, self.current_model_run_name_duration)
+            self.waveform_image = functions.get_single_waveform_image(self.current_model_run_name_recording_id, self.current_model_run_name_start_time, self.current_model_run_name_duration)            
+            
+            self.spectrogram_label.config(image=self.spectrogram_image)
+            self.waveform_label.config(image=self.waveform_image)
+            
+        def load_current_model_run_result():
+            
+
+            self.run_result = functions.get_model_run_result(int(self.current_model_run_name_ID))  
+
+            print('self.run_result', self.run_result)
+            
+            print('ID', self.run_result[0])
+            
+            self.current_model_run_name_recording_id = self.run_result[1]      
+            self.recording_id.set(self.current_model_run_name_recording_id)
+              
+            self.current_model_run_name_start_time = self.run_result[2]
+            self.start_time.set(self.current_model_run_name_start_time)
+            
+            self.current_model_run_name_duration = self.run_result[3]
+            self.current_model_run_name_duration = 0.7 # The original length of 1.5 is too long for a morepork  
+            
+            self.current_model_run_name_actual = self.run_result[4] 
+          
+            self.current_model_run_name_predicted = self.run_result[5]             
+            self.current_model_run_name_actual_confirmed = self.run_result[6] 
+
+            self.actual_label_value.set(self.current_model_run_name_actual)
+
+            
+            # Set the radio button
+            print('current_model_run_name_actual_confirmed', self.current_model_run_name_actual_confirmed)
+            if self.current_model_run_name_actual_confirmed == 'morepork - classic':
+                self.actual_confirmed.set('morepork - classic')
+            elif self.current_model_run_name_actual_confirmed == 'unknown':
+                self.actual_confirmed.set('unknown')
+            else:
+                self.actual_confirmed.set(self.current_model_run_name_actual)
+                
+#             print('current_model_run_name_predicted', self.current_model_run_name_predicted)
+#             if self.current_model_run_name_predicted == 'morepork':
+#                 self.predicted.set('morepork')
+#             elif self.current_model_run_name_predicted == 'unknown':
+#                 self.predicted.set('unknown')
+
+            self.predicted_label_value.set(self.current_model_run_name_predicted)
+
+            
+            
+            threading.Thread(target=play_clip(), args=(1,)).start()
+            threading.Thread(target=display_images(), args=(1,)).start()
+                                                                                
         
 app = Main_GUI()
 app.mainloop() 

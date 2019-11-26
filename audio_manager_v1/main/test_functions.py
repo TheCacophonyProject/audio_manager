@@ -29,10 +29,26 @@ import main.functions as functions
 
 # test_librosaFeatureExtraction()
 
-# gui_functions.test_insert_onset_into_database()
+# functions.test_insert_onset_into_database()
 
 # functions.create_onsets()
 
 # functions.test_get_onsets_stored_locally()
 
-functions.create_focused_mel_spectrogram_jps_using_onset_pairs()
+# functions.create_focused_mel_spectrogram_jps_using_onset_pairs()
+
+#functions.test_get_unique_recording_ids_that_have_been_tagged_with_this_tag_stored_locally()
+
+# functions.test_create_onsets_with_null_existing_tag()
+
+# functions.test_create_onsets_with_existing_tag()
+
+# functions.test_play_clip2()
+
+# functions.test_update_model_run_result()
+
+functions.test_get_model_run_result()
+
+
+
+

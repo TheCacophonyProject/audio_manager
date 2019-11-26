@@ -24,9 +24,10 @@ devices = '/api/v1/devices'
 #downloaded_recordings_folder = '/home/tim/Work/Cacophony/downloaded_recordings/all_recordings'
 
 base_folder = '/home/tim/Work/Cacophony'
-# downloaded_recordings_folder = 'downloaded_recordings/all_recordings' # All the recordings
-downloaded_recordings_folder = 'downloaded_recordings/temp_for_testing' # Use this if doing a test
+downloaded_recordings_folder = 'downloaded_recordings/all_recordings' # All the recordings
+# downloaded_recordings_folder = 'downloaded_recordings/temp_for_testing' # Use this if doing a test
 run_folder = 'Analysis_5' # Change this when doing a new analyis
+temp_folder = 'Temp'
 
 onset_pairs_folder = 'onset_pairs'
 mel_spectrograms_folder = 'mel_spectrograms'
@@ -39,7 +40,7 @@ list_of_tags_folder = 'list_of_tags'
 files_for_testing_folder = 'files_for_testing'
 tagged_recordings_folder = 'wavfiles'
 version = '5'
-squawk_duration_seconds = 0.7
+squawk_duration_seconds = 0.8
 
 #### End of Local File Structure Configuration
 
