@@ -360,8 +360,8 @@ class EvaluateWekaModelPage(tk.Frame):
         
         weka_instructions = "The Weka model was created using arff files.  You can now run the model against the same training arff files \
         and save the results in the database.  Because the training arff files contained the expected result, you will be able to look at \
-        individual instances to determine if the model got it correct.  You will be able to update the tag in the database with your new \
-        determination."
+individual instances to determine if the model got it correct.  Use the Evaluate Weka model Run Result page to do this"
+
         msg = tk.Message(self, text = weka_instructions)
         msg.config(bg='lightgreen', font=('times', 16), width=1200)
         msg.grid(column=0, columnspan=6, row=1)   
@@ -385,28 +385,28 @@ class EvaluateWekaModelPage(tk.Frame):
         evaluate_button = ttk.Button(self, text="Evaluate Model",
                             command=lambda: functions.process_arff_folder(base_folder.get(), run_folder.get(), arff_folder.get(), modelRunName.get())).grid(column=0, columnspan=1, row=7)
         
-        sqlite_instructions = "Once you have completed the previous step, use the separate 'DB Browser for SQLite' program to find interesting examples by using the 'Browse Data' tab in the 'model_run_result' table.\
-        For example, can filter the results, by typing unknown in the actual column filter, and morepork in the predictedByModel column filter.\
-        Then enter the enter recording id and start time in the fields below to play that clip"
-        msg = tk.Message(self, text = sqlite_instructions)
-        msg.config(bg='lightgreen', font=('times', 16), width=1200)
-        msg.grid(column=0, columnspan=6, row=8)   
-        
-        recording_id_label = ttk.Label(self, text="Recording ID (e.g. 240631").grid(column=0, columnspan=1, row=9)        
-        recording_id = StringVar(value='240631')
-        recording_id_entry = tk.Entry(self,  textvariable=recording_id, width=80).grid(column=1, columnspan=1,row=9)   
-        
-        start_time_label = ttk.Label(self, text="Start time (seconds) (e.g. 4.2").grid(column=0, columnspan=1, row=10)        
-        start_time = StringVar(value='4.2')
-        start_time_entry = tk.Entry(self,  textvariable=start_time, width=80).grid(column=1, columnspan=1,row=10) 
-        
-        duration_label = ttk.Label(self, text="Duration (seconds) e.g. 1.5").grid(column=0, columnspan=1, row=11)        
-        duration = StringVar(value='1.5')
-        duration_entry = tk.Entry(self,  textvariable=duration, width=80).grid(column=1, columnspan=1,row=11)  
-        
-        play_clip_button = ttk.Button(self, text="Play clip",
-                            command=lambda: functions.play_clip(recording_id.get(), start_time.get(), duration.get())).grid(column=0, columnspan=1, row=12)
-         
+#         sqlite_instructions = "Once you have completed the previous step, use the separate 'DB Browser for SQLite' program to find interesting examples by using the 'Browse Data' tab in the 'model_run_result' table.\
+#         For example, can filter the results, by typing unknown in the actual column filter, and morepork in the predictedByModel column filter.\
+#         Then enter the enter recording id and start time in the fields below to play that clip"
+#         msg = tk.Message(self, text = sqlite_instructions)
+#         msg.config(bg='lightgreen', font=('times', 16), width=1200)
+#         msg.grid(column=0, columnspan=6, row=8)   
+#         
+#         recording_id_label = ttk.Label(self, text="Recording ID (e.g. 240631").grid(column=0, columnspan=1, row=9)        
+#         recording_id = StringVar(value='240631')
+#         recording_id_entry = tk.Entry(self,  textvariable=recording_id, width=80).grid(column=1, columnspan=1,row=9)   
+#         
+#         start_time_label = ttk.Label(self, text="Start time (seconds) (e.g. 4.2").grid(column=0, columnspan=1, row=10)        
+#         start_time = StringVar(value='4.2')
+#         start_time_entry = tk.Entry(self,  textvariable=start_time, width=80).grid(column=1, columnspan=1,row=10) 
+#         
+#         duration_label = ttk.Label(self, text="Duration (seconds) e.g. 1.5").grid(column=0, columnspan=1, row=11)        
+#         duration = StringVar(value='1.5')
+#         duration_entry = tk.Entry(self,  textvariable=duration, width=80).grid(column=1, columnspan=1,row=11)  
+#         
+#         play_clip_button = ttk.Button(self, text="Play clip",
+#                             command=lambda: functions.play_clip(recording_id.get(), start_time.get(), duration.get())).grid(column=0, columnspan=1, row=12)
+#          
  
 
         back_to_home_button = ttk.Button(self, text="Back to Home",
@@ -455,7 +455,7 @@ class CreateSpectrogramsPage(tk.Frame):
         title_label.grid(column=0, columnspan=1, row=0)    
         
         onset_instructions = "Use this page to run the create spectrogram function that will create spectrograms  \
-        in the spectrogram folder"
+in the spectrogram folder"
         msg = tk.Message(self, text = onset_instructions)
         msg.config(bg='lightgreen', font=('times', 16), width=1200)
         msg.grid(column=0, columnspan=6, row=1)   
@@ -597,80 +597,114 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         
         if len(self.unique_model_run_names) > 0:
             self.run_names_combo.current(0)
-            self.run_names_combo.grid(column=1, columnspan=1,row=1)  
-        
-#         run_name.set('tim was here')
+            self.run_names_combo.grid(column=1, columnspan=1,row=1)         
+
             
         refresh_model_run_names_button = ttk.Button(self, text="Refresh Unique Model Run Names",command=lambda: refresh_unique_model_run_names())
-        refresh_model_run_names_button.grid(column=2, columnspan=1, row=1)         
+        refresh_model_run_names_button.grid(column=2, columnspan=1, row=1) 
         
-        load_run_results_button = ttk.Button(self, text="Load Run Results",command=lambda: get_run_results())
-        load_run_results_button.grid(column=0, columnspan=1, row=2)   
+        actual_filter_label = ttk.Label(self, text="Filter - Actual", font=LARGE_FONT)
+        actual_filter_label.grid(column=0, columnspan=1, row=2)        
+        self.actual_filter = tk.StringVar()
+        actual_filter_radio_button_none = ttk.Radiobutton(self,text='No Filter', variable=self.actual_filter, value='no filter')
+        actual_filter_radio_button_none.grid(column=0, columnspan=1, row=3)
+        actual_filter_radio_button_morepork_classic = ttk.Radiobutton(self,text='morepork_more-pork', variable=self.actual_filter, value='morepork_more-pork')
+        actual_filter_radio_button_morepork_classic.grid(column=0, columnspan=1, row=4)
+        actual_filter_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_filter, value='unknown')
+        actual_filter_radio_button_unknown.grid(column=0, columnspan=1, row=5) 
+        self.actual_filter.set('no filter')
         
-        recording_id_label = ttk.Label(self, text="Recording Id") 
-        recording_id_label.grid(column=0, columnspan=1, row=3)            
-        self.recording_id = StringVar(value='0000000')
-        self.recording_id_entry = tk.Entry(self,  textvariable=self.recording_id, width=30).grid(column=1, columnspan=1, row=3)
+        actual_confirmed_filter_label = ttk.Label(self, text="Filter - Actual Confirmed", font=LARGE_FONT)
+        actual_confirmed_filter_label.grid(column=1, columnspan=1, row=2)        
+        self.actual_confirmed_filter = tk.StringVar()
+        actual_confirmed_filter_radio_button_none = ttk.Radiobutton(self,text='No Filter', variable=self.actual_confirmed_filter, value='no filter')
+        actual_confirmed_filter_radio_button_none.grid(column=1, columnspan=1, row=3)
+        actual_confirmed_filter_radio_button_morepork_classic = ttk.Radiobutton(self,text='morepork_more-pork', variable=self.actual_confirmed_filter, value='morepork_more-pork')
+        actual_confirmed_filter_radio_button_morepork_classic.grid(column=1, columnspan=1, row=4)
+        actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_confirmed_filter, value='unknown')
+        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=5) 
+        self.actual_confirmed_filter.set('no filter')
+        
+        predicted_filter_label = ttk.Label(self, text="Filter - Predicted", font=LARGE_FONT)
+        predicted_filter_label.grid(column=2, columnspan=1, row=2)        
+        self.predicted_filter = tk.StringVar()
+        predicted_filter_radio_button_none = ttk.Radiobutton(self,text='No Filter', variable=self.predicted_filter, value='no filter')
+        predicted_filter_radio_button_none.grid(column=2, columnspan=1, row=3)
+        predicted_filter_radio_button_morepork_classic = ttk.Radiobutton(self,text='morepork_more-pork', variable=self.predicted_filter, value='morepork_more-pork')
+        predicted_filter_radio_button_morepork_classic.grid(column=2, columnspan=1, row=4)
+        predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.predicted_filter, value='unknown')
+        predicted_filter_radio_button_unknown.grid(column=2, columnspan=1, row=5) 
+        self.predicted_filter.set('no filter')        
+        
+        load_run_results_button = ttk.Button(self, text="Load Run Results using Filters",command=lambda: get_run_results())
+        load_run_results_button.grid(column=3, columnspan=1, row=3) 
+        
+        self.number_of_results_label_value = tk.StringVar()
+        number_of_results_label_for_value = ttk.Label(self, textvariable=self.number_of_results_label_value)
+        number_of_results_label_for_value.grid(column=3, columnspan=1, row=4)   
+        
+        self.recording_id_and_result_place_value = tk.StringVar()
+        recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value) 
+        recording_id_label.grid(column=0, columnspan=1, row=6) 
+        self.recording_id_and_result_place_value.set("Recording Id")
+                   
+#         self.recording_id = StringVar(value='0000000')
+#         self.recording_id_entry = tk.Entry(self,  textvariable=self.recording_id, width=30).grid(column=1, columnspan=1, row=6)
         
         start_time_label = ttk.Label(self, text="Start Time")
-        start_time_label.grid(column=2, columnspan=1, row=3)        
+        start_time_label.grid(column=2, columnspan=1, row=6)        
         self.start_time = StringVar(value='0.0')
-        self.start_time_entry = tk.Entry(self,  textvariable=self.start_time, width=30).grid(column=3, columnspan=1,row=3)
+        self.start_time_entry = tk.Entry(self,  textvariable=self.start_time, width=30).grid(column=3, columnspan=1,row=6)
         
         
         self.spectrogram_label = ttk.Label(self, image=None)
-        self.spectrogram_label.grid(column=0, columnspan=1, row=4)
+        self.spectrogram_label.grid(column=0, columnspan=1, row=7)
         
         self.waveform_label = ttk.Label(self, image=None)
-        self.waveform_label.grid(column=1, columnspan=1, row=4)        
+        self.waveform_label.grid(column=1, columnspan=1, row=7)        
         
         actual_label = ttk.Label(self, text="Actual", font=LARGE_FONT)
-        actual_label.grid(column=0, columnspan=1, row=5) 
+        actual_label.grid(column=0, columnspan=1, row=8) 
         
         self.actual_label_value = tk.StringVar()
         actual_label_for_value = ttk.Label(self, textvariable=self.actual_label_value)
-        actual_label_for_value.grid(column=0, columnspan=1, row=6) 
-#         self.actual_label_value.set('tim was here')
+        actual_label_for_value.grid(column=0, columnspan=1, row=9)         
         
-        actual_label_confirmed = ttk.Label(self, text="Actual Confirmed (On first view, it will be Actual - select to change and save)")
-        actual_label_confirmed.grid(column=1, columnspan=1, row=5) 
+        actual_label_confirmed = ttk.Label(self, text="Actual Confirmed", font=LARGE_FONT)
+        actual_label_confirmed.grid(column=1, columnspan=1, row=8)
+        actual_label_confirmed2 = ttk.Label(self, text="(The default is the same as Actual - select to change and save)")
+        actual_label_confirmed2.grid(column=1, columnspan=1, row=9) 
         
         self.actual_confirmed = tk.StringVar()
-#         self.actual.set('')
-        actual_confirmed_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork-classic', variable=self.actual_confirmed, value='morepork - classic',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_morepork_classic.grid(column=1, columnspan=1, row=6)   
+
+        actual_confirmed_radio_button_morepork_classic = ttk.Radiobutton(self,text='morepork_more-pork', variable=self.actual_confirmed, value='morepork_more-pork',command=lambda: confirm_actual())
+        actual_confirmed_radio_button_morepork_classic.grid(column=1, columnspan=1, row=10)   
                       
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_confirmed, value='unknown',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=7)   
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=11)   
         
        
-        predicted_label = ttk.Label(self, text="Predicted", font=LARGE_FONT)
-        predicted_label.grid(column=2, columnspan=1, row=5) 
-        
-#         self.predicted = tk.StringVar()
-#         predicted_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork-classic', variable=self.predicted, value='morepork - classic')
-#         predicted_radio_button_morepork_classic.grid(column=2, columnspan=1, row=6)   
-#                       
-#         predicted_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.predicted, value='unknown')
-#         predicted_radio_button_unknown.grid(column=2, columnspan=1, row=7) 
+        predicted_label = ttk.Label(self, text="Predicted (by last model run)", font=LARGE_FONT)
+        predicted_label.grid(column=2, columnspan=1, row=8)         
+
         
         self.predicted_label_value = tk.StringVar()
         predicted_label_value_for_value = ttk.Label(self, textvariable=self.predicted_label_value)
-        predicted_label_value_for_value.grid(column=2, columnspan=1, row=6) 
+        predicted_label_value_for_value.grid(column=2, columnspan=1, row=9) 
         
         
         previous_button = ttk.Button(self, text="Previous", command=lambda: previous_run_result())
-        previous_button.grid(column=0, columnspan=1, row=10)
+        previous_button.grid(column=0, columnspan=1, row=15)
                             
-        play_button = ttk.Button(self, text="Play", command=lambda: functions.play_clip(str(self.current_model_run_name_recording_id), float(self.current_model_run_name_start_time),self.current_model_run_name_duration))
-        play_button.grid(column=1, columnspan=1, row=10)
+        play_button = ttk.Button(self, text="Play Again", command=lambda: functions.play_clip(str(self.current_model_run_name_recording_id), float(self.current_model_run_name_start_time),self.current_model_run_name_duration))
+        play_button.grid(column=1, columnspan=1, row=15)
                             
         next_button = ttk.Button(self, text="Confirm Actual and move Next", command=lambda: next_run_result())
-        next_button.grid(column=2, columnspan=1, row=10)
+        next_button.grid(column=2, columnspan=1, row=15)
         
         
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=15) 
+        back_to_home_button.grid(column=0, columnspan=1, row=20) 
         
 
         def confirm_actual():
@@ -688,14 +722,20 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             load_current_model_run_result() 
       
         def get_run_results():    
-            print('run_names_combo.get()', self.run_names_combo.get())        
-            self.run_results = functions.get_model_run_results(self.run_names_combo.get())
-            first_result = self.run_results[0]
-            self.current_model_run_name_ID = first_result[0]
-            print('self.current_model_run_name_ID ', self.current_model_run_name_ID)
+            print('run_names_combo.get()', self.run_names_combo.get())   
+            print('Actual Filter', self.actual_filter.get())   
+            print('Predicted Filter', self.predicted_filter.get())        
+            self.run_results = functions.get_model_run_results(self.run_names_combo.get(), self.actual_filter.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get())
+            number_of_results_returned = len(self.run_results)
+            print('number_of_results_returned ', number_of_results_returned)
+            self.number_of_results_label_value.set("Number of results: " + str(number_of_results_returned))
+            if number_of_results_returned > 0:
+                first_result = self.run_results[0]
+                self.current_model_run_name_ID = first_result[0]
+                print('self.current_model_run_name_ID ', self.current_model_run_name_ID)
 #             print(self.run_results)   
                      
-            load_current_model_run_result() 
+                load_current_model_run_result() 
 #             get_run_result()
             
        
@@ -735,7 +775,8 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             print('ID', self.run_result[0])
             
             self.current_model_run_name_recording_id = self.run_result[1]      
-            self.recording_id.set(self.current_model_run_name_recording_id)
+            
+            self.recording_id_and_result_place_value.set("Recording Id: " + str(self.current_model_run_name_recording_id) + " Result: " + str(self.current_model_run_result_array_pos))
               
             self.current_model_run_name_start_time = self.run_result[2]
             self.start_time.set(self.current_model_run_name_start_time)
@@ -753,8 +794,8 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             
             # Set the radio button
             print('current_model_run_name_actual_confirmed', self.current_model_run_name_actual_confirmed)
-            if self.current_model_run_name_actual_confirmed == 'morepork - classic':
-                self.actual_confirmed.set('morepork - classic')
+            if self.current_model_run_name_actual_confirmed == 'morepork_more-pork':
+                self.actual_confirmed.set('morepork_more-pork')
             elif self.current_model_run_name_actual_confirmed == 'unknown':
                 self.actual_confirmed.set('unknown')
             else:

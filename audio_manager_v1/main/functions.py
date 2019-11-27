@@ -642,6 +642,42 @@ def test_get_onsets_stored_locally():
     onsets = get_onsets_stored_locally()
     for onset in onsets:
         print(onset) 
+        
+def get_model_run_results(modelRunName, actualFilter, actualConfirmedFilter, predictedFilter):        
+    cur = get_database_connection().cursor()
+    
+    if actualConfirmedFilter == 'no filter':
+    
+        if actualFilter == 'no filter' and predictedFilter == 'no filter':
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? ORDER BY recording_id", (modelRunName,)) 
+        elif actualFilter != 'no filter' and predictedFilter == 'no filter':
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? ORDER BY recording_id", (modelRunName, actualFilter)) 
+        elif actualFilter == 'no filter' and predictedFilter != 'no filter':
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND predictedByModel = ? ORDER BY recording_id", (modelRunName, predictedFilter)) 
+        else:
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND predictedByModel = ? ORDER BY recording_id", (modelRunName, actualFilter, predictedFilter))
+    else: 
+        if actualFilter == 'no filter' and predictedFilter == 'no filter':
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? ORDER BY recording_id", (modelRunName, actualConfirmedFilter)) 
+        elif actualFilter != 'no filter' and predictedFilter == 'no filter':
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? ORDER BY recording_id", (modelRunName, actualFilter, actualConfirmedFilter)) 
+        elif actualFilter == 'no filter' and predictedFilter != 'no filter':
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id", (modelRunName, actualConfirmedFilter, predictedFilter)) 
+        else:
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id", (modelRunName, actualFilter, actualConfirmedFilter, predictedFilter)) 
+    
+    rows = cur.fetchall()
+    return rows 
+
+def get_model_run_result(database_ID):        
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT ID, recording_id, startTime, duration, actual, predictedByModel, actual_confirmed FROM model_run_result WHERE ID = ?", (database_ID,)) 
+    rows = cur.fetchall()
+    return rows[0] 
+
+def test_get_model_run_result():
+    result = get_model_run_result(163)
+    print('result', result)
     
 def scan_local_folder_for_recordings_not_in_local_db_and_update(device_name, device_super_name):
     recordings_folder = getRecordingsFolder()
@@ -704,6 +740,20 @@ def update_local_tags_with_version():
 def test_update_local_tags_with_version():
     update_local_tags_with_version()
     
+def update_model_run_result(ID, actual_confirmed):
+    # This is probably only used the once to modify intial rows to indicate they are from my first morepork tagging of Hammond Park
+    cur = get_database_connection().cursor()
+   
+    sql = ''' UPDATE model_run_result
+              SET actual_confirmed = ?               
+              WHERE ID = ?'''
+    cur = get_database_connection().cursor()
+    cur.execute(sql, (actual_confirmed, ID))
+    
+    get_database_connection().commit()      
+
+def test_update_model_run_result():    
+    update_model_run_result(17, 'tim was here')
 
     
 # def create_clips(device_super_name, what, version, clips_ouput_folder):
@@ -1056,14 +1106,14 @@ def play_clip(recording_id, start_time, duration):
 #     duration = 2
 #     audio_in_path = getRecordingsFolder() + '/218113.m4a'
 #     audio_out_path = '/home/tim/Temp/temp2.wav'
-    audio_out_path = base_folder + '/' + run_folder + '/' + 'temp.wav'
+    audio_out_path = base_folder + '/' + temp_folder + '/' + 'temp.wav'
     print('audio_out_path ', audio_out_path)
     y, sr = librosa.load(audio_in_path, sr=None) 
     y_amplified = np.int16(y/np.max(np.abs(y)) * 32767)
     y_amplified_start = sr * start_time
-    y_amplified_end = (sr * start_time) + (sr * duration * 5)
+    y_amplified_end = (sr * start_time) + (sr * duration)
     y_amplified_to_play = y_amplified[int(y_amplified_start):int(y_amplified_end)]
-    y_to_play = y[int(y_amplified_start):int(y_amplified_end)]
+#     y_to_play = y[int(y_amplified_start):int(y_amplified_end)]
 #     sf.write(audio_out_path, y_to_play, sr, 'PCM_24')
     sf.write(audio_out_path, y_amplified_to_play, sr)
 #     os.system("aplay " + audio_out_path + " -N")
@@ -1183,79 +1233,6 @@ def test_append_data_to_arff_file():
     append_data_to_arff_file(output_path_filename, data)
         
 
-    
-# #https://dsp.stackexchange.com/questions/41184/high-pass-filter-in-python-scipy/41185#41185
-# def highpass_filter_with_parameters(y, sr, filter_stop_freq, filter_pass_freq ):
-#     filter_order = 1001
-# 
-#     # High-pass filter
-#     nyquist_rate = sr / 2.
-#     desired = (0, 0, 1, 1)
-#     bands = (0, filter_stop_freq, filter_pass_freq, nyquist_rate)
-#     filter_coefs = signal.firls(filter_order, bands, desired, nyq=nyquist_rate)
-#     
-#     # Apply high-pass filter
-#     filtered_audio = signal.filtfilt(filter_coefs, [1], y)
-#     return filtered_audio
-# 
-# # https://stackoverflow.com/questions/25191620/creating-lowpass-filter-in-scipy-understanding-methods-and-units
-# def butter_lowpass(cutoff, fs, order=5):
-#     nyq = 0.5 * fs
-#     normal_cutoff = cutoff / nyq
-#     b, a = butter(order, normal_cutoff, btype='low', analog=False)
-#     return b, a
-# 
-# def butter_lowpass_filter(data, cutoff, fs, order=5):
-#     b, a = butter_lowpass(cutoff, fs, order=order)
-#     y = lfilter(b, a, data)
-#     return y
-# 
-# def apply_lowpass_filter(y, sr):
-#     # Filter requirements.
-#     order = 6
-#    
-#     cutoff = 1000  # desired cutoff frequency of the filter, Hz
-#     
-#     y = butter_lowpass_filter(y, cutoff, sr, order)
-#     
-#     return y
-# def apply_band_pass_filter(y, sr):
-#     y = highpass_filter_with_parameters(y=y, sr=sr, filter_stop_freq=750, filter_pass_freq=800 )
-#     y = apply_lowpass_filter(y, sr)    
-#     return y
-
-# def extract_melspectrogram(audio_in):
-# #     y, sr = librosa.load(audio_in, res_type='kaiser_fast') 
-# #     y, sr = librosa.load(audio_in, mono=True, duration=30)
-#     y, sr = librosa.load(audio_in, mono=True, duration=3) 
-# #     y_filtered = apply_band_pass_filter(y, sr)
-# #     y = apply_band_pass_filter(y, sr)
-#     print(sr)
-#     print("\n")
-# #     print(y)
-# #     mel_spectrogram = librosa.feature.melspectrogram(y=y_filtered, sr=sr, fmin=100, fmax=2000)
-# #     mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr)
-# #     mel_spectrogram = librosa.feature.melspectrogram(y=y_filtered, sr=sr)
-# 
-# #     mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, fmin=500, fmax=1000)
-# #     mel_spectrogram_800_1000_freq = librosa.feature.melspectrogram(y=y_part, sr=sr, n_fft=int(sr/10), hop_length=int(sr/10), n_mels=10, fmin=800,fmax=1000)
-#     mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, n_fft=int(sr/10), hop_length=int(sr/10), n_mels=10, fmin=600,fmax=1000)
-#     print("mel_spectrogram \n")
-#     print(mel_spectrogram.shape)
-#     np.set_printoptions(threshold=np.inf)
-#     print(mel_spectrogram)
-#     
-#    
-# #     librosa.display.specshow(mel_spectrogram, x_axis='time', y_axis='mel', sr=sr,fmax=2000)
-#     librosa.display.specshow(mel_spectrogram, x_axis='time', y_axis='mel')
-#     plt.colorbar(format='%+2.0f dB')
-#     plt.title('Mel-frequency spectrogram')
-#     plt.tight_layout()
-#     plt.show()
-    
-# def test_extract_melspectrogram():
-#     audio_in = "/home/tim/Work/Cacophony/Audio_Analysis/temp/235980.m4a"
-#     extract_melspectrogram(audio_in)   
 
 
 def fingerprint():
@@ -1283,24 +1260,12 @@ def featureExtraction():
 def test_featureExtraction():
     featureExtraction()
     
-# def pyAudioAnalysisFeatureExtraction():
-#     audio_in = "/home/tim/Work/Cacophony/Audio_Analysis/temp/235980.m4a"
-#     y, sr = librosa.load(audio_in, mono=True, duration=3) 
-#     F, f_names = audioFeatureExtraction.stFeatureExtraction(y, sr, 0.050*sr, 0.025*sr);
-#     print(f_names)
-#     print(F[1])
-#     
-#     mt_features, st_features, mid_feature_names = audioFeatureExtraction.mtFeatureExtraction(y, ar, mt_win, mt_step, st_win, st_step)
-#     
-# def test_pyAudioAnalysisFeatureExtraction():
-#     pyAudioAnalysisFeatureExtraction()
+
     
 def librosaFeatureExtraction():
     audio_in = "/home/tim/Work/Cacophony/Audio_Analysis/temp/235980.m4a"
     y, sr = librosa.load(audio_in, mono=True) 
-#     tempo, beats = librosa.beat.beat_track(y=y, sr=sr, units="time")
-#     print(tempo)
-#     print(beats)    
+
     S = np.abs(librosa.stft(y))
     comps, acts = librosa.decompose.decompose(S, n_components=1)
     np.set_printoptions(threshold=np.inf)
@@ -1382,13 +1347,7 @@ def highpass_filter_with_parameters(y, sr, filter_stop_freq, filter_pass_freq ):
   filtered_audio = signal.filtfilt(filter_coefs, [1], y)
   return filtered_audio
     
-# def test_lowpass_filter():
-#     filename = '153003.m4a'
-#     audio_in_path = './' + parameters.downloaded_recordings_folder + '/' + str(filename) 
-#     y, sr = librosa.load(audio_in_path, sr=None)
-#     plot_mel_scaled_power_spectrogram (y, sr)
-#     y = apply_lowpass_filter(y, sr)
-#     plot_mel_scaled_power_spectrogram (y, sr)
+
     
 def apply_band_pass_filter(y, sr):
 #    y = highpass_filter(y, sr)
@@ -1654,6 +1613,9 @@ def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, 
         print(e, '\n')
         print('Error processing onset ', onset)
         
+
+    
+        
 def get_single_waveform_image(recording_id, start_time_seconds, duration_seconds):
 
     mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + mel_spectrograms_folder 
@@ -1692,45 +1654,69 @@ def get_single_waveform_image(recording_id, start_time_seconds, duration_seconds
     except Exception as e:
         print(e, '\n')
         print('Error processing onset ', onset)
+        
+def test_get_single_waveform_image():
+    image_out = get_single_waveform_image('161943', 1.0, 0.7)
+    print('image_out ', image_out)
                 
 def get_image(image_name_path): 
-#     image_name_path = base_folder + '/' +
+
         
     image = Image.open(image_name_path)
     [imageSizeWidth, imageSizeHeight] = image.size
     image = image.resize((int(imageSizeWidth/2),int(imageSizeHeight/2)), Image.ANTIALIAS)
     spectrogram_image = ImageTk.PhotoImage(image)
     return spectrogram_image
-# def load_onsets(onset_version):
-#     print('version ', version)
-# #     onsets = get_onsets_stored_locally():
-#     return 'tttttttt'
-    
+
 
 
 def play_array(recording_id, start_time, duration):
     audio_in_path = getRecordingsFolder() + '/' + recording_id + '.m4a'
     audio_out_path = '/home/tim/Temp/temp.wav'
-#     audio_in_path = '/home/tim/Temp/dog.wav'
+
     print('audio_in_path ', audio_in_path)
-#     playsound(audio_in_path)
-#     song = AudioSegment.from_wav(audio_in_path)
-#     play(song)
+
     os.system("play " + audio_out_path)
 
-   
-#     y, sr = librosa.load(audio_in_path, sr=None) 
-#     print(y)
-#     print('sr ', sr)
-#     sd.default.samplerate = sr
-#     sd.play(y)
-    
-    
 
 def test_play_array():
     play_array("161943", "1", "2.2")
+    
+def get_unique_model_run_names():   
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT DISTINCT modelRunName FROM model_run_result") 
+    rows = cur.fetchall()  
+    
+    unique_model_run_names = []
+    for row in rows:
+        unique_model_run_names.append(row[0])
         
-
+    return unique_model_run_names  
+    
+        
+def change_morepork_in_db():
+    cur = get_database_connection().cursor()
+    
+    
+def update_morepork_name():
+    # This is probably only used the once to modify intial rows to indicate they are from my first morepork tagging of Hammond Park
+    cur = get_database_connection().cursor()
+#     cur.execute("select ID from model_run_result WHERE actual = morepork")
+    cur.execute("SELECT ID FROM model_run_result WHERE predictedByModel = ?", ('morepork',)) 
+ 
+    rows = cur.fetchall()     
+ 
+    for row in rows:              
+        ID =  row[0] 
+        print('ID ', ID) 
+        sql = ''' UPDATE model_run_result
+                  SET predictedByModel = ?               
+                  WHERE ID = ?'''
+        cur = get_database_connection().cursor()
+        cur.execute(sql, ('morepork_more-pork', ID))
+    
+    get_database_connection().commit()    
+    
 
 
 
