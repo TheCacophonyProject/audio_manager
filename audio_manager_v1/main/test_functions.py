@@ -47,7 +47,11 @@ import main.functions as functions
 
 # functions.test_update_model_run_result()
 
-functions.test_get_model_run_result()
+# functions.test_get_model_run_result()
+
+# functions.test_get_arff_for_single_focused_mel_spectrogram()
+
+functions.update_morepork_name()
 
 
 
