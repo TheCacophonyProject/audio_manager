@@ -10,24 +10,31 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.json.JSONObject;
+import weka.classifiers.trees.LMT;
+import weka.core.Instance;
+import weka.core.Instances;
+import weka.core.converters.ConverterUtils.DataSource;
 
 //import org.apache.commons.io.Fr
 
 
-import weka.*;
-import weka.classifiers.trees.LMT;
-import weka.core.converters.ConverterUtils.DataSource;
-import weka.core.Instance;
-import weka.core.Instances;
+//import weka.*;
+//import weka.classifiers.trees.LMT;
+//import weka.core.converters.ConverterUtils.DataSource;
+//import weka.core.Instance;
+//import weka.core.Instances;
 
 public class Run {
 	// https://www.youtube.com/watch?v=6o19TPn181g
 	// https://www.youtube.com/watch?v=fh4ouoKs8H0&list=PLea0WJq13cnBVfsPVNyRAus2NK-KhCuzJ&index=14
 
 	public static void main(String[] args) throws Exception {
+		System.out.println("Working Directory = " + System.getProperty("user.dir"));
 			
-		String modelLocation = "model.model";	
-		String arffFileToEvaluate = "input.arff";
+//		String modelLocation = "model.model";	
+		String modelLocation = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs/2019_11_28_1/Model created from previous run/model.model";
+//		String arffFileToEvaluate = "input.arff";
+		String arffFileToEvaluate = "images.arff";
 		LMT lmtModel = (LMT) weka.core.SerializationHelper.read(modelLocation);
 		
 		DataSource unknownSource = new DataSource(arffFileToEvaluate);

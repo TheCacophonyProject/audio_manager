@@ -1,4 +1,4 @@
-import main.parameters
+import main.parameters as parameters
 from main.parameters import *
 
 import sqlite3
@@ -241,7 +241,7 @@ def get_ids_of_recordings_to_download_using_deviceId(deviceId, offset):
 
 def get_device_id_using_device_name(device_name):
     user_token = get_cacophony_user_token()
-    url = server_endpoint + devices
+    url = server_endpoint + devices_endpoint
       
     headers = {'Authorization': user_token}  
 
@@ -646,22 +646,35 @@ def test_get_onsets_stored_locally():
 def get_model_run_results(modelRunName, actualFilter, actualConfirmedFilter, predictedFilter):        
     cur = get_database_connection().cursor()
     
-    if actualConfirmedFilter == 'no filter':
+    if actualConfirmedFilter == 'not-used':
     
-        if actualFilter == 'no filter' and predictedFilter == 'no filter':
+        if actualFilter == 'not-used' and predictedFilter == 'not-used':
             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? ORDER BY recording_id", (modelRunName,)) 
-        elif actualFilter != 'no filter' and predictedFilter == 'no filter':
+        elif actualFilter != 'not-used' and predictedFilter == 'not-used':
             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? ORDER BY recording_id", (modelRunName, actualFilter)) 
-        elif actualFilter == 'no filter' and predictedFilter != 'no filter':
+        elif actualFilter == 'not-used' and predictedFilter != 'not-used':
             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND predictedByModel = ? ORDER BY recording_id", (modelRunName, predictedFilter)) 
         else:
             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND predictedByModel = ? ORDER BY recording_id", (modelRunName, actualFilter, predictedFilter))
+            
+    elif actualConfirmedFilter == 'IS NULL':
+    
+        if actualFilter == 'not-used' and predictedFilter == 'not-used':
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL ORDER BY recording_id", (modelRunName, )) 
+        elif actualFilter != 'not-used' and predictedFilter == 'not-used':
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed IS NULL ORDER BY recording_id", (modelRunName, actualFilter)) 
+        elif actualFilter == 'not-used' and predictedFilter != 'not-used':
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id", (modelRunName, predictedFilter)) 
+        else:
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id", (modelRunName, actualFilter, predictedFilter)) 
+    
+            
     else: 
-        if actualFilter == 'no filter' and predictedFilter == 'no filter':
+        if actualFilter == 'not-used' and predictedFilter == 'not-used':
             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? ORDER BY recording_id", (modelRunName, actualConfirmedFilter)) 
-        elif actualFilter != 'no filter' and predictedFilter == 'no filter':
+        elif actualFilter != 'not-used' and predictedFilter == 'not-used':
             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? ORDER BY recording_id", (modelRunName, actualFilter, actualConfirmedFilter)) 
-        elif actualFilter == 'no filter' and predictedFilter != 'no filter':
+        elif actualFilter == 'not-used' and predictedFilter != 'not-used':
             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id", (modelRunName, actualConfirmedFilter, predictedFilter)) 
         else:
             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id", (modelRunName, actualFilter, actualConfirmedFilter, predictedFilter)) 
@@ -991,28 +1004,96 @@ def run_model(model_folder):
     # https://stackoverflow.com/questions/1996518/retrieving-the-output-of-subprocess-call
 
     os.chdir(model_folder)  
-    command = ['java', '-jar', 'run.jar', 'shell=True']    
+#     command = ['java', '-jar', 'run.jar', 'shell=True']
+    command = ['java', '--add-opens=java.base/java.lang=ALL-UNNAMED', '-jar', 'run.jar', 'shell=True']     
     
     result = run(command, stdout=PIPE, stderr=PIPE, text=True)
+#     print('result ', result)
+#     print('result.returncode ', result.returncode
+          
+    
+          
+          
 #     if result.returncode == 0:
-#         return result.stdout
+#         if result.stdout == 0:
+#             return 'morepork_more-pork'
+#         else:
+#             return 'unknown'
 #     else:
-#         return result.stderr
+#         return 'error'
+    
     return result
+#     if result == 0:
+#         return 'morepork_more-pork'
+#     else
+#         return 'unknown'
 
 
 def test_run_model():
     base_folder = '/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs'
-    run_folder = '2019_09_17_1'
-    model_folder = base_folder + '/' + run_folder + '/model_run'
+    run_folder = '2019_11_28_1'
+    model_folder = base_folder + '/' + run_folder + '/exported_jars'
     
     result = run_model(model_folder)
     if result.returncode == 0:
         print(result.stdout)
     else:
         print(result.stderr)
+#     print('result ', result)
     
-#     print(run_model(model_folder) )   
+def classify_onsets_using_weka_model():
+#     model_folder = base_folder + '/' + run_folder + '/' + exported_jars_folder
+    model_folder = base_folder + '/' + run_folder + '/' + weka_model_folder
+    
+    # Need to check if run.jar is there, otherwise run.jar will break later on
+    weka_run_jar_filename_path = model_folder + '/' + weka_run_jar_filename        
+    if not os.path.isfile(weka_run_jar_filename_path):
+        print(weka_run_jar_filename, " is missing") 
+        return 
+    
+    # Need to check arff file is there, otherwise run.jar will break later on
+    arff_filename_path = model_folder + '/' + weka_input_arff_filename        
+    if not os.path.isfile(arff_filename_path):
+        print(weka_input_arff_filename, " is missing") 
+        return  
+    
+     # Need to check model file is there, otherwise run.jar will break later on
+    weka_model_filename_path = model_folder + '/' + weka_model_filename        
+    if not os.path.isfile(weka_model_filename_path):
+        print(weka_model_filename_path, " is missing") 
+        return    
+
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT recording_id, start_time_seconds, duration_seconds FROM onsets") 
+    onsets = cur.fetchall()  
+    number_of_onsets = len(onsets)
+    count = 0
+    for onset in onsets:
+        count += 1
+        print('Processing onset', count, ' of ', number_of_onsets)
+        print('onset', onset)
+        recording_id = onset[0]
+        start_time_seconds = onset[1]
+        duration_seconds = onset[2]
+        create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds)
+        
+        result = run_model(model_folder)
+        if result.returncode == 0:
+            print(result.stdout)
+            if (int(result.stdout) == 0):
+                predicted = 'morepork_more-pork'
+                print('It is predicted to be a morepork\n')
+                insert_model_run_result_into_database(parameters.model_run_name, recording_id, start_time_seconds, duration_seconds, None, predicted)
+            else:
+                predicted = 'unknown'
+                print('It is predicted to be unknown\n')
+                insert_model_run_result_into_database(parameters.model_run_name, recording_id, start_time_seconds, duration_seconds, None, predicted)
+        
+        else:
+            print(result.stderr)
+
+            
+    
     
 def process_arff_folder(base_folder, run_folder, arff_files, modelRunName):
     folder_to_process = base_folder + '/' + run_folder + '/' + arff_files
@@ -1118,6 +1199,10 @@ def play_clip(recording_id, start_time, duration):
     sf.write(audio_out_path, y_amplified_to_play, sr)
 #     os.system("aplay " + audio_out_path + " -N")
     os.system("aplay " + audio_out_path + " &")
+    
+def test_play_clip():
+    play_clip('171696', 20.7, 0.8)
+    
     
 # def test_play_clip2():
 #     audio_in_path = getRecordingsFolder() + '/218113.m4a'
@@ -1280,6 +1365,8 @@ def create_onsets(existing_tag_type):
     print("create_onsets")
     if existing_tag_type is None:
         create_onsets_in_local_db_using_recordings_folder()
+    elif not existing_tag_type:
+        create_onsets_in_local_db_using_recordings_folder()
     else:
         create_onsets_in_local_db_using_existing_tag_type(existing_tag_type)
         
@@ -1376,35 +1463,59 @@ def create_onsets_in_local_db_using_existing_tag_type(existing_tag_type):
     
     
 def create_onsets_in_local_db_using_recordings_folder():
+    
+    # First need to find out what recordings have previously been used to create onsets - as we don't want to repeat
+    
+    cur = get_database_connection().cursor()
+
+    
     recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
     total_number_of_files = len(os.listdir(recordings_folder_with_path))
-    total_onset_pairs_including_more_than_20 = 0
-    total_onset_pairs_including_not_including_more_20 = 0
+    total_onset_pairs_including_more_than_40 = 0
+    total_onset_pairs_including_not_including_more_40 = 0
+    
+    
     
     with os.scandir(recordings_folder_with_path) as entries:
         count = 0
-        for entry in entries:           
-            print(entry.name)
-            if entry.is_file():                  
-                filename = entry.name
-            else:
-                continue
-            
-            count+=1
-            print('Processing recording ', count, ' of ', total_number_of_files, ' recordings.')
-            count_of_onset_pairs_including_more_than_20, count_of_onset_pairs_including_not_including_more_20 = create_onsets_in_local_db(filename)
-            total_onset_pairs_including_more_than_20 += count_of_onset_pairs_including_more_than_20
-            total_onset_pairs_including_not_including_more_20 += count_of_onset_pairs_including_not_including_more_20
-            print('total_onset_pairs_including_more_than_20:', total_onset_pairs_including_more_than_20)
-            print('total_onset_pairs_including_not_including_more_20:', total_onset_pairs_including_not_including_more_20, '\n')
+        for entry in entries:   
+            try:        
+                print(entry.name)
+                if entry.is_file():                  
+                    filename = entry.name
+                else:
+                    continue
+                 
+                count+=1
+                print('Processing recording ', count, ' of ', total_number_of_files, ' recordings.')
+                recording_id = filename.split('.')[0]
+                
+                cur.execute("SELECT recording_id FROM onsets WHERE recording_id = ?", (recording_id,)) 
+               
+                result = cur.fetchall() 
+    #             print('result ', result)
+                if result:
+                    print('recording_id' , recording_id, ' has been used')
+                    continue
+    #             else:
+    #                 print('recording_id' , recording_id, ' has NOT been used')
+                
+                count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 = create_onsets_in_local_db(filename)
+                total_onset_pairs_including_more_than_40 += count_of_onset_pairs_including_more_than_40
+                total_onset_pairs_including_not_including_more_40 += count_of_onset_pairs_including_not_including_more_40
+                print('total_onset_pairs_including_more_than_40:', total_onset_pairs_including_more_than_40)
+                print('total_onset_pairs_including_not_including_more_40:', total_onset_pairs_including_not_including_more_40, '\n')
+            except Exception as e:
+                print(e, '\n')
+                print('Error processing file ', filename)
     
     
 def create_onsets_in_local_db(filename): 
     try:
         recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
         
-        count_of_onset_pairs_including_more_than_20 = 0
-        count_of_onset_pairs_including_not_including_more_20 = 0
+        count_of_onset_pairs_including_more_than_40 = 0
+        count_of_onset_pairs_including_not_including_more_40 = 0
         
         audio_in_path = recordings_folder_with_path + "/" + filename
         
@@ -1415,12 +1526,12 @@ def create_onsets_in_local_db(filename):
         #print('paired_squawks_sec', paired_squawks_sec)
         number_of_onsets = len(onsets)
         if not number_of_onsets == 0:
-            if number_of_onsets > 20:
-                count_of_onset_pairs_including_more_than_20 += number_of_onsets
+            if number_of_onsets > 40:
+                count_of_onset_pairs_including_more_than_40 += number_of_onsets
             else:                
                 
-                count_of_onset_pairs_including_more_than_20 += number_of_onsets
-                count_of_onset_pairs_including_not_including_more_20 += number_of_onsets                        
+                count_of_onset_pairs_including_more_than_40 += number_of_onsets
+                count_of_onset_pairs_including_not_including_more_40 += number_of_onsets                        
            
                 recording_id = filename.split('.')[0]  
 #                 print('recording_id', recording_id)
@@ -1429,7 +1540,7 @@ def create_onsets_in_local_db(filename):
                 
 #         print('count_of_onset_pairs_including_more_than_20 ', count_of_onset_pairs_including_more_than_20)
 #         print('count_of_onset_pairs_including_not_including_more_20 ', count_of_onset_pairs_including_not_including_more_20)
-        return count_of_onset_pairs_including_more_than_20, count_of_onset_pairs_including_not_including_more_20 
+        return count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 
 
     except Exception as e:
         print(e, '\n')
@@ -1575,17 +1686,119 @@ def create_focused_mel_spectrogram_jps_using_onset_pairs():
             print(e, '\n')
             print('Error processing onset ', onset)
 
+def create_spectrogram_jpg_files_for_next_model_run():
+    mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + spectrograms_for_model_creation_folder 
+    if not os.path.exists(mel_spectrograms_out_folder_path):
+        os.makedirs(mel_spectrograms_out_folder_path)
+        
+    # Also going to take this opportunity to create the model_run directory so it is available later in Weka for saving the model
+    weka_model_folder_path = base_folder + '/' + run_folder + '/' + weka_model_folder 
+    if not os.path.exists(weka_model_folder_path):
+        os.makedirs(weka_model_folder_path)
+  
+    cur = get_database_connection().cursor()
+#     cur.execute("SELECT DISTINCT actual_confirmed FROM model_run_result WHERE actual_confirmed IS NOT NULL") 
+          
+    count = 0
+    
+#     cur.execute("SELECT ID, recording_id, startTime, actual_confirmed FROM model_run_result WHERE actual_confirmed IS NOT NULL")
+    cur.execute("SELECT ID, recording_id, startTime, actual_confirmed FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NOT NULL", (model_run_name, ))  
+    rows = cur.fetchall()  
+    
+    for row in rows:
+        try:
+            print('Processing row ', count, ' of ', len(rows), ' rows.')
+            count+=1
+            print('row ', row)
+            recording_id = row[1] 
+            start_time_seconds = row[2]
+            actual_confirmed = row[3]       
+#             
+            audio_filename = str(recording_id) + '.m4a'
+            audio_in_path = base_folder  + '/' + downloaded_recordings_folder + '/' +  audio_filename 
+            image_out_name = actual_confirmed + '$' + str(recording_id) + '$' + str(start_time_seconds) + '.jpg'
+            print('image_out_name', image_out_name)           
+            
+            image_out_path = mel_spectrograms_out_folder_path + '/' + image_out_name
+             
+            y, sr = librosa.load(audio_in_path, sr=None) 
+             
+            start_time_seconds_float = float(start_time_seconds)            
+             
+            start_position_array = int(sr * start_time_seconds_float)              
+                        
+            end_position_array = start_position_array + int((sr * morepork_more_pork_call_duration))
+#                        
+            if end_position_array > y.shape[0]:
+                print('Clip would end after end of recording')
+                continue
+                 
+            y_part = y[start_position_array:end_position_array]  
+          
+            mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
+             
+            pylab.axis('off') # no axis
+            pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+            librosa.display.specshow(mel_spectrogram, cmap='binary') #https://matplotlib.org/examples/color/colormaps_reference.html
+            pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+            pylab.close()
+             
+        except Exception as e:
+            print(e, '\n')
+           
+            
+            
 def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, duration_seconds):
 
-    mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + mel_spectrograms_folder 
-    if not os.path.exists(mel_spectrograms_out_folder_path):
-        os.makedirs(mel_spectrograms_out_folder_path)         
+    temp_display_images_folder_path = base_folder + '/' + run_folder + '/' + temp_display_images_folder 
+    if not os.path.exists(temp_display_images_folder_path):
+        os.makedirs(temp_display_images_folder_path)         
 
     try:
         
         audio_filename = str(recording_id) + '.m4a'
         audio_in_path = base_folder + '/' + downloaded_recordings_folder + '/' +  audio_filename 
         image_out_name = 'temp_spectrogram.jpg'
+        print('image_out_name', image_out_name)           
+       
+        image_out_path = temp_display_images_folder_path + '/' + image_out_name
+        
+        y, sr = librosa.load(audio_in_path, sr=None)      
+               
+        start_time_seconds_float = float(start_time_seconds)            
+        
+        start_position_array = int(sr * start_time_seconds_float)              
+                   
+        end_position_array = start_position_array + int((sr * duration_seconds))                  
+                    
+        y_part = y[start_position_array:end_position_array]  
+        mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
+        
+        pylab.axis('off') # no axis
+        pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+        librosa.display.specshow(mel_spectrogram, cmap='binary') #https://matplotlib.org/examples/color/colormaps_reference.html
+        pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+        pylab.close()
+        
+        return get_image(image_out_path)
+        
+    except Exception as e:
+        print(e, '\n')
+        print('Error processing onset ', onset)
+        
+def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds):
+
+    mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + weka_model_folder + '/' + single_spectrogram_for_classification_folder 
+    if not os.path.exists(mel_spectrograms_out_folder_path):
+        os.makedirs(mel_spectrograms_out_folder_path)  
+        
+   
+
+    try:
+        
+        audio_filename = str(recording_id) + '.m4a'
+        audio_in_path = base_folder + '/' + downloaded_recordings_folder + '/' +  audio_filename 
+        image_out_name = 'input_image.jpg'
         print('image_out_name', image_out_name)           
        
         image_out_path = mel_spectrograms_out_folder_path + '/' + image_out_name
@@ -1618,9 +1831,9 @@ def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, 
         
 def get_single_waveform_image(recording_id, start_time_seconds, duration_seconds):
 
-    mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + mel_spectrograms_folder 
-    if not os.path.exists(mel_spectrograms_out_folder_path):
-        os.makedirs(mel_spectrograms_out_folder_path)         
+    temp_display_images_folder_path = base_folder + '/' + run_folder + '/' + temp_display_images_folder 
+    if not os.path.exists(temp_display_images_folder_path):
+        os.makedirs(temp_display_images_folder_path)         
 
     try:
         
@@ -1629,7 +1842,7 @@ def get_single_waveform_image(recording_id, start_time_seconds, duration_seconds
         image_out_name = 'temp_waveform.jpg'
         print('image_out_name', image_out_name)           
        
-        image_out_path = mel_spectrograms_out_folder_path + '/' + image_out_name
+        image_out_path = temp_display_images_folder_path + '/' + image_out_name
         
         y, sr = librosa.load(audio_in_path, sr=None) 
         
@@ -1704,7 +1917,8 @@ def update_morepork_name():
 #     cur.execute("select ID from model_run_result WHERE actual = morepork")
     cur.execute("SELECT ID FROM model_run_result WHERE predictedByModel = ?", ('morepork',)) 
  
-    rows = cur.fetchall()     
+    rows = cur.fetchall()
+         
  
     for row in rows:              
         ID =  row[0] 
@@ -1718,7 +1932,117 @@ def update_morepork_name():
     get_database_connection().commit()    
     
 
-
+# def create_arff_file_for_weka_image_filter_input(image_base_folder, relation_name, class_names):
+def create_arff_file_for_weka_image_filter_input():
+#     image_base_folder = base_folder + '/' + run_folder + '/' + arff_folder_for_next_run
+    run_folder_path = base_folder + '/' + run_folder
+    
+#     relation_name = 'morepork_more-pork_vs_unknown'
+#     class_names = 'morepork_more-pork,unknown'
+    
+#     if not os.path.exists(image_base_folder):
+#         os.makedirs(image_base_folder)
+    
+    
+#     f= open(image_base_folder + '/' + "images.arff","w+")
+    f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+")
+    f.write('@relation ' + relation_name + '\r\n')
+    f.write('@attribute filename string' + '\r\n')
+    f.write('@attribute class {' + class_names +'}' + '\r\n')
+    f.write('@data' + '\r\n')    
+    
+    spectrograms_for_model_creation_folder_path = run_folder_path + '/' + spectrograms_for_model_creation_folder    
+   
+    for filename in os.listdir(spectrograms_for_model_creation_folder_path):
+        filename_parts = filename.split('$')
+        class_type = filename_parts[0]
+        print('image', filename)
+        print('class_type', class_type)
+        f.write(filename +',' + class_type + '\r\n')      
+        
+    f.close()
+    
+# def test_create_arff_file_for_weka_image_filter_input():
+#     image_base_folder = base_folder + '/' + run_folder + '/' + arff_folder_for_next_run
+#     
+#     relation_name = 'morepork_more-pork_vs_unknown'
+#     class_names = 'morepork_more-pork,unknown'
+#     create_arff_file_for_weka_image_filter_input(image_base_folder, relation_name, class_names)
+    
+    
+    
+def update_latest_model_run_results_with_previous_confirmed():
+    
+    # First find rows that have been confirmed
+    # Then using recording_id and startTime these confirmed rows, find unconfirmed rows with the same recording_id and startTime
+    # Then update these unconfirmed rows with the confirmed value e.g. could be morepork_morepork or unknown
+    
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT recording_id, startTime, actual_confirmed FROM model_run_result WHERE actual_confirmed IS NOT NULL") 
+ 
+    confirmed_rows = cur.fetchall()
+    
+    for confirmed_row in confirmed_rows:
+       
+        recording_id = confirmed_row[0]
+        startTime = confirmed_row[1]
+        actual_confirmed = confirmed_row[2]
+        
+        print(recording_id, ' ', startTime, ' ', actual_confirmed)
+        
+        cur2 = get_database_connection().cursor()
+        cur2.execute("SELECT ID, recording_id, startTime, actual_confirmed FROM model_run_result WHERE actual_confirmed IS NULL AND recording_id = ? AND startTime = ?", (recording_id,startTime))  
+        matching_unconfirmed_rows = cur2.fetchall()
+        if len(matching_unconfirmed_rows) > 0:
+            print('Match Found')
+            for matching_unconfirmed_row in matching_unconfirmed_rows:
+                matching_unconfirmed_row_ID = matching_unconfirmed_row[0]
+                matching_unconfirmed_row_recording_id = matching_unconfirmed_row[1]
+                print('Updating actual_confirmed value in recording_id ', matching_unconfirmed_row_recording_id, ' to be ', actual_confirmed)
+                
+                cur3 = get_database_connection().cursor()
+                cur3.execute("UPDATE model_run_result SET actual_confirmed = ? WHERE ID = ?", (actual_confirmed, matching_unconfirmed_row_ID))  
+                
+                get_database_connection().commit()
+       
+                
+            
+def create_folders_for_next_run():
+    next_run_folder = parameters.base_folder + '/' + run_folder
+    if not os.path.exists(next_run_folder):
+        os.makedirs(next_run_folder) 
+        
+#     next_exported_jars_folder = parameters.base_folder + '/' + run_folder + '/' + exported_jars_folder  
+#     if not os.path.exists(next_exported_jars_folder):
+#         os.makedirs(next_exported_jars_folder) 
+        
+#     next_arff_folder_for_next_run = parameters.base_folder + '/' + run_folder + '/' + arff_folder_for_next_run  
+#     if not os.path.exists(next_arff_folder_for_next_run):
+#         os.makedirs(next_arff_folder_for_next_run) 
+#         
+    
+        
+    weka_model_folder_path = parameters.base_folder + '/' + run_folder + '/' + weka_model_folder  
+    if not os.path.exists(weka_model_folder_path):
+        os.makedirs(weka_model_folder_path) 
+        
+    spectrograms_for_model_creation_folder_path = parameters.base_folder + '/' + run_folder + '/' + spectrograms_for_model_creation_folder  
+    if not os.path.exists(spectrograms_for_model_creation_folder_path):
+        os.makedirs(spectrograms_for_model_creation_folder_path) 
+        
+    single_spectrogram_for_classification_folder_path = parameters.base_folder + '/' + run_folder + '/' + weka_model_folder + '/' + single_spectrogram_for_classification_folder  
+    if not os.path.exists(single_spectrogram_for_classification_folder_path):
+        os.makedirs(single_spectrogram_for_classification_folder_path) 
+        
+        
+           
+        
+            
+    
+    
+    
+    
+    
 
 
 

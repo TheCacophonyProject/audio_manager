@@ -15,7 +15,7 @@ get_a_token_for_getting_a_recording_url = '/api/v1/recordings/' # should change 
 get_a_recording = '/api/v1/signedUrl'
 tags_url = '/api/v1/tags'
 groups = '/api/v1/groups'
-devices = '/api/v1/devices'
+devices_endpoint = '/api/v1/devices'
 
 #### End of Cacophony Server Configuration
 
@@ -26,11 +26,28 @@ devices = '/api/v1/devices'
 base_folder = '/home/tim/Work/Cacophony'
 downloaded_recordings_folder = 'downloaded_recordings/all_recordings' # All the recordings
 # downloaded_recordings_folder = 'downloaded_recordings/temp_for_testing' # Use this if doing a test
-run_folder = 'Analysis_5' # Change this when doing a new analyis
+#run_folder = 'Analysis_5' # Change this when doing a new analyis
+# model_run_name='2019_11_28_1'
+model_run_name='2019_12_03_1'
+run_folder = 'Audio_Analysis/audio_classifier_runs' + '/' + model_run_name
+# exported_jars_folder = 'exported_jars'
+single_spectrogram_for_classification_folder = 'images'
 temp_folder = 'Temp'
+# arff_folder_for_next_run = 'arff_folder_for_next_run'
+
+relation_name = 'morepork_more-pork_vs_unknown'
+class_names = 'morepork_more-pork,unknown'
+
+weka_model_folder = 'weka_model'
+weka_model_filename = "model.model"
+weka_input_arff_filename = "input.arff"
+weka_run_jar_filename = "run.jar"
 
 onset_pairs_folder = 'onset_pairs'
-mel_spectrograms_folder = 'mel_spectrograms'
+# mel_spectrograms_folder = 'mel_spectrograms'
+temp_display_images_folder = 'temp_display_images'
+spectrograms_for_model_creation_folder = 'spectrograms_for_model_creation'
+arff_file_for_weka_model_creation = 'arff_file_for_weka_model_creation.arff'
 filtered_recordings_folder = 'filtered_recordings'
 squawks_from_filtered_recordings = 'squawks_from_filtered_recordings'
 basic_information_on_recordings_with_audio_tags_folder = 'basic_information_on_recordings_with_audio_tags'
@@ -41,6 +58,7 @@ files_for_testing_folder = 'files_for_testing'
 tagged_recordings_folder = 'wavfiles'
 version = '5'
 squawk_duration_seconds = 0.8
+morepork_more_pork_call_duration = 0.9
 
 #### End of Local File Structure Configuration
 

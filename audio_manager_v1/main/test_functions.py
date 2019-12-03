@@ -43,7 +43,7 @@ import main.functions as functions
 
 # functions.test_create_onsets_with_existing_tag()
 
-# functions.test_play_clip2()
+# functions.test_play_clip()
 
 # functions.test_update_model_run_result()
 
@@ -51,8 +51,17 @@ import main.functions as functions
 
 # functions.test_get_arff_for_single_focused_mel_spectrogram()
 
-functions.update_morepork_name()
+# functions.update_morepork_name()
 
+# functions.create_spectrogram_jpg_files_for_next_model_run()
 
+# functions.test_create_arff_file_for_weka_image_filter_input()
+functions.create_arff_file_for_weka_image_filter_input()
+
+# functions.test_run_model()
+
+# functions.analyse_onsets_using_weka_model()
+
+# functions.update_latest_model_run_results_with_previous_confirmed()
 
 

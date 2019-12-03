@@ -44,6 +44,7 @@ get_a_recording = '/api/v1/signedUrl'
 tags_url = '/api/v1/tags'
 groups = '/api/v1/groups'
 devices = '/api/v1/devices'
+arff_file_to_process = '/arff_file_to_process'
 
 
 
