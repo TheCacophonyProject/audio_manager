@@ -17,6 +17,10 @@ import weka.filters.unsupervised.instance.imagefilter.EdgeHistogramFilter;
 import weka.classifiers.trees.LMT;
 
 public class Main4 {
+	// https://www.youtube.com/watch?v=6o19TPn181g
+	// https://www.youtube.com/watch?v=fh4ouoKs8H0&list=PLea0WJq13cnBVfsPVNyRAus2NK-KhCuzJ&index=14
+	// https://www.youtube.com/watch?v=wSB5oByt7ko
+
 
 	static String modelName = "model.model";
 	static String imageDirectory = "./images";
@@ -24,10 +28,7 @@ public class Main4 {
 
 	public static void main(String[] args) throws Exception {
 		// see https://weka.8497.n7.nabble.com/warnings-td42935.html for suppressing warning when running from command line
-		// ie use https://weka.8497.n7.nabble.com/warnings-td42935.html
-
-//		imageDirectory = "./images";
-
+		
 		DataSource source = new DataSource("input.arff");																						
 		Instances data = source.getDataSet();
 
@@ -45,7 +46,7 @@ public class Main4 {
 		Instances testDataset = Filter.useFilter(dataWithAttributes, remove);
 
 		// Run through model
-		// https://www.youtube.com/watch?v=wSB5oByt7ko
+		
 		testDataset.setClassIndex(testDataset.numAttributes() - 1);
 
 		Instance newInst = testDataset.instance(0);

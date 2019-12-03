@@ -1,0 +1,5 @@
+@relation morepork_more-pork_vs_unknown
+@attribute filename string
+@attribute class {morepork_more-pork,unknown}
+@data
+input_image.jpg,unknown

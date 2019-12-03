@@ -17,10 +17,8 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import *
 from tkinter.ttk import *
-# from tkinter import ttk
-# from tkinter import *
 
-import os
+# import os
 from PIL import ImageTk,Image 
 
 import main.functions as functions
@@ -28,8 +26,6 @@ import main.parameters as parameters
 from main.parameters import *
 
 import threading
-
-
 LARGE_FONT= ("Verdana", 12)
 
 
@@ -50,13 +46,10 @@ class Main_GUI(tk.Tk):
        
         self.frames = {}
         
-#         for F in (HomePage, SettingsPage, RecordingsPage, TaggingPage, ClipsPage, ArffPage, CreateWekaModelPage, EvaluateWekaModelPage, CreateOnsetsPage):
-        for F in (HomePage, RecordingsPage, TaggingPage, ClipsPage, ArffPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage, CreateTagsFromOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage):
-        
-        
+        for F in (HomePage, RecordingsPage, TaggingPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage, CreateTagsFromOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage):
+      
             frame = F(container, self)
-            self.frames[F] = frame
-            
+            self.frames[F] = frame            
             frame.grid(row=0, column=0, sticky="nsew")
         
         self.show_frame(HomePage)
@@ -77,12 +70,9 @@ class HomePage(tk.Frame):
         label.pack(pady=10,padx=10)
         
         instuctions_text = "Work through the steps for normal model iteration."
-
         instuctions_msg = tk.Message(self, text = instuctions_text)
         instuctions_msg.config(width=600)
         instuctions_msg.pack(pady=10,padx=10)
-        
-        
         
         recordings_button = ttk.Button(self, text="Step 1: Recordings (Do not always use)",
                             command=lambda: controller.show_frame(RecordingsPage))        
@@ -115,23 +105,13 @@ class HomePage(tk.Frame):
         createTagsOnCacophonyServerFromModelRunPage_button.pack()
         
         other_or_no_longer_used_label = tk.Label(self, text="Functions below here probably no longer needed")
-        other_or_no_longer_used_label.pack(pady=10,padx=10)
-        
-        clips_button = ttk.Button(self, text="Create audio clips",
-                            command=lambda: controller.show_frame(ClipsPage))        
-        clips_button.pack()
-        
-        arff_button = ttk.Button(self, text="Create Weka arff files",
-                            command=lambda: controller.show_frame(ArffPage))        
-        arff_button.pack()
-        
+        other_or_no_longer_used_label.pack(pady=10,padx=10)       
+              
+               
         createTagsFromOnsetsPage_button = ttk.Button(self, text="Create Tags from Onsets",
                             command=lambda: controller.show_frame(CreateTagsFromOnsetsPage))         
         createTagsFromOnsetsPage_button.pack()
-        
-        
-        
-        
+                
         
         createSpectrogramsPage_button = ttk.Button(self, text="Create Spectrograms",
                             command=lambda: controller.show_frame(CreateSpectrogramsPage))        
@@ -140,42 +120,7 @@ class HomePage(tk.Frame):
         tagging_button = ttk.Button(self, text="Tagging",
                             command=lambda: controller.show_frame(TaggingPage))        
         tagging_button.pack()
-        
-        
-        
-# class SettingsPage(tk.Frame):
-#     
-#     def __init__(self, parent, controller):
-#         tk.Frame.__init__(self, parent)
-#         
-# 
-# #         recordings_Folder = gui_functions.getRecordingsFolderWithOutHome()
-# #         recordings_Folder = functions.getRecordingsFolderWithOutHome()
-#         
-#         
-#         # https://www.python-course.eu/tkinter_entry_widgets.php        
-#         tk.Label(self,text="Recordings location").grid(column=0, columnspan=1, row=0)
-# 
-#         #https://stackoverflow.com/questions/16373887/how-to-set-the-text-value-content-of-an-entry-widget-using-a-button-in-tkinter
-#         entryText = tk.StringVar()
-#         recordings_folder_entry = tk.Entry(self, textvariable=entryText, width=80)
-#         recordings_folder_entry.grid(row=0, column=1, columnspan=1)
-#         entryText.set( recordings_Folder )
-#         
-# 
-#         tk.Button(self, 
-#                   text='Save', command=lambda: functions.saveSettings(recordings_folder_entry.get())).grid(row=6, 
-#                                                                column=0, 
-#                                                                sticky=tk.W, 
-#                                                                pady=4)     
-# 
-#         tk.Button(self, 
-#                   text='Back to Home', 
-#                   command=lambda: controller.show_frame(HomePage)).grid(row=6, 
-#                                             column=1, 
-#                                             sticky=tk.W, 
-#                                             pady=4)                  
-
+     
         
 class TaggingPage(tk.Frame):
     
@@ -198,8 +143,8 @@ class RecordingsPage(tk.Frame):
     
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        
         title_label = ttk.Label(self, text="Recordings Page", font=LARGE_FONT)
-#         label.pack(pady=10,padx=10)
         title_label.grid(column=0, columnspan=1, row=0)
         
         device_name_label = ttk.Label(self, text="Device name e.g fpF7B9AFNn6hvfVgdrJB")
@@ -224,17 +169,13 @@ class RecordingsPage(tk.Frame):
         
         load_recordings_from_local_folder_instructions = "Useful if you have the recordings on a usb drive - not for downloading from server"
 
-
         msg1 = tk.Message(self, text = load_recordings_from_local_folder_instructions)
         msg1.config(width=600)
         msg1.grid(column=1, columnspan=2, row=3)  
 
- 
-
         get_recording_information_from_server_button = ttk.Button(self, text="Get Recording Information for recordings imported from local file system",
                             command=lambda: functions.update_recording_information_for_all_local_database_recordings())
         get_recording_information_from_server_button.grid(column=0, columnspan=1, row=4)
-              
         
         get_new_recordings_from_server_button = ttk.Button(self, text="Get New Recordings From Server",
                             command=lambda: functions.get_recordings_from_server(device_name.get(), device_super_name.get()))
@@ -246,17 +187,12 @@ class RecordingsPage(tk.Frame):
         msg2 = tk.Message(self, text = get_new_recordings_from_server_instructions)
         msg2.config(width=600)
         msg2.grid(column=1, columnspan=2, row=5)   
-                                               
         
         scan_local_folder_for_recordings_not_in_local_db_and_update_button = ttk.Button(self, text="Scan recordings folder for recordings not in local db and update",
                             command=lambda: functions.scan_local_folder_for_recordings_not_in_local_db_and_update(device_name.get(), device_super_name.get()))
         scan_local_folder_for_recordings_not_in_local_db_and_update_button.grid(column=0, columnspan=1, row=6)
-                                                
-#         scan_label = ttk.Label(self, text="If you do NOT know the device name or super name enter unknown in the fields. The device name will be updated automatically")                   
-#         scan_label.grid(column=1, columnspan=1, row=6)  
-        
+       
         scan_recordings_folder_instructions = "If you do NOT know the device name or super name enter unknown in the fields. The device name will be updated automatically"
-
 
         msg3 = tk.Message(self, text = scan_recordings_folder_instructions)
         msg3.config(width=600)
@@ -264,117 +200,12 @@ class RecordingsPage(tk.Frame):
         
         back_to_home_button = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=7)
-                            
-                   
-        
-class ClipsPage(tk.Frame):
-    
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        
-        unique_tags = functions.get_unique_whats_from_local_db()
-                
-        title_label = ttk.Label(self, text="Clips Page", font=LARGE_FONT)
-        title_label.grid(column=0, columnspan=1, row=0)        
-              
-        device_super_name_label = ttk.Label(self, text="Device Super name (e.g. Hammond Park)").grid(column=0, columnspan=1, row=1)        
-        device_super_name = StringVar(value='Hammond Park')
-        device_super_name_entry = tk.Entry(self,  textvariable=device_super_name, width=30).grid(column=1, columnspan=1,row=1)
-        
-        what_label = ttk.Label(self, text="What (e.g. more pork - classic)").grid(column=0, columnspan=1, row=2)      
-                                    
-        what = StringVar()
-        what_combo = ttk.Combobox(self, textvariable=what, values=unique_tags)
-        if len(unique_tags) > 0:
-            what_combo.current(0)
-            what_combo.grid(column=1, columnspan=1,row=2) 
-                
-                
-        version_label = ttk.Label(self, text="Versions (e.g. morepork_base)").grid(column=0, columnspan=1, row=3)        
-        version = StringVar(value='morepork_base')
-        version_entry = tk.Entry(self,  textvariable=version, width=30).grid(column=1, columnspan=1,row=3)
-        
-        
-        run_base_folder_label = ttk.Label(self, text="Base folder for output (e.g. /home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs)").grid(column=0, columnspan=1, row=4)           
-        run_base_folder_folder = StringVar(value='/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs')
-        run_base_folder_entry = tk.Entry(self,  textvariable=run_base_folder_folder, width=110).grid(column=1, columnspan=1,row=4) 
-        
-        run_folder_label = ttk.Label(self, text="Output (sub)folder where clips will be created (e.g. 2019_09_17_1).").grid(column=0, columnspan=1, row=5)    
-        run_folder = StringVar(value='2019_09_17_1')
-        run_folder_entry = tk.Entry(self,  textvariable=run_folder, width=110).grid(column=1, columnspan=1,row=5) 
-        
-        
-#         create_clips_button = ttk.Button(self, text="Create Clips",
-#                             command=lambda: gui_functions.create_clips(device_super_name.get(), what.get(), version.get(), run_base_folder_folder.get(),run_folder.get() )).grid(column=0, columnspan=2, row=6)
-# 
-        create_clips_button = ttk.Button(self, text="Create Clips",
-                            command=lambda: functions.create_clips(device_super_name.get(), what.get(), version.get(), run_base_folder_folder.get(),run_folder.get() )).grid(column=0, columnspan=2, row=6)
+        back_to_home_button.grid(column=0, columnspan=1, row=7)               
 
-                 
-        back_to_home_button = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=7)
-
-                
-class ArffPage(tk.Frame):
-    
-    
-    def choose_clip_folder(self, base_folder, run_folder):
-        choosen_folder = functions.choose_clip_folder(base_folder, run_folder)
-        # https://stackoverflow.com/questions/50227577/update-label-in-tkinter-when-calling-function
-        self.clip_folder.set(choosen_folder)
-        
-    
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        self.clip_folder = StringVar(value='')
-        openSmile_config_files = functions.getOpenSmileConfigFiles()
-        arffTemplateFiles = functions.getArffTemplateFiles()
-             
-        title_label = ttk.Label(self, text="Create Arff Page", font=LARGE_FONT)
-        title_label.grid(column=0, columnspan=1, row=0)    
-        
-        base_folder_label = ttk.Label(self, text="Base folder (e.g. /home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs)").grid(column=0, columnspan=1, row=1)        
-        base_folder = StringVar(value='/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs')
-        base_folder_entry = tk.Entry(self,  textvariable=base_folder, width=80).grid(column=1, columnspan=1,row=1)    
-        
-        run_folder_label = ttk.Label(self, text="Run folder (e.g. 2019_09_17_1)").grid(column=0, columnspan=1, row=2)    
-        run_folder = StringVar(value='2019_09_17_1')
-        run_folder_entry = tk.Entry(self,  textvariable=run_folder, width=80).grid(column=1, columnspan=1,row=2) 
-        
-
-        choose_clip_folder_button = ttk.Button(self, text="Choose clip folder",
-                            command=lambda: self.choose_clip_folder(base_folder.get(), run_folder.get())).grid(column=0, columnspan=1, row=3)
-        self.clip_folder_entry = tk.Entry(self,  textvariable=self.clip_folder, width=80).grid(column=1, columnspan=1,row=3)  
-
-          
-        openSmile_config_file_label = ttk.Label(self, text="Name of openSMILE configuration file (e.g. morepork_unknown_label_morpork.conf)").grid(column=0, columnspan=1, row=4)      
-        openSmile_config_file = StringVar()
-        openSmile_config_combo = ttk.Combobox(self, textvariable=openSmile_config_file, values=openSmile_config_files, width=80)
-        openSmile_config_combo.current(0)
-        openSmile_config_combo.grid(column=1, columnspan=2,row=4) 
-        
-        create_arff_button = ttk.Button(self, text="Create Individual Arff Files for each audio file",
-                            command=lambda: functions.create_arff_file(base_folder.get(), run_folder.get(), self.clip_folder.get(), openSmile_config_file.get())).grid(column=0, columnspan=1, row=5)
-          
-        arff_template_file_label = ttk.Label(self, text="Name of openSMILE template arff file (e.g. arff_template.mfcc.arff)").grid(column=0, columnspan=1, row=6)     
-        arff_template_file = StringVar()
-        arff_template_combo = ttk.Combobox(self, textvariable=arff_template_file, values=arffTemplateFiles, width=80)
-        arff_template_combo.current(0)
-        arff_template_combo.grid(column=1, columnspan=2,row=6)
-
-        
-        merge_arffs_button = ttk.Button(self, text="Merge Arffs",
-                            command=lambda: functions.merge_arffs(base_folder.get(), run_folder.get(), arff_template_file.get())).grid(column=0, columnspan=1, row=7)
-        
-        back_to_home_button = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(HomePage)).grid(column=0, columnspan=1, row=8)   
-                            
 class CreateWekaModelPage(tk.Frame):    
     
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-#         self.clip_folder = StringVar(value='')
         
         title_label = ttk.Label(self, text="Create a Weka model - using Weka https://www.cs.waikato.ac.nz/ml/weka/downloading.html", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)   
@@ -383,23 +214,6 @@ class CreateWekaModelPage(tk.Frame):
         msg1 = tk.Message(self, text = introduction_instructions)
         msg1.config(width=600)
         msg1.grid(column=0, columnspan=2, row=1)  
-       
-#         title_label = ttk.Label(self, text="Using Weka", font=LARGE_FONT)
-#         title_label.grid(column=0, columnspan=1, row=0)   
-#         
-#         weka_instructions = "To create a Weka model you will need to use the Weka program https://www.cs.waikato.ac.nz/ml/weka/downloading.html\n\
-# Once Weka has been installed, you can run it from a terminal; cd into the the weka directory (e.g. weka-3-8-3) enter the command: java -jar weka.jar\
-# We are using the image classification plug in as described in https://www.futurelearn.com/courses/advanced-data-mining-with-weka/0/steps/29486\
-# In Weka, open Explorer, open the merged arff file that you previously created and stored (e.g. at /home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs/mfcc_merge_morepork_unknown.arff)\
-# Change to the Classify tab, press the choose button and select the model type e.g. Trees LMT.\
-# Choose Cross validation, folds 10. Press the start button.\n\
-# When finished, right click on the result and choose 'Save Model (e.g. in ... audio_classifier_runs/2019-09-17-1/model_run/model) The file extension is automatically .model.\n\
-# You can now use this model in the next page"
-#         msg = tk.Message(self, text = weka_instructions)
-#         msg.config(bg='lightgreen', font=('times', 16), width=1200)
-#         msg.grid(column=0, columnspan=6, row=1) 
-        
-          
         
         create_spectrograms_instructions = "Press this button to create the spectrograms (from confirmed onsets) that will be used to train the next version/iteration of the model"
         create_spectrograms_msg = tk.Message(self, text = create_spectrograms_instructions)
@@ -456,27 +270,19 @@ Then click on the Box with the name of the Filter (EdgeHistogramFilter) and past
         using_weka_msg6.config(width=800)
         using_weka_msg6.grid(column=0, columnspan=2, row=10) 
         
-        
         back_to_home_button = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=15)                
         
 class ClassifyOnsetsUsingWekaModelPage(tk.Frame):
     
-    
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.clip_folder = StringVar(value='')
-        openSmile_config_files = functions.getOpenSmileConfigFiles()
-        arffTemplateFiles = functions.getArffTemplateFiles()
-             
+          
         title_label = ttk.Label(self, text="Classify Onsets Using Weka Model", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)    
         
-#         intro_text = "This page will guide you through the process of using a Weka model to analyse onsets."
-#         1) First create a new weka model using Weka, \n2) Using Eclipse/Java create a new run.jar file and save in a subfolder called exported_jars folder \
-# in this run folder.  \n3) In the exported-jars folder, put the input.arff, model.model and create a sub foler called images.  Python code will create spectrogram images (one at a time) called input_image.jpg in the images folder to be evaluated by the model."
-
         intro_msg = tk.Message(self, text = "This page will guide you through the process of using a Weka model to classify onsets.")
         intro_msg.config(bg='lightgreen', font=('times', 16), width=600)
         intro_msg.grid(column=0, columnspan=1, row=1)  
@@ -488,8 +294,6 @@ class ClassifyOnsetsUsingWekaModelPage(tk.Frame):
         
         create_folders_button = ttk.Button(self, text="Create folders",command=lambda: functions.create_folders_for_next_run())
         create_folders_button.grid(column=1, columnspan=1, row=2)
-        
-             
         
         model_setup1_instructions = "From the previous run, copy the following files into the " + weka_model_folder + " folder: " + weka_model_filename + ", " + weka_input_arff_filename + ", " + weka_run_jar_filename 
         model_setup1_msg = tk.Message(self, text = model_setup1_instructions)
@@ -539,12 +343,8 @@ class CreateOnsetsPage(tk.Frame):
         existing_tag_type_message = "Leave this box empty to create onsets from ALL recordings that haven't yet had an onset created from them.  OR enter the name of an existing tag type - onsets will only be created from recordings that already been tagged with this type"
         existing_tag_type_msg = tk.Message(self, text = existing_tag_type_message)
         existing_tag_type_msg.config(width=600)
-        existing_tag_type_msg.grid(column=0, columnspan=1, row=2)   
-        
-#         existing_tag_type_label = ttk.Label(self, text="Enter the name of an existing tag type - onsets will only be created from recordings that already been tagged with this type")
-#         existing_tag_type_label.grid(column=0, columnspan=1, row=2)      
-          
-#         existing_tag_type = StringVar(value='more pork - classic')
+        existing_tag_type_msg.grid(column=0, columnspan=1, row=2) 
+
         existing_tag_type = StringVar()
         existing_tag_type_entry = tk.Entry(self,  textvariable=existing_tag_type, width=30)   
         existing_tag_type_entry.grid(column=1, columnspan=1,row=2) 
@@ -619,9 +419,6 @@ class CreateTagsFromOnsetsPage(tk.Frame):
         
         self.waveform_label = ttk.Label(self, image=None)
         self.waveform_label.grid(column=1, columnspan=1, row=5)
-
-        
-        
         
         previous_button = ttk.Button(self, text="Previous", command=lambda: previous_onset())
         previous_button.grid(column=0, columnspan=1, row=6)
@@ -630,23 +427,20 @@ class CreateTagsFromOnsetsPage(tk.Frame):
         play_button.grid(column=1, columnspan=1, row=6)
                             
         next_button = ttk.Button(self, text="Next", command=lambda: next_onset())
-        next_button.grid(column=2, columnspan=1, row=6)
-                            
+        next_button.grid(column=2, columnspan=1, row=6)                           
                              
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=7)    
                             
         def get_onsets():            
             self.onsets = functions.get_onsets_stored_locally(onset_version.get())            
-            load_current_onset()          
-          
+            load_current_onset() 
             
         def next_onset():
             if self.current_onset_array_pos < (len(self.onsets)) -1:                        
                 self.current_onset_array_pos +=1
                 load_current_onset()
-#                 functions.play_clip(str(self.current_onset_recording_id), float(self.current_onset_start_time),self.current_onset_duration)
-                
+               
         def previous_onset():
             if self.current_onset_array_pos > 0:
                 self.current_onset_array_pos -=1
@@ -673,14 +467,9 @@ class CreateTagsFromOnsetsPage(tk.Frame):
             self.start_time.set(self.current_onset_start_time)
             
             self.current_onset_duration = current_onset[3] 
-            
-
-            
-            
+                        
             threading.Thread(target=play_clip(), args=(1,)).start()
-            threading.Thread(target=display_images(), args=(1,)).start()
-           
-         
+            threading.Thread(target=display_images(), args=(1,)).start()      
             
 class EvaluateWekaModelRunResultPage(tk.Frame):    
     
@@ -759,13 +548,10 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         recording_id_label.grid(column=0, columnspan=1, row=7) 
         self.recording_id_and_result_place_value.set("Recording Id")
                    
-
-        
         start_time_label = ttk.Label(self, text="Start Time")
         start_time_label.grid(column=2, columnspan=1, row=7)        
         self.start_time = StringVar(value='0.0')
         self.start_time_entry = tk.Entry(self,  textvariable=self.start_time, width=30).grid(column=3, columnspan=1,row=7)
-        
         
         self.spectrogram_label = ttk.Label(self, image=None)
         self.spectrogram_label.grid(column=0, columnspan=1, row=8)
@@ -791,17 +577,14 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         actual_confirmed_radio_button_morepork_classic.grid(column=1, columnspan=1, row=11)   
                       
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_confirmed, value='unknown',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=12)   
-        
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=12)  
        
         predicted_label = ttk.Label(self, text="Predicted (by last model run)", font=LARGE_FONT)
-        predicted_label.grid(column=2, columnspan=1, row=9)         
-
+        predicted_label.grid(column=2, columnspan=1, row=9)       
         
         self.predicted_label_value = tk.StringVar()
         predicted_label_value_for_value = ttk.Label(self, textvariable=self.predicted_label_value)
         predicted_label_value_for_value.grid(column=2, columnspan=1, row=10) 
-        
         
         previous_button = ttk.Button(self, text="Previous", command=lambda: previous_run_result())
         previous_button.grid(column=0, columnspan=1, row=15)
@@ -812,21 +595,15 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         next_button = ttk.Button(self, text="Confirm Actual and move Next", command=lambda: next_run_result())
         next_button.grid(column=2, columnspan=1, row=15)
         
-#         create_spectrograms_button = ttk.Button(self, text="Create Spectrograms for Next Run", command=lambda: create_spectrograms())
-#         create_spectrograms_button.grid(column=0, columnspan=1, row=16)
-        
-        
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=20) 
         
         def create_spectrograms():
             functions.create_spectrogram_jpg_files_for_next_model_run()
-        
 
         def confirm_actual():
             print('self.actual_confirmed.get() ', self.actual_confirmed.get())
             functions.update_model_run_result(self.current_model_run_name_ID, self.actual_confirmed.get())
-           
         
         def refresh_unique_model_run_names():
             self.unique_model_run_names = functions.get_unique_model_run_names()
@@ -848,19 +625,13 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             if number_of_results_returned > 0:
                 first_result = self.run_results[0]
                 self.current_model_run_name_ID = first_result[0]
-                print('self.current_model_run_name_ID ', self.current_model_run_name_ID)
-#             print(self.run_results)   
-                     
-                load_current_model_run_result() 
-#             get_run_result()
-            
-       
+                print('self.current_model_run_name_ID ', self.current_model_run_name_ID)                     
+                load_current_model_run_result()
 
         def next_run_result(): 
             confirm_actual()           
           
             if self.current_model_run_result_array_pos < (len(self.run_results)) -1:
-#                 self.confirm_actual()
                 self.current_model_run_result_array_pos +=1
                 self.current_model_run_name_ID = self.run_results[self.current_model_run_result_array_pos][0]
                 load_current_model_run_result()
@@ -882,7 +653,6 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             self.waveform_label.config(image=self.waveform_image)
             
         def load_current_model_run_result():
-            
 
             self.run_result = functions.get_model_run_result(int(self.current_model_run_name_ID))  
 
@@ -906,7 +676,6 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             self.current_model_run_name_actual_confirmed = self.run_result[6] 
 
             self.actual_label_value.set(self.current_model_run_name_actual)
-
             
             # Set the radio button
             print('current_model_run_name_actual_confirmed', self.current_model_run_name_actual_confirmed)
@@ -916,16 +685,8 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
                 self.actual_confirmed.set('unknown')
             else:
                 self.actual_confirmed.set(self.current_model_run_name_actual)
-                
-#             print('current_model_run_name_predicted', self.current_model_run_name_predicted)
-#             if self.current_model_run_name_predicted == 'morepork':
-#                 self.predicted.set('morepork')
-#             elif self.current_model_run_name_predicted == 'unknown':
-#                 self.predicted.set('unknown')
 
             self.predicted_label_value.set(self.current_model_run_name_predicted)
-
-            
             
             threading.Thread(target=play_clip(), args=(1,)).start()
             threading.Thread(target=display_images(), args=(1,)).start()
@@ -938,9 +699,7 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
                      
         title_label = ttk.Label(self, text="Create Tags On Cacophony Server / Still to do - will modify create from onsets page", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)    
-        
-        
-                                                                                
+                                                                               
         
 app = Main_GUI()
 app.mainloop() 

@@ -4,55 +4,44 @@ from main.parameters import *
 import sqlite3
 from sqlite3 import Error
 import requests
-import os
-import sys
+# import os
+# import sys
 import json
 from pathlib import Path
 from tkinter import filedialog
 from tkinter import *
-import re
-from scipy.io import wavfile
-import shutil
-import send2trash
-import sounddevice as sd
-from pydub import AudioSegment
-from pydub.playback import play
-import librosa
+# import re
+# from scipy.io import wavfile
+# import shutil
+# import send2trash
+# import sounddevice as sd
+# from pydub import AudioSegment
+# from pydub.playback import play
+# import librosa
 import os
 from scipy import signal
-from scipy.io import wavfile
+# from scipy.io import wavfile
 from scipy.signal import butter, lfilter, freqz
 import numpy as np
 from scipy.ndimage.filters import maximum_filter
 import pylab
 import librosa.display
-import shlex
-import glob
+# import shlex
+# import glob
 import soundfile as sf
-import subprocess
+# import subprocess
 from subprocess import PIPE, run
-from playsound import playsound
-from librosa.output import write_wav
+# from playsound import playsound
+# from librosa.output import write_wav
 from librosa import display, onset
-import matplotlib.pyplot as plt
-import acoustid
-import chromaprint
-from pyAudioAnalysis import audioBasicIO
-from pyAudioAnalysis import audioFeatureExtraction
-import pywt
-import shlex
+# import matplotlib.pyplot as plt
+# import acoustid
+# import chromaprint
+# from pyAudioAnalysis import audioBasicIO
+# from pyAudioAnalysis import audioFeatureExtraction
+# import pywt
+# import shlex
 from PIL import ImageTk,Image 
-
-
-
-
-#path to configs
-# sys.path.append('/home/jonah/Documents/opensmile-2.3.0/config/')
-sys.path.append('/home/tim/opensmile-2.3.0/config/')
-#path to input files
-search_path = '/home/tim/Work/Cacophony/opensmile_weka/TestAudioInput'
-#path to where we want the output
-arff_path = '/home/tim/Work/Cacophony/opensmile_weka/TestAudioOutput'
 
 
 db_file = "/home/tim/Work/Cacophony/eclipse-workspace/audio_manager_v1/audio_analysis_db2.db"
@@ -268,9 +257,6 @@ def get_cacophony_user_token():
     global cacophony_user_password 
     if cacophony_user_token:
         return cacophony_user_token
-
-#     if cacophony_user_token is not None:
-#         return cacophony_user_token
     
     print('About to get user_token from server')
     username = cacophony_user_name
@@ -358,12 +344,7 @@ def getRecordingsFolderWithOutHome():
     rows = cur.fetchall()   
  
     for row in rows:     
-        return row[0] 
-    
-def saveSettings(recordings_folder):
-    print('recordings_folder ', recordings_folder)
-    #https://stackoverflow.com/questions/16856647/sqlite3-programmingerror-incorrect-number-of-bindings-supplied-the-current-sta
-    update_recordings_folder(recordings_folder)
+        return row[0]     
         
 def update_recording_information_for_single_recording(recording_id):
     print('About to update recording information for recording ', recording_id)    
@@ -407,8 +388,6 @@ def update_recording_information_for_single_recording(recording_id):
     update_recording_in_database(recordingDateTime, relativeToDawn, relativeToDusk, duration, locationLat, locationLong, version, batteryLevel, phoneModel, androidApiLevel, deviceId, nightRecording, device_name, recording_id)
     print('Finished updating recording information for recording ', recording_id)
                
-def test_update_recording_information_for_single_recording():
-    update_recording_information_for_single_recording('291047')
     
 def update_recording_in_database(recordingDateTime, relativeToDawn, relativeToDusk, duration, locationLat, locationLong, version, batteryLevel, phoneModel,androidApiLevel, deviceId, nightRecording, device_name, recording_id):
     try:
@@ -436,9 +415,7 @@ def update_recording_in_database(recordingDateTime, relativeToDawn, relativeToDu
         print(e, '\n')
         print('\t\tUnable to insert recording ' + str(recording_id), '\n')
         
-def test_update_recording_in_database():
-    update_recording_in_database('2018-04-04T17:07:01.000Z', 3, 1, 2, -22.2, 178.1, '23b', 77, 'ZTE phone',7, 1234, 'true', 'grants shed3', 291047)
-      
+   
     
 def get_recording_information_for_a_single_recording(recording_id):
     user_token = get_cacophony_user_token()
@@ -455,12 +432,9 @@ def get_recording_information_for_a_single_recording(recording_id):
     
     return recording_data_for_single_recording     
 
-def test_get_recording_information_for_a_single_recording():
-    recording_data = get_recording_information_for_a_single_recording('197294')
-    print('recording_data is: ', recording_data)
+
 
 def update_recording_information_for_all_local_database_recordings():
-#     conn = get_database_connection()
     cur = get_database_connection().cursor()
     cur.execute("SELECT recording_id, recordingDateTime FROM recordings")
  
@@ -475,8 +449,7 @@ def update_recording_information_for_all_local_database_recordings():
             update_recording_information_for_single_recording(recording_id)
         print('Finished updating recording information')
     
-def test_update_recording_information_for_all_local_database_recordings():
-    update_recording_information_for_all_local_database_recordings()
+
 
 def get_audio_recordings_with_tags_information_from_server(user_token, recording_type, deviceId):
     print('Retrieving recordings basic information from Cacophony Server\n')
@@ -503,13 +476,7 @@ def get_audio_recordings_with_tags_information_from_server(user_token, recording
     
     return recordings   
 
-def test_get_audio_recordings_with_tags_information_from_server():
-    user_token = get_cacophony_user_token()
-    recording_type = 'audio'
-    deviceId = 379
-    recordings = get_audio_recordings_with_tags_information_from_server(user_token, recording_type, str(deviceId))
-    for recording in recordings:
-        print(recording, '\n')
+
 
 def get_and_store_tag_information_for_recording(recording_id, deviceId, device_name, device_super_name):
     single_recording_full_information = get_recording_information_for_a_single_recording(recording_id)
@@ -531,8 +498,7 @@ def get_and_store_tag_information_for_recording(recording_id, deviceId, device_n
         insert_tag_into_database(recording_id,server_Id, what, detail, confidence, startTime, duration, automatic, version, createdAt, tagger_username, deviceId, device_name, device_super_name)
     
     
-def test_get_and_store_tag_information_for_recording():
-    get_and_store_tag_information_for_recording(str(197294), 123)
+
     
 def insert_tag_into_database(recording_id,server_Id, what, detail, confidence, startTime, duration, automatic, version, createdAt, tagger_username, deviceId, device_name, device_super_name ):
     # Use this for tags that have been downloaded from the server
@@ -565,9 +531,7 @@ def insert_locally_created_tag_into_database(recording_id,what, detail, confiden
         print(e, '\n')
         print('\t\tUnable to insert tag ' + str(recording_id), '\n')   
        
-def test_insert_tag_into_database():
-    insert_tag_into_database(1,135940, 'bat', 'detail', 'confidence', 1.2, 2.5, 'automatic', 256, '2019-06-20T04:14:24.811Z', 'timhot', 'deviceId', 'device_name', 'device_super_name')
-    
+
 def check_if_tag_alredy_in_database(server_Id):
     cur = get_database_connection().cursor()
     cur.execute("SELECT server_Id FROM tags WHERE server_Id = ?", (server_Id,))
@@ -577,8 +541,7 @@ def check_if_tag_alredy_in_database(server_Id):
     else:
         return True
 
-def test_check_if_tag_alredy_in_database(): 
-    check_if_tag_alredy_in_database(135939)  
+
  
 def get_all_tags_for_all_devices_in_local_database():
     user_token = get_cacophony_user_token()
@@ -599,8 +562,7 @@ def get_all_tags_for_all_devices_in_local_database():
             get_and_store_tag_information_for_recording(str(recording_id), deviceId, device_name, device_super_name)
     print('Finished getting tags from server')
             
-def test_get_all_tags_for_all_devices_in_local_database():
-    get_all_tags_for_all_devices_in_local_database()            
+    
      
 def get_unique_devices_stored_locally():
     cur = get_database_connection().cursor()
@@ -615,16 +577,7 @@ def get_unique_recording_ids_that_have_been_tagged_with_this_tag_stored_locally(
     rows = cur.fetchall()
     return rows 
 
-def test_get_unique_recording_ids_that_have_been_tagged_with_this_tag_stored_locally():
-    recording_ids = get_unique_recording_ids_that_have_been_tagged_with_this_tag_stored_locally("more pork - classic")  
-    for recording_id in recording_ids:
-        print(recording_id)
-    
-     
-def test_get_unique_devices_stored_locally():
-    unique_devices = get_unique_devices_stored_locally()
-    for unique_device in unique_devices:
-        print(unique_device, '\n')
+
         
 def get_onsets_stored_locally(onset_version):
     global version
@@ -638,10 +591,7 @@ def get_onsets_stored_locally(onset_version):
     rows = cur.fetchall()
     return rows 
 
-def test_get_onsets_stored_locally():
-    onsets = get_onsets_stored_locally()
-    for onset in onsets:
-        print(onset) 
+
         
 def get_model_run_results(modelRunName, actualFilter, actualConfirmedFilter, predictedFilter):        
     cur = get_database_connection().cursor()
@@ -688,9 +638,7 @@ def get_model_run_result(database_ID):
     rows = cur.fetchall()
     return rows[0] 
 
-def test_get_model_run_result():
-    result = get_model_run_result(163)
-    print('result', result)
+
     
 def scan_local_folder_for_recordings_not_in_local_db_and_update(device_name, device_super_name):
     recordings_folder = getRecordingsFolder()
@@ -710,8 +658,7 @@ def scan_local_folder_for_recordings_not_in_local_db_and_update(device_name, dev
             # Now update this recording with information from server
             update_recording_information_for_single_recording(recording_id)
         
-def test_scan_local_folder_for_recordings_not_in_local_db_and_update():
-    scan_local_folder_for_recordings_not_in_local_db_and_update('grants shed')
+
            
 def create_tags_from_folder_of_unknown_images():
     # This will probably only get used to recreate the unknown tags from the unknown images - as I'm not sure where the text file of this is/exists
@@ -729,8 +676,7 @@ def create_tags_from_folder_of_unknown_images():
         insert_locally_created_tag_into_database(recording_id=recording_id, what='unknown', detail=None, confidence=None, startTime=startTimeSeconds, duration=1.5, createdAt='2019-06-20T05:39:28.391Z', tagger_username='timhot', deviceId=378, device_name='fpF7B9AFNn6hvfVgdrJB', device_super_name='Hammond Park')
     print('Finished creating unknown tags from image files')
     
-def test_create_tags_from_folder_of_unknown_images():
-    create_tags_from_folder_of_unknown_images()
+
     
 def update_local_tags_with_version():
     # This is probably only used the once to modify intial rows to indicate they are from my first morepork tagging of Hammond Park
@@ -750,8 +696,7 @@ def update_local_tags_with_version():
     
     get_database_connection().commit()    
     
-def test_update_local_tags_with_version():
-    update_local_tags_with_version()
+
     
 def update_model_run_result(ID, actual_confirmed):
     # This is probably only used the once to modify intial rows to indicate they are from my first morepork tagging of Hammond Park
@@ -765,50 +710,7 @@ def update_model_run_result(ID, actual_confirmed):
     
     get_database_connection().commit()      
 
-def test_update_model_run_result():    
-    update_model_run_result(17, 'tim was here')
 
-    
-# def create_clips(device_super_name, what, version, clips_ouput_folder):
-def create_clips(device_super_name, what, version, run_base_folder, run_folder):
-    print(device_super_name, what, version, run_base_folder, run_folder) 
-#     what_without_spaces = re.sub(' ', '', what)
-#     what_without_spaces_dashes = re.sub('-', '_', what_without_spaces) 
-#     clips_ouput_folder = run_base_folder + '/' + run_folder + '/' + 'audio_clips' + '/' + what_without_spaces_dashes
-# 
-#     
-#     sql = ''' SELECT recording_Id, startTime, duration FROM tags WHERE device_super_name=? AND what=? AND version=? '''          
-#     cur = get_database_connection().cursor()
-#     cur.execute(sql, (device_super_name, what, version,)) 
-#     rows = cur.fetchall()  
-#     
-#     count = 0
-#  
-#     for row in rows: 
-#         print('Creating clip ', count, ' of ', len(rows))
-#         recording_Id = row[0]
-#         start_time_seconds = row[1]
-#         duration_seconds = row[2]
-#         create_wav_clip(recording_Id, start_time_seconds, duration_seconds, clips_ouput_folder)   
-#         count = count + 1     
-    
-def create_wav_clip(recording_Id, start_time_seconds, duration_seconds, clips_ouput_folder):
-    print(recording_Id)
-    audio_in_path = getRecordingsFolder() + '/' + str(recording_Id) + '.m4a'
-#     audio_out_folder = getRecordingsFolder() + '/' + what
-    if not os.path.exists(clips_ouput_folder):
-#         os.mkdir(clips_ouput_folder)
-        os.makedirs(clips_ouput_folder)    
-    
-    audio_out_path = clips_ouput_folder + '/' + str(recording_Id) + '_' + str(start_time_seconds) + '_' + str(duration_seconds) + '.wav'
-#     print('audio_in_path ', audio_in_path)
-#     print('audio_out_path ', audio_out_path)
-#     if not os.path.exists(audio_in_path):
-#         print('Can not find ', audio_in_path)
-#     else:
-#         print('Found it')
-        
-    create_wav(audio_in_path, audio_out_path, start_time_seconds, duration_seconds)
      
         
 def create_folder(folder_to_create):
@@ -826,223 +728,20 @@ def create_folder(folder_to_create):
       
 
 
-            
-def run_processDir():
-    processDir(search_path,arff_path)
-    
-    
-def create_wav(audio_in_path, audio_out_path, start_time_seconds, duration_seconds): 
-    print('start_time_seconds ', start_time_seconds) 
-    print('duration_seconds ', duration_seconds)  
-    y, sr = librosa.load(audio_in_path) 
-    
-    clip_start_array = int((sr * start_time_seconds))
-    print('clip_start_array ', clip_start_array)
-    clip_end_array = clip_start_array + int((sr * duration_seconds))    
- 
-     
-    if clip_end_array > y.shape[0]:
-        print('Clip would end after end of recording')
-        return
-     
-    clip_call_by_array = y[clip_start_array:clip_end_array]  
-     
-     
- 
-     
-    #Save the file 
-#     wavfile.write(filename=audio_out_path, rate=sr, data=clip_call_by_array)
-#     sf.write(file, data, samplerate, subtype, endian, format, closefd)
-#     sf.write(file=audio_out_path, data=clip_call_by_array, samplerate=sr, subtype, endian, format, closefd)
-    # https://pysoundfile.readthedocs.io/en/0.9.0/
-    sf.write(audio_out_path, clip_call_by_array, sr, 'PCM_24')
-#     sf.write(audio_out_path, y, sr, 'PCM_24')      
-    
-
-#     run_processDir()
-
-
-def test_create_wav():
-    create_wav('/home/tim/Work/Cacophony/opensmile_weka/m4a_files/161945.m4a', '/home/tim/Work/Cacophony/opensmile_weka/TestAudioInput/161945.wav')  
-    create_wav('/home/tim/Work/Cacophony/opensmile_weka/m4a_files/161946.m4a', '/home/tim/Work/Cacophony/opensmile_weka/TestAudioInput/161946.wav')  
-    processDir(search_path,arff_path)
-
-        
-def create_arff_file(base_folder, run_folder, clip_folder, openSmile_config_file):
-    clip_folder_without_spaces = re.sub(' ', '_', clip_folder)
-    print('base_folder ', base_folder)
-    cwd = os.getcwd()
-       
-    openSmile_config_file_template = cwd + '/template_files/openSmile_config_files/' + openSmile_config_file
-    print('openSmile_config_file_template ', openSmile_config_file_template)
-    openSmile_config_file_for_this_run = base_folder + '/' + run_folder + '/' + openSmile_config_file
-    print('openSmile_config_file_for_this_run ', openSmile_config_file_for_this_run)
-    shutil.copy2(openSmile_config_file_template, openSmile_config_file_for_this_run)
-    
-#     arff_template_file_path = cwd + '/template_files/' + arff_template_file
-#     arff_template_file_for_this_run = base_folder + '/' + run_folder + '/' + arff_template_file
-#     shutil.copy2(arff_template_file_path, arff_template_file_for_this_run)
-    
-    print('clip_folder', clip_folder_without_spaces)
-   
-    
-    searchDir = base_folder + '/' + run_folder + '/audio_clips/' + clip_folder_without_spaces
-    arffDir = base_folder + '/' + run_folder + '/arff_files' 
-    if not os.path.exists(arffDir):
-        os.mkdir(arffDir)
-    
-    print('searchDir', searchDir)
-    print('arffDir', arffDir)
-    
-    processDir(searchDir, arffDir, openSmile_config_file_for_this_run)
-    
-# First version written by Jonah Dearden
-def processDir( searchDir, arffDir, openSmile_config_file_for_this_run):
-    print('openSmile_config_file_for_this_run ', openSmile_config_file_for_this_run)
-    
-    os.chdir(searchDir)
-    i=0
-    list_of_files=[]
-    # https://www.tutorialspoint.com/python/os_walk.htm
-    for root,dir,files in os.walk(searchDir):
-        for f in files:
-            if re.match(r'.*\.wav',f):
-                list_of_files.append(root+'/'+f)
-                
-    os.chdir(arffDir)
-    
-    for i in list_of_files: 
-        print(i)
-    
-    print('openSmile_config_file_for_this_run ', openSmile_config_file_for_this_run)
-    
-    for i in list_of_files:     
-        name1=re.sub(r'(' + searchDir + '/)(.*)(\.wav)',r'\2',i)
-        os.system('SMILExtract -C ' + openSmile_config_file_for_this_run + ' -I '+i+' -O '+arffDir+'/'+name1+'.mfcc.arff')
- 
-
-       
-def merge_arffs(base_folder, run_folder, arff_template_file):
-    #path to directory with arffs
-    arffDir = base_folder + '/' + run_folder + '/arff_files'
-    arrf_filename = re.sub('_template', '', arff_template_file)
-    cwd = os.getcwd()
-    arff_template_file_path = cwd + '/template_files/arff_template_files/' + arff_template_file
-    arff_template_file_for_this_run = base_folder + '/' + run_folder + '/arff_files/' + arrf_filename
-    shutil.copy2(arff_template_file_path, arff_template_file_for_this_run)
-    
-    os.chdir(arffDir)
-    
-    counter = 0
-
-    #Opens joinedArff.arff and appends
-    with open(arrf_filename, "a") as f:
-        #for each file with the .arff ext in the directroy
-        for file in glob.glob("*.arff"):
-            #Open the file and read line 996
-            print(file)
-            a = open(file, "r")
-            lines = a.readlines()
-    
-            x = lines[995]
-            #Replace class label if necessary
-            #This is unnecessary if you have already assigned the classes using the OpenSmile conf.
-            #x = x.replace("unknown", "person")
-            #Writes that line to the joinedArff file
-            f.write(x + "\n")
-            a.close()
-    
-    f.close()   
-    
-    arff_template_file_for_this_run_in_run_folder = base_folder + '/' + run_folder + '/' + arrf_filename
-#     os.rename(arff_template_file_for_this_run, arff_template_file_for_this_run_in_run_folder)
-    shutil.move(arff_template_file_for_this_run, arff_template_file_for_this_run_in_run_folder)
-    
-    print('Merged arff file created in ', base_folder, '/',run_folder)
-    
-def get_unique_whats_from_local_db():
-    cur = get_database_connection().cursor()
-    cur.execute("SELECT DISTINCT what FROM tags") 
-    rows = cur.fetchall()  
-    
-    unique_whats = []
-    for row in rows:
-         unique_whats.append(row[0])
-    return unique_whats  
-
-def getOpenSmileConfigFiles():
-    cwd = os.getcwd()
-    openSmileConfigFileDir = cwd + '/template_files/openSmile_config_files/'
-    openSmileConfigFiles = []
-    for file in os.listdir(openSmileConfigFileDir):
-        openSmileConfigFiles.append(file)        
-   
-    return openSmileConfigFiles
-    
-def getArffTemplateFiles():
-    cwd = os.getcwd()
-    arrTemplateFileDir = cwd + '/template_files/arff_template_files/'
-
-    arffTemplateFiles = []
-    for file in os.listdir(arrTemplateFileDir):
-#         print(file)
-        arffTemplateFiles.append(file)        
-   
-    return arffTemplateFiles     
-
-
-
-def choose_clip_folder(base_folder, run_folder):
-    start_folder = base_folder + '/' + run_folder + '/audio_clips/'
-    clip_folder = filedialog.askdirectory(initialdir=start_folder,  title = "Open the folder you want (Just selecting it won't choose it)")
-    parts = re.split('/', clip_folder)
-    clip_folder =  parts[len(parts)-1]     
-    return clip_folder      
-
 def run_model(model_folder):
-    #https://stackoverflow.com/questions/21406887/subprocess-changing-directory
+    # https://stackoverflow.com/questions/21406887/subprocess-changing-directory
     # https://stackoverflow.com/questions/1996518/retrieving-the-output-of-subprocess-call
 
     os.chdir(model_folder)  
-#     command = ['java', '-jar', 'run.jar', 'shell=True']
     command = ['java', '--add-opens=java.base/java.lang=ALL-UNNAMED', '-jar', 'run.jar', 'shell=True']     
     
     result = run(command, stdout=PIPE, stderr=PIPE, text=True)
-#     print('result ', result)
-#     print('result.returncode ', result.returncode
-          
-    
-          
-          
-#     if result.returncode == 0:
-#         if result.stdout == 0:
-#             return 'morepork_more-pork'
-#         else:
-#             return 'unknown'
-#     else:
-#         return 'error'
     
     return result
-#     if result == 0:
-#         return 'morepork_more-pork'
-#     else
-#         return 'unknown'
 
-
-def test_run_model():
-    base_folder = '/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs'
-    run_folder = '2019_11_28_1'
-    model_folder = base_folder + '/' + run_folder + '/exported_jars'
-    
-    result = run_model(model_folder)
-    if result.returncode == 0:
-        print(result.stdout)
-    else:
-        print(result.stderr)
-#     print('result ', result)
     
 def classify_onsets_using_weka_model():
-#     model_folder = base_folder + '/' + run_folder + '/' + exported_jars_folder
+
     model_folder = base_folder + '/' + run_folder + '/' + weka_model_folder
     
     # Need to check if run.jar is there, otherwise run.jar will break later on
@@ -1092,48 +791,7 @@ def classify_onsets_using_weka_model():
         else:
             print(result.stderr)
 
-            
-    
-    
-def process_arff_folder(base_folder, run_folder, arff_files, modelRunName):
-    folder_to_process = base_folder + '/' + run_folder + '/' + arff_files
-    model_folder = base_folder + '/' + run_folder + '/model_run'
-    for arffFile in os.listdir(folder_to_process):
-        try:
-            fileparts = arffFile.replace('_','.').split('.')
-            recording_id = fileparts[0]       
-            startTime = fileparts[1] + '.' + fileparts[2]       
-            duration = fileparts[3] + '.' + fileparts[4]    
-            
-            arff_input_file = folder_to_process + '/' + arffFile
-            arff_file_in_model_folder = model_folder + '/input.arff'       
-            shutil.copy(arff_input_file, arff_file_in_model_folder)
-            prediction = run_model(model_folder)
-            if prediction.returncode == 0:
-                model_prediction = json.loads(prediction.stdout)
-                actual = model_prediction.get('actual')
-                predictedByModel = model_prediction.get('predicted')
-                print(prediction.stdout)
-                print('actual ', actual)
-                print('predictedByModel ', predictedByModel)
-                
-                insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel)
-#                 send2trash.send2trash(arff_input_file)
-            else:
-                print(prediction.stderr)
-        except Exception as e:
-            print(e, '\n')
-    print('Finished processing arff folder')   
-        
-            
-    
-       
-def test_process_arff_folder():
-    base_folder = '/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs'
-    run_folder = '2019_09_17_1'
-    arff_files_to_process = 'arff_files_to_process'
-    modelRunName = '2019_09_17_1'
-    process_arff_folder(base_folder, run_folder, arff_files_to_process, modelRunName)
+
     
 def insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel):
     # Use this for tags that have been downloaded from the server
@@ -1145,48 +803,14 @@ def insert_model_run_result_into_database(modelRunName, recording_id, startTime,
         get_database_connection().commit()
     except Exception as e:
         print(e, '\n')
-        print('\t\tUnable to insert result' + str(recording_id) + ' ' + str(startTime), '\n')   
-        
-def play_clip1(recording_id, start_time, duration):
-    audio_in_path = getRecordingsFolder() + '/' + recording_id + '.m4a'
-    audio_out_path = '/home/tim/Temp/temp.wav'
-#     audio_in_path = '/home/tim/Temp/dog.wav'
-    print('audio_in_path ', audio_in_path)
-#     playsound(audio_in_path)
-#     song = AudioSegment.from_wav(audio_in_path)
-#     play(song)
-#     os.system("play " + audio_in_path)
-
-   
-    y, sr = librosa.load(audio_in_path, sr=None) 
-    sd.play(y, sr)
-    
-#     print('sr ', sr)
-#     print(y)
-#     print(y.shape)
-    y_amplified = np.int16(y/np.max(np.abs(y)) * 32767)
-    print(y_amplified)
-    y_amplified_start = sr * start_time
-    y_amplified_end = y_amplified_start + (sr * duration)
-    y_amplified_to_play = y_amplified[int(y_amplified_start):int(y_amplified_end)]
-#     y_to_play = y[int(y_amplified_start):int(y_amplified_end)]
-#     librosa.output.write_wav(audio_out_path, y_amplified_to_play, sr)
-
-#     os.system("play " + audio_out_path)
-# #     sd.play(y_amplified_to_play, sr)
-# #     sd.play(y_amplified, sr)
-#     sd.play(y, sr)
-    print('finished')
+        print('\t\tUnable to insert result' + str(recording_id) + ' ' + str(startTime), '\n')  
     
 def play_clip(recording_id, start_time, duration):
     audio_in_path = getRecordingsFolder() + '/' + recording_id + '.m4a'
     print('audio_in_path ', audio_in_path)
     print('start_time ', start_time)
     print('duration ', duration)
-#     start_time = 18
-#     duration = 2
-#     audio_in_path = getRecordingsFolder() + '/218113.m4a'
-#     audio_out_path = '/home/tim/Temp/temp2.wav'
+
     audio_out_path = base_folder + '/' + temp_folder + '/' + 'temp.wav'
     print('audio_out_path ', audio_out_path)
     y, sr = librosa.load(audio_in_path, sr=None) 
@@ -1194,54 +818,11 @@ def play_clip(recording_id, start_time, duration):
     y_amplified_start = sr * start_time
     y_amplified_end = (sr * start_time) + (sr * duration)
     y_amplified_to_play = y_amplified[int(y_amplified_start):int(y_amplified_end)]
-#     y_to_play = y[int(y_amplified_start):int(y_amplified_end)]
-#     sf.write(audio_out_path, y_to_play, sr, 'PCM_24')
+
     sf.write(audio_out_path, y_amplified_to_play, sr)
-#     os.system("aplay " + audio_out_path + " -N")
+
     os.system("aplay " + audio_out_path + " &")
-    
-def test_play_clip():
-    play_clip('171696', 20.7, 0.8)
-    
-    
-# def test_play_clip2():
-#     audio_in_path = getRecordingsFolder() + '/218113.m4a'
-#     start_time = 18
-#     duration = 2
-#     play_clip2(audio_in_path, start_time, duration)
-    
-def play_clip3():
-    start_time = 14.5
-    duration = 1.5
-    audio_in_path = getRecordingsFolder() + '/218113.m4a'
-    audio_out_path = '/home/tim/Temp/temp.wav'
-    y, sr = librosa.load(audio_in_path, sr=None) 
-    y_amplified = np.int16(y/np.max(np.abs(y)) * 32767)
-    y_amplified_start = sr * start_time
-    y_amplified_end = (sr * start_time) + (sr * duration)
-    y_amplified_to_play = y_amplified[int(y_amplified_start):int(y_amplified_end)]
-#     y_to_play = y[int(y_amplified_start):int(y_amplified_end)]
-    sf.write(audio_out_path, y_amplified_to_play, sr)
-    song = AudioSegment.from_wav(audio_out_path)
-    play(song)  
-    
-def play_clip4():
-    start_time = 17
-    duration = 3
-    audio_in_path = getRecordingsFolder() + '/218113.m4a'
-    audio_out_path = '/home/tim/Temp/temp.wav'
-    y, sr = librosa.load(audio_in_path, sr=None) 
-    y_amplified = np.int16(y/np.max(np.abs(y)) * 32767)
-    y_amplified_start = sr * start_time
-    y_amplified_end = (sr * start_time) + (sr * duration)
-#     y_amplified_to_play = y_amplified[int(y_amplified_start):int(y_amplified_end)]
-    y_to_play = y[int(y_amplified_start):int(y_amplified_end)]
-    sd.play(y, 44100)
-    
-    
-# def test_play_clip():
-# #     play_clip('218113', 4.5, 1.5)
-#     play_clip2()
+ 
     
 def create_arff_file_headder(output_folder, arff_filename, comments, relation, attribute_labels, attribute_features): 
    
@@ -1271,95 +852,7 @@ def create_arff_file_headder(output_folder, arff_filename, comments, relation, a
     f.write("\n")  
         
     f.close()
-    
-        
-def test_create_arff_file_header():
-    run_base_folder = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs"
-    run_folder = "/test_run"
-    arff_filename = "test_arff.arff"
-    arff_output_folder = "/arff_folder"
-    output_folder = run_base_folder + run_folder + arff_output_folder
-    comments = "% Multi-label test"
-    relation = "@relation \'Audio: -C 3\'"
-    attribute_labels = []
-    attribute_labels.append("@attribute morepork-classic {0,1}")
-    attribute_labels.append("@attribute cicada {0,1}")
-    attribute_labels.append("@attribute dog {0,1}")
-    
-    attribute_features = []
-    attribute_features.append("@attribute mel1 numeric")
-    attribute_features.append("@attribute mel2 numeric")
-    
-    
-    create_arff_file_headder(output_folder, arff_filename, comments, relation, attribute_labels, attribute_features)
-
-def append_data_to_arff_file(output_path_filename, data):
-    f=open(output_path_filename, "a")    
-    
-    for line in data:
-        f.write(line)
-        f.write("\n")  
-        
-    f.close()
-        
-def test_append_data_to_arff_file():
-    run_base_folder = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs"
-    run_folder = "/test_run"
-    arff_filename = "test_arff.arff"
-    arff_output_folder = "/arff_folder"
-    output_folder = run_base_folder + run_folder + arff_output_folder
-    output_path_filename = output_folder + "/" + arff_filename
-    
-    data = []
-      
-    data.append("0,1,1,0.9,0.7")
-    data.append("0,1,0,0.6,0.7")
-    data.append("0,0,1,0.1,0.3")
-    append_data_to_arff_file(output_path_filename, data)
-        
-
-
-
-def fingerprint():
-    duration, fp_encoded = acoustid.fingerprint_file("/home/tim/Work/Cacophony/Audio_Analysis/temp/morepork.mp3")
-    fingerprint, version = chromaprint.decode_fingerprint(fp_encoded)
-    print(fingerprint)
-    
-#     fig = plt.figure()
-#     bitmap = np.transpose(np.array([[b == '1' for b in list('{:32b}'.format(i & 0xffffffff))] for i in fingerprint]))
-#     plt.imshow(bitmap)
-
-    librosa.display.specshow(fingerprint)
-#     plt.colorbar(format='%+2.0f dB')
-    plt.title('Finger print')
-    plt.tight_layout()
-    plt.show()
-    
-def test_fingerprint():
-    fingerprint()
-    
-def featureExtraction():
-    w = pywt.Wavelet('db3')
-    print(w)
-    
-def test_featureExtraction():
-    featureExtraction()
-    
-
-    
-def librosaFeatureExtraction():
-    audio_in = "/home/tim/Work/Cacophony/Audio_Analysis/temp/235980.m4a"
-    y, sr = librosa.load(audio_in, mono=True) 
-
-    S = np.abs(librosa.stft(y))
-    comps, acts = librosa.decompose.decompose(S, n_components=1)
-    np.set_printoptions(threshold=np.inf)
-    print(comps)
-#     print(acts)
-    
-   
-def test_librosaFeatureExtraction():
-    librosaFeatureExtraction()
+  
     
 def create_onsets(existing_tag_type):
     print("create_onsets")
@@ -1370,13 +863,6 @@ def create_onsets(existing_tag_type):
     else:
         create_onsets_in_local_db_using_existing_tag_type(existing_tag_type)
         
-def test_create_onsets_with_existing_tag():
-    create_onsets("more pork - classic")  
-      
-def test_create_onsets_with_null_existing_tag():
-#     This should use the recordings folder
-    create_onsets(None)     
-
 def insert_onset_into_database(version, recording_id, start_time_seconds, duration_seconds):
     print('duration_seconds', duration_seconds)
     # Use this is the tag was created in this application, rather than being downloaded from the server - becuase some fiels are mission e.g. server_Id
@@ -1390,9 +876,7 @@ def insert_onset_into_database(version, recording_id, start_time_seconds, durati
         print(e, '\n')
         print('\t\tUnable to insert onest ' + str(recording_id), '\n')   
        
-def test_insert_onset_into_database():
-    insert_onset_into_database('Analysis_5', 1234, 3.2, 0.6)
-    
+
 
 # https://stackoverflow.com/questions/25191620/creating-lowpass-filter-in-scipy-understanding-methods-and-units
 def butter_lowpass(cutoff, fs, order=5):
@@ -1628,9 +1112,7 @@ def rms(x):
     return np.sqrt(x.dot(x)/x.size)
 
 def create_focused_mel_spectrogram_jps_using_onset_pairs():
-#     onset_pairs_folder_path = base_folder + '/' + onset_pairs_folder
-#     audio_files_input_folder_path = base_folder + '/' + audio_files_input_folder
-    mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + mel_spectrograms_folder 
+    mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + spectrograms_for_model_creation_folder 
     if not os.path.exists(mel_spectrograms_out_folder_path):
         os.makedirs(mel_spectrograms_out_folder_path)
        
@@ -1867,21 +1349,14 @@ def get_single_waveform_image(recording_id, start_time_seconds, duration_seconds
     except Exception as e:
         print(e, '\n')
         print('Error processing onset ', onset)
-        
-def test_get_single_waveform_image():
-    image_out = get_single_waveform_image('161943', 1.0, 0.7)
-    print('image_out ', image_out)
-                
+               
 def get_image(image_name_path): 
-
         
     image = Image.open(image_name_path)
     [imageSizeWidth, imageSizeHeight] = image.size
     image = image.resize((int(imageSizeWidth/2),int(imageSizeHeight/2)), Image.ANTIALIAS)
     spectrogram_image = ImageTk.PhotoImage(image)
     return spectrogram_image
-
-
 
 def play_array(recording_id, start_time, duration):
     audio_in_path = getRecordingsFolder() + '/' + recording_id + '.m4a'
@@ -1890,10 +1365,6 @@ def play_array(recording_id, start_time, duration):
     print('audio_in_path ', audio_in_path)
 
     os.system("play " + audio_out_path)
-
-
-def test_play_array():
-    play_array("161943", "1", "2.2")
     
 def get_unique_model_run_names():   
     cur = get_database_connection().cursor()
@@ -1905,46 +1376,11 @@ def get_unique_model_run_names():
         unique_model_run_names.append(row[0])
         
     return unique_model_run_names  
-    
-        
-def change_morepork_in_db():
-    cur = get_database_connection().cursor()
-    
-    
-def update_morepork_name():
-    # This is probably only used the once to modify intial rows to indicate they are from my first morepork tagging of Hammond Park
-    cur = get_database_connection().cursor()
-#     cur.execute("select ID from model_run_result WHERE actual = morepork")
-    cur.execute("SELECT ID FROM model_run_result WHERE predictedByModel = ?", ('morepork',)) 
- 
-    rows = cur.fetchall()
-         
- 
-    for row in rows:              
-        ID =  row[0] 
-        print('ID ', ID) 
-        sql = ''' UPDATE model_run_result
-                  SET predictedByModel = ?               
-                  WHERE ID = ?'''
-        cur = get_database_connection().cursor()
-        cur.execute(sql, ('morepork_more-pork', ID))
-    
-    get_database_connection().commit()    
-    
 
-# def create_arff_file_for_weka_image_filter_input(image_base_folder, relation_name, class_names):
+
 def create_arff_file_for_weka_image_filter_input():
-#     image_base_folder = base_folder + '/' + run_folder + '/' + arff_folder_for_next_run
+
     run_folder_path = base_folder + '/' + run_folder
-    
-#     relation_name = 'morepork_more-pork_vs_unknown'
-#     class_names = 'morepork_more-pork,unknown'
-    
-#     if not os.path.exists(image_base_folder):
-#         os.makedirs(image_base_folder)
-    
-    
-#     f= open(image_base_folder + '/' + "images.arff","w+")
     f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+")
     f.write('@relation ' + relation_name + '\r\n')
     f.write('@attribute filename string' + '\r\n')
@@ -1961,15 +1397,6 @@ def create_arff_file_for_weka_image_filter_input():
         f.write(filename +',' + class_type + '\r\n')      
         
     f.close()
-    
-# def test_create_arff_file_for_weka_image_filter_input():
-#     image_base_folder = base_folder + '/' + run_folder + '/' + arff_folder_for_next_run
-#     
-#     relation_name = 'morepork_more-pork_vs_unknown'
-#     class_names = 'morepork_more-pork,unknown'
-#     create_arff_file_for_weka_image_filter_input(image_base_folder, relation_name, class_names)
-    
-    
     
 def update_latest_model_run_results_with_previous_confirmed():
     
