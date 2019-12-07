@@ -695,6 +695,10 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
                 self.actual_confirmed.set('morepork_more-pork')
             elif self.current_model_run_name_actual_confirmed == 'unknown':
                 self.actual_confirmed.set('unknown')
+            elif self.current_model_run_name_actual_confirmed == 'dove':
+                self.actual_confirmed.set('dove')
+            elif self.current_model_run_name_actual_confirmed == 'duck':
+                self.actual_confirmed.set('duck')
             else:
                 self.actual_confirmed.set(self.current_model_run_name_actual)
 
