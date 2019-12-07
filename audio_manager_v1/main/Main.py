@@ -565,7 +565,12 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         self.spectrogram_label.grid(column=0, columnspan=1, row=21)
         
         self.waveform_label = ttk.Label(self, image=None)
-        self.waveform_label.grid(column=1, columnspan=1, row=21)        
+        self.waveform_label.grid(column=1, columnspan=1, row=21)
+        
+        self.recorded_at_value = tk.StringVar()
+        recorded_at_label = ttk.Label(self, textvariable=self.recorded_at_value) 
+        recorded_at_label.grid(column=2, columnspan=1, row=21) 
+        self.recorded_at_value.set("Recorded at: ")        
         
         actual_label = ttk.Label(self, text="Actual", font=LARGE_FONT)
         actual_label.grid(column=0, columnspan=1, row=30) 
@@ -668,13 +673,13 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
 
             self.run_result = functions.get_model_run_result(int(self.current_model_run_name_ID)) 
             
-            print('self.run_result', self.run_result)
+            self.current_model_run_name_recording_id = self.run_result[1]    
             
-            print('ID', self.run_result[0])
-            
-            self.current_model_run_name_recording_id = self.run_result[1]      
-            
-            self.recording_id_and_result_place_value.set("Recording Id: " + str(self.current_model_run_name_recording_id) + " Result: " + str(self.current_model_run_result_array_pos))
+            self.recording_id_and_result_place_value.set("Recording Id: " + str(self.current_model_run_name_recording_id) + " Result: " + str(self.current_model_run_result_array_pos))              
+
+            device_super_name, recordingDateTime = functions.get_single_recording_info_from_local_db(self.current_model_run_name_recording_id)
+
+            self.recorded_at_value.set("Recorded: " + str(device_super_name) + " " + str(recordingDateTime))  
               
             self.current_model_run_name_start_time = self.run_result[2]
             self.start_time.set(self.current_model_run_name_start_time)

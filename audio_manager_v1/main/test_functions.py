@@ -1,4 +1,4 @@
-from main.functions import *
+import main.functions as functions
 
 # Uncomment a test to run it :-)
 
@@ -96,3 +96,10 @@ from main.functions import *
 #     
 # def test_update_recording_information_for_single_recording():
 #     update_recording_information_for_single_recording('291047')
+
+
+    
+    
+    
+    
+    

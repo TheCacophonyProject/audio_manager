@@ -4,44 +4,32 @@ from main.parameters import *
 import sqlite3
 from sqlite3 import Error
 import requests
-# import os
-# import sys
+
 import json
 from pathlib import Path
 from tkinter import filedialog
 from tkinter import *
-# import re
-# from scipy.io import wavfile
-# import shutil
-# import send2trash
-# import sounddevice as sd
-# from pydub import AudioSegment
-# from pydub.playback import play
-# import librosa
+
 import os
 from scipy import signal
-# from scipy.io import wavfile
+
 from scipy.signal import butter, lfilter, freqz
 import numpy as np
 from scipy.ndimage.filters import maximum_filter
 import pylab
 import librosa.display
-# import shlex
-# import glob
+
 import soundfile as sf
-# import subprocess
+
 from subprocess import PIPE, run
-# from playsound import playsound
-# from librosa.output import write_wav
+
 from librosa import display, onset
-# import matplotlib.pyplot as plt
-# import acoustid
-# import chromaprint
-# from pyAudioAnalysis import audioBasicIO
-# from pyAudioAnalysis import audioFeatureExtraction
-# import pywt
-# import shlex
+
 from PIL import ImageTk,Image 
+
+from datetime import datetime
+from pytz import timezone
+from pytz import all_timezones
 
 
 db_file = "/home/tim/Work/Cacophony/eclipse-workspace/audio_manager_v1/audio_analysis_db2.db"
@@ -1418,15 +1406,6 @@ def create_folders_for_next_run():
     if not os.path.exists(next_run_folder):
         os.makedirs(next_run_folder) 
         
-#     next_exported_jars_folder = parameters.base_folder + '/' + run_folder + '/' + exported_jars_folder  
-#     if not os.path.exists(next_exported_jars_folder):
-#         os.makedirs(next_exported_jars_folder) 
-        
-#     next_arff_folder_for_next_run = parameters.base_folder + '/' + run_folder + '/' + arff_folder_for_next_run  
-#     if not os.path.exists(next_arff_folder_for_next_run):
-#         os.makedirs(next_arff_folder_for_next_run) 
-#         
-    
         
     weka_model_folder_path = parameters.base_folder + '/' + run_folder + '/' + weka_model_folder  
     if not os.path.exists(weka_model_folder_path):
@@ -1440,15 +1419,28 @@ def create_folders_for_next_run():
     if not os.path.exists(single_spectrogram_for_classification_folder_path):
         os.makedirs(single_spectrogram_for_classification_folder_path) 
         
-        
-           
-        
-            
+def get_single_recording_info_from_local_db(recording_id):
+    for zone in all_timezones:
+        print(zone)
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT device_super_name, recordingDateTime FROM recordings WHERE recording_id = ?", (recording_id,))  
+  
+    recordings = cur.fetchall()
+     
+    single_recording =  recordings[0]   
+    device_super_name = single_recording[0]
+    recordingDateTime = single_recording[1]
     
+#     print(recordingDateTime)    
+
+    date_time_obj = datetime.strptime(recordingDateTime, "%Y-%m-%dT%H:%M:%S.000Z")    
+    date_time_obj_Zulu = timezone('Zulu').localize(date_time_obj)
+
+    fmt = "%Y-%m-%d %H:%M:%S %Z%z"
     
-    
-    
-    
+    date_time_obj_NZ = date_time_obj_Zulu.astimezone(timezone('Pacific/Auckland'))
+#     print(date_time_obj_NZ.strftime(fmt))
+    return device_super_name, date_time_obj_NZ.strftime(fmt)
 
 
 
