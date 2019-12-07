@@ -599,35 +599,35 @@ def get_model_run_results(modelRunName, actualFilter, actualConfirmedFilter, pre
     if actualConfirmedFilter == 'not-used':
     
         if actualFilter == 'not-used' and predictedFilter == 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? ORDER BY recording_id", (modelRunName,)) 
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName,)) 
         elif actualFilter != 'not-used' and predictedFilter == 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? ORDER BY recording_id", (modelRunName, actualFilter)) 
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter)) 
         elif actualFilter == 'not-used' and predictedFilter != 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND predictedByModel = ? ORDER BY recording_id", (modelRunName, predictedFilter)) 
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predictedFilter)) 
         else:
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND predictedByModel = ? ORDER BY recording_id", (modelRunName, actualFilter, predictedFilter))
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, predictedFilter))
             
     elif actualConfirmedFilter == 'IS NULL':
     
         if actualFilter == 'not-used' and predictedFilter == 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL ORDER BY recording_id", (modelRunName, )) 
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL ORDER BY recording_id DESC, startTime ASC", (modelRunName, )) 
         elif actualFilter != 'not-used' and predictedFilter == 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed IS NULL ORDER BY recording_id", (modelRunName, actualFilter)) 
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed IS NULL ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter)) 
         elif actualFilter == 'not-used' and predictedFilter != 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id", (modelRunName, predictedFilter)) 
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predictedFilter)) 
         else:
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id", (modelRunName, actualFilter, predictedFilter)) 
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, predictedFilter)) 
     
             
     else: 
         if actualFilter == 'not-used' and predictedFilter == 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? ORDER BY recording_id", (modelRunName, actualConfirmedFilter)) 
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter)) 
         elif actualFilter != 'not-used' and predictedFilter == 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? ORDER BY recording_id", (modelRunName, actualFilter, actualConfirmedFilter)) 
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, actualConfirmedFilter)) 
         elif actualFilter == 'not-used' and predictedFilter != 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id", (modelRunName, actualConfirmedFilter, predictedFilter)) 
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter, predictedFilter)) 
         else:
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id", (modelRunName, actualFilter, actualConfirmedFilter, predictedFilter)) 
+            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, actualConfirmedFilter, predictedFilter)) 
     
     rows = cur.fetchall()
     return rows 
@@ -699,7 +699,9 @@ def update_local_tags_with_version():
 
     
 def update_model_run_result(ID, actual_confirmed):
-    # This is probably only used the once to modify intial rows to indicate they are from my first morepork tagging of Hammond Park
+    if (actual_confirmed == 'None'): # This happens if the user does not select an option.  None causes issues later with creating the model as None is not valid class for the model
+        return
+    
     cur = get_database_connection().cursor()
    
     sql = ''' UPDATE model_run_result
@@ -711,23 +713,7 @@ def update_model_run_result(ID, actual_confirmed):
     get_database_connection().commit()      
 
 
-     
-        
-def create_folder(folder_to_create):
-    if folder_to_create is None:
-        print("Please enter a folder name")
-        return
-    if not folder_to_create:
-        print("Please enter a folder name")
-        return
     
-    if not os.path.exists(folder_to_create):
-        os.mkdir(folder_to_create)
-        print("Folder " , folder_to_create ,  " Created ")    
-    
-      
-
-
 def run_model(model_folder):
     # https://stackoverflow.com/questions/21406887/subprocess-changing-directory
     # https://stackoverflow.com/questions/1996518/retrieving-the-output-of-subprocess-call
@@ -763,7 +749,8 @@ def classify_onsets_using_weka_model():
         return    
 
     cur = get_database_connection().cursor()
-    cur.execute("SELECT recording_id, start_time_seconds, duration_seconds FROM onsets") 
+#     cur.execute("SELECT recording_id, start_time_seconds, duration_seconds FROM onsets")  
+    cur.execute("SELECT recording_id, start_time_seconds, duration_seconds FROM onsets ORDER BY recording_id DESC")
     onsets = cur.fetchall()  
     number_of_onsets = len(onsets)
     count = 0
@@ -1358,14 +1345,6 @@ def get_image(image_name_path):
     spectrogram_image = ImageTk.PhotoImage(image)
     return spectrogram_image
 
-def play_array(recording_id, start_time, duration):
-    audio_in_path = getRecordingsFolder() + '/' + recording_id + '.m4a'
-    audio_out_path = '/home/tim/Temp/temp.wav'
-
-    print('audio_in_path ', audio_in_path)
-
-    os.system("play " + audio_out_path)
-    
 def get_unique_model_run_names():   
     cur = get_database_connection().cursor()
     cur.execute("SELECT DISTINCT modelRunName FROM model_run_result") 

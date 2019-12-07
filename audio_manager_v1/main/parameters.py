@@ -1,5 +1,9 @@
 import sys
 
+# model_run_name='2019_11_28_1'
+# model_run_name='2019_12_03_1'
+model_run_name='2019_12_05_1'
+
 #### Cacophony Server Configuration
 server_endpoint = 'https://api.cacophony.org.nz' # Production
 # server_endpoint = 'https://api-test.cacophony.org.nz'  # Test
@@ -27,8 +31,7 @@ base_folder = '/home/tim/Work/Cacophony'
 downloaded_recordings_folder = 'downloaded_recordings/all_recordings' # All the recordings
 # downloaded_recordings_folder = 'downloaded_recordings/temp_for_testing' # Use this if doing a test
 #run_folder = 'Analysis_5' # Change this when doing a new analyis
-# model_run_name='2019_11_28_1'
-model_run_name='2019_12_03_1'
+
 run_folder = 'Audio_Analysis/audio_classifier_runs' + '/' + model_run_name
 # exported_jars_folder = 'exported_jars'
 single_spectrogram_for_classification_folder = 'images'
