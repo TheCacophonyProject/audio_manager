@@ -2,7 +2,8 @@ import sys
 
 # model_run_name='2019_11_28_1'
 # model_run_name='2019_12_03_1'
-model_run_name='2019_12_05_1'
+# model_run_name='2019_12_05_1'
+model_run_name='2019_12_11_1'
 
 #### Cacophony Server Configuration
 server_endpoint = 'https://api.cacophony.org.nz' # Production
@@ -38,8 +39,8 @@ single_spectrogram_for_classification_folder = 'images'
 temp_folder = 'Temp'
 # arff_folder_for_next_run = 'arff_folder_for_next_run'
 
-relation_name = 'morepork_more-pork_vs_unknown'
-class_names = 'morepork_more-pork,unknown'
+relation_name = model_run_name
+class_names = 'morepork_more-pork,unknown,siren,dog,duck,dove,human,bird,car,rumble,white_noise,cow,buzzy_insect,plane'
 
 weka_model_folder = 'weka_model'
 weka_model_filename = "model.model"

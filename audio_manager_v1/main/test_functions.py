@@ -2,6 +2,12 @@ import main.functions as functions
 
 # Uncomment a test to run it :-)
 
+
+print('hello')
+
+functions.update_onsets_with_latest_model_run_actual_confirmed()
+    
+
 # def test_update_recording_in_database():
 #     update_recording_in_database('2018-04-04T17:07:01.000Z', 3, 1, 2, -22.2, 178.1, '23b', 77, 'ZTE phone',7, 1234, 'true', 'grants shed3', 291047)
 #    
@@ -98,7 +104,6 @@ import main.functions as functions
 #     update_recording_information_for_single_recording('291047')
 
 
-    
     
     
     
