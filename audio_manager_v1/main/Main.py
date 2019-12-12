@@ -488,24 +488,37 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         self.current_model_run_result_array_pos = 0
         self.current_model_run_name_ID = 0        
         
-        self.unique_model_run_names = functions.get_unique_model_run_names()            
+        self.unique_model_run_names = functions.get_unique_model_run_names()  
+        self.unique_locations = functions.get_unique_locations()            
                     
         title_label = ttk.Label(self, text="Evaluate Model Run Results", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)   
         
+        refresh_model_run_names_button = ttk.Button(self, text="Refresh Unique Model Run Names",command=lambda: refresh_unique_model_run_names())
+        refresh_model_run_names_button.grid(column=0, columnspan=1, row=2) 
+        
         run_names_label = ttk.Label(self, text="Run Names")
-        run_names_label.grid(column=1, columnspan=1, row=0)      
+        run_names_label.grid(column=1, columnspan=1, row=1)      
                                     
         self.run_name = StringVar()
         self.run_names_combo = ttk.Combobox(self, textvariable=self.run_name, values=self.unique_model_run_names)
         
         if len(self.unique_model_run_names) > 0:
             self.run_names_combo.current(0)
-            self.run_names_combo.grid(column=1, columnspan=1,row=1)         
+            self.run_names_combo.grid(column=1, columnspan=1,row=2) 
+            
+        location_filter_label = ttk.Label(self, text="Location Filter")
+        location_filter_label.grid(column=2, columnspan=1, row=1)      
+                                    
+        self.location_filter = StringVar()
+        self.location_filter_combo = ttk.Combobox(self, textvariable=self.location_filter, values=self.unique_locations)
+        
+        if len(self.unique_locations) > 0:
+            self.location_filter_combo.current(0)
+            self.location_filter_combo.grid(column=2, columnspan=1,row=2)         
 
             
-        refresh_model_run_names_button = ttk.Button(self, text="Refresh Unique Model Run Names",command=lambda: refresh_unique_model_run_names())
-        refresh_model_run_names_button.grid(column=2, columnspan=2, row=1) 
+       
         
 #         actual_filter_label = ttk.Label(self, text="Filter - Tags from Server", font=LARGE_FONT)
 #         actual_filter_label.grid(column=0, columnspan=1, row=2)        
@@ -519,203 +532,211 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
 #         self.actual_filter.set('not_used')
         
         actual_confirmed_filter_label = ttk.Label(self, text="Filter - Actual Confirmed", font=LARGE_FONT)
-        actual_confirmed_filter_label.grid(column=1, columnspan=2, row=2)   
+        actual_confirmed_filter_label.grid(column=0, columnspan=2, row=3)   
              
         self.actual_confirmed_filter = tk.StringVar()
         actual_confirmed_filter_radio_button_none = ttk.Radiobutton(self,text='Not Used', variable=self.actual_confirmed_filter, value='not_used')
-        actual_confirmed_filter_radio_button_none.grid(column=1, columnspan=1, row=3)        
+        actual_confirmed_filter_radio_button_none.grid(column=0, columnspan=1, row=13)        
         actual_confirmed_filter_radio_button_null = ttk.Radiobutton(self,text='Null Filter (ie nothing in DB table)', variable=self.actual_confirmed_filter, value='IS NULL')
-        actual_confirmed_filter_radio_button_null.grid(column=1, columnspan=1, row=4)        
+        actual_confirmed_filter_radio_button_null.grid(column=0, columnspan=1, row=14)        
         actual_confirmed_filter_radio_button_morepork_classic = ttk.Radiobutton(self,text='morepork_more-pork', variable=self.actual_confirmed_filter, value='morepork_more-pork')
-        actual_confirmed_filter_radio_button_morepork_classic.grid(column=1, columnspan=1, row=5)
+        actual_confirmed_filter_radio_button_morepork_classic.grid(column=0, columnspan=1, row=15)
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_confirmed_filter, value='unknown')
-        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=6) 
+        actual_confirmed_filter_radio_button_unknown.grid(column=0, columnspan=1, row=16) 
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Dove', variable=self.actual_confirmed_filter, value='dove')
-        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=7) 
+        actual_confirmed_filter_radio_button_unknown.grid(column=0, columnspan=1, row=17) 
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Duck', variable=self.actual_confirmed_filter, value='duck')
-        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=8) 
+        actual_confirmed_filter_radio_button_unknown.grid(column=0, columnspan=1, row=18) 
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Dog', variable=self.actual_confirmed_filter, value='dog')
-        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=9) 
+        actual_confirmed_filter_radio_button_unknown.grid(column=0, columnspan=1, row=19) 
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Human', variable=self.actual_confirmed_filter, value='human')
-        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=10) 
+        actual_confirmed_filter_radio_button_unknown.grid(column=0, columnspan=1, row=20) 
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Siren', variable=self.actual_confirmed_filter, value='siren')
-        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=11) 
+        actual_confirmed_filter_radio_button_unknown.grid(column=0, columnspan=1, row=21) 
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Bird', variable=self.actual_confirmed_filter, value='bird')
-        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=12) 
+        actual_confirmed_filter_radio_button_unknown.grid(column=0, columnspan=1, row=22) 
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Car', variable=self.actual_confirmed_filter, value='car')
-        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=13) 
+        actual_confirmed_filter_radio_button_unknown.grid(column=0, columnspan=1, row=23) 
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Rumble', variable=self.actual_confirmed_filter, value='rumble')
-        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=14)
+        actual_confirmed_filter_radio_button_unknown.grid(column=0, columnspan=1, row=24)
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='White noise', variable=self.actual_confirmed_filter, value='white_noise')
-        actual_confirmed_filter_radio_button_unknown.grid(column=2, columnspan=1, row=5)
+        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=13)
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Plane', variable=self.actual_confirmed_filter, value='plane')
-        actual_confirmed_filter_radio_button_unknown.grid(column=2, columnspan=1, row=6)
+        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=14)
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Cow', variable=self.actual_confirmed_filter, value='cow')
-        actual_confirmed_filter_radio_button_unknown.grid(column=2, columnspan=1, row=7)
+        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=15)
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Buzzy_insect', variable=self.actual_confirmed_filter, value='buzzy_insect')
-        actual_confirmed_filter_radio_button_unknown.grid(column=2, columnspan=1, row=8)
+        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=16)
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Morepork more-pork Part', variable=self.actual_confirmed_filter, value='morepork_more-pork_part')
-        actual_confirmed_filter_radio_button_unknown.grid(column=2, columnspan=1, row=9)
+        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=17)
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Hammering', variable=self.actual_confirmed_filter, value='hammering')
-        actual_confirmed_filter_radio_button_unknown.grid(column=2, columnspan=1, row=10)
+        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=18)
         self.actual_confirmed_filter.set('not_used')
         
         predicted_filter_label = ttk.Label(self, text="Filter - Predicted", font=LARGE_FONT)
-        predicted_filter_label.grid(column=3, columnspan=1, row=2)  
+        predicted_filter_label.grid(column=2, columnspan=1, row=3)  
         
-        self.predicted_probability_filter = tk.StringVar()
-        predicted_probability_filter_radio_button_not_used = ttk.Radiobutton(self,text='Not used', variable=self.predicted_probability_filter, value='not_used')
-        predicted_probability_filter_radio_button_not_used.grid(column=4, columnspan=1, row=2)
-        predicted_probability_filter_radio_button_greater_than = ttk.Radiobutton(self,text='Greater than', variable=self.predicted_probability_filter, value='greater_than')
-        predicted_probability_filter_radio_button_greater_than.grid(column=5, columnspan=1, row=2)
-        predicted_probability_filter_radio_button_less_than = ttk.Radiobutton(self,text='Less than', variable=self.predicted_probability_filter, value='less_than')
-        predicted_probability_filter_radio_button_less_than.grid(column=6, columnspan=1, row=2)
-        self.predicted_probability_filter.set('not_used')        
-       
-        self.predicted_probability_filter_value = StringVar(value='')
-        self.predicted_probability_filter_entry = tk.Entry(self,  textvariable=self.predicted_probability_filter_value, width=10).grid(column=7, columnspan=1,row=2)
+        
         
               
         self.predicted_filter = tk.StringVar()        
         predicted_filter_radio_button_none = ttk.Radiobutton(self,text='Not Used', variable=self.predicted_filter, value='not_used')
-        predicted_filter_radio_button_none.grid(column=3, columnspan=1, row=3)
+        predicted_filter_radio_button_none.grid(column=2, columnspan=1, row=13)
         predicted_filter_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork more-pork', variable=self.predicted_filter, value='morepork_more-pork')
-        predicted_filter_radio_button_morepork_classic.grid(column=3, columnspan=1, row=4)
+        predicted_filter_radio_button_morepork_classic.grid(column=2, columnspan=1, row=14)
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.predicted_filter, value='unknown')
-        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=5) 
+        predicted_filter_radio_button_unknown.grid(column=2, columnspan=1, row=15) 
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Dove', variable=self.predicted_filter, value='dove')
-        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=6) 
+        predicted_filter_radio_button_unknown.grid(column=2, columnspan=1, row=16) 
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Duck', variable=self.predicted_filter, value='duck')
-        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=7) 
+        predicted_filter_radio_button_unknown.grid(column=2, columnspan=1, row=17) 
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Dog', variable=self.predicted_filter, value='dog')
-        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=8) 
+        predicted_filter_radio_button_unknown.grid(column=2, columnspan=1, row=18) 
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Human', variable=self.predicted_filter, value='human')
-        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=9) 
+        predicted_filter_radio_button_unknown.grid(column=2, columnspan=1, row=19) 
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Siren', variable=self.predicted_filter, value='siren')
-        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=10) 
+        predicted_filter_radio_button_unknown.grid(column=2, columnspan=1, row=20) 
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Bird', variable=self.predicted_filter, value='bird')
-        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=11) 
+        predicted_filter_radio_button_unknown.grid(column=2, columnspan=1, row=21) 
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Car', variable=self.predicted_filter, value='car')
-        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=12)
+        predicted_filter_radio_button_unknown.grid(column=2, columnspan=1, row=22)
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Rumble', variable=self.predicted_filter, value='rumble')
-        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=13)
+        predicted_filter_radio_button_unknown.grid(column=2, columnspan=1, row=23)
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='White noise', variable=self.predicted_filter, value='white_noise')
-        predicted_filter_radio_button_unknown.grid(column=4, columnspan=1, row=4)  
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=13)  
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Plane', variable=self.predicted_filter, value='plane')
-        predicted_filter_radio_button_unknown.grid(column=4, columnspan=1, row=5)
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=14)
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Cow', variable=self.predicted_filter, value='cow')
-        predicted_filter_radio_button_unknown.grid(column=4, columnspan=1, row=6)  
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=15)  
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Buzzy insect', variable=self.predicted_filter, value='buzzy_insect')
-        predicted_filter_radio_button_unknown.grid(column=4, columnspan=1, row=7)
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=16)
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Morepork more-pork Part', variable=self.predicted_filter, value='morepork_more-pork_part')
-        predicted_filter_radio_button_unknown.grid(column=4, columnspan=1, row=8) 
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=17) 
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Hammering', variable=self.predicted_filter, value='hammering')
-        predicted_filter_radio_button_unknown.grid(column=4, columnspan=1, row=9) 
-        self.predicted_filter.set('not_used')        
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=18) 
+        self.predicted_filter.set('not_used')    
+        
+        run_probability_label = ttk.Label(self, text="Probability")
+        run_probability_label.grid(column=2, columnspan=1, row=25)  
+        
+        self.predicted_probability_filter = tk.StringVar()
+        predicted_probability_filter_radio_button_greater_than = ttk.Radiobutton(self,text='Greater than', variable=self.predicted_probability_filter, value='greater_than')
+        predicted_probability_filter_radio_button_greater_than.grid(column=2, columnspan=1, row=26)
+        predicted_probability_filter_radio_button_less_than = ttk.Radiobutton(self,text='Less than', variable=self.predicted_probability_filter, value='less_than')
+        predicted_probability_filter_radio_button_less_than.grid(column=3, columnspan=1, row=26)
+        self.predicted_probability_filter_value = StringVar(value='')
+        self.predicted_probability_filter_entry = tk.Entry(self,  textvariable=self.predicted_probability_filter_value, width=10).grid(column=2, columnspan=1,row=27)    
+        predicted_probability_filter_radio_button_not_used = ttk.Radiobutton(self,text='Not used', variable=self.predicted_probability_filter, value='not_used')
+        predicted_probability_filter_radio_button_not_used.grid(column=3, columnspan=1, row=27)
+        
+        
+        self.predicted_probability_filter.set('not_used')        
+       
+        
         
         load_run_results_button = ttk.Button(self, text="Load Run Results using Filters",command=lambda: get_run_results())
-        load_run_results_button.grid(column=0, columnspan=1, row=18) 
+        load_run_results_button.grid(column=0, columnspan=1, row=28) 
         
         self.number_of_results_label_value = tk.StringVar()
         number_of_results_label_for_value = ttk.Label(self, textvariable=self.number_of_results_label_value)
-        number_of_results_label_for_value.grid(column=0, columnspan=1, row=19)   
+        number_of_results_label_for_value.grid(column=0, columnspan=1, row=29)   
         
         self.recording_id_and_result_place_value = tk.StringVar()
         recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value) 
-        recording_id_label.grid(column=0, columnspan=1, row=20) 
+        recording_id_label.grid(column=0, columnspan=1, row=30) 
         self.recording_id_and_result_place_value.set("Recording Id")
                    
         start_time_label = ttk.Label(self, text="Start Time")
-        start_time_label.grid(column=1, columnspan=1, row=19)        
+        start_time_label.grid(column=1, columnspan=1, row=29)        
         self.start_time = StringVar(value='0.0')
-        self.start_time_entry = tk.Entry(self,  textvariable=self.start_time, width=30).grid(column=1, columnspan=1,row=20)
+        self.start_time_entry = tk.Entry(self,  textvariable=self.start_time, width=30).grid(column=1, columnspan=1,row=30)
         
         self.location_recorded_value = tk.StringVar()
         location_recorded_label = ttk.Label(self, textvariable=self.location_recorded_value) 
-        location_recorded_label.grid(column=2, columnspan=1, row=19) 
+        location_recorded_label.grid(column=2, columnspan=1, row=29) 
         self.location_recorded_value.set("Location: ")   
         
         self.when_recorded_value = tk.StringVar()
         when_recorded_label = ttk.Label(self, textvariable=self.when_recorded_value) 
-        when_recorded_label.grid(column=2, columnspan=1, row=20) 
+        when_recorded_label.grid(column=2, columnspan=1, row=30) 
         self.when_recorded_value.set("When: ")     
         
         self.spectrogram_label = ttk.Label(self, image=None)
-        self.spectrogram_label.grid(column=0, columnspan=1, row=21)
+        self.spectrogram_label.grid(column=0, columnspan=1, row=31)
         
         self.waveform_label = ttk.Label(self, image=None)
-        self.waveform_label.grid(column=1, columnspan=1, row=21)
+        self.waveform_label.grid(column=1, columnspan=1, row=31)
         
 #         actual_label = ttk.Label(self, text="Tags from Server", font=LARGE_FONT)
 #         actual_label.grid(column=0, columnspan=1, row=30) 
         
-        self.actual_label_value = tk.StringVar()
-        actual_label_for_value = ttk.Label(self, textvariable=self.actual_label_value)
-        actual_label_for_value.grid(column=0, columnspan=1, row=31)         
+#         self.actual_label_value = tk.StringVar()
+#         actual_label_for_value = ttk.Label(self, textvariable=self.actual_label_value)
+#         actual_label_for_value.grid(column=0, columnspan=1, row=41)         
         
         actual_label_confirmed = ttk.Label(self, text="Actual Confirmed", font=LARGE_FONT)
-        actual_label_confirmed.grid(column=1, columnspan=1, row=30)
-        actual_label_confirmed2 = ttk.Label(self, text="(The default is the same as Actual - select to change and save)")
-        actual_label_confirmed2.grid(column=1, columnspan=1, row=31) 
+        actual_label_confirmed.grid(column=0, columnspan=1, row=40)
+#         actual_label_confirmed2 = ttk.Label(self, text="(The default is the same as Actual - select to change and save)")
+#         actual_label_confirmed2.grid(column=0, columnspan=1, row=41) 
         
         self.actual_confirmed = tk.StringVar()
 
         actual_confirmed_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork more-pork', variable=self.actual_confirmed, value='morepork_more-pork',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_morepork_classic.grid(column=1, columnspan=1, row=32) 
+        actual_confirmed_radio_button_morepork_classic.grid(column=0, columnspan=1, row=42) 
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_confirmed, value='unknown',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=33)
+        actual_confirmed_radio_button_unknown.grid(column=0, columnspan=1, row=43)
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Dove', variable=self.actual_confirmed, value='dove',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=34)   
+        actual_confirmed_radio_button_unknown.grid(column=0, columnspan=1, row=44)   
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Duck', variable=self.actual_confirmed, value='duck',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=35) 
+        actual_confirmed_radio_button_unknown.grid(column=0, columnspan=1, row=45) 
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Dog', variable=self.actual_confirmed, value='dog',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=36) 
+        actual_confirmed_radio_button_unknown.grid(column=0, columnspan=1, row=46) 
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Human', variable=self.actual_confirmed, value='human',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=37)   
+        actual_confirmed_radio_button_unknown.grid(column=0, columnspan=1, row=47)   
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Siren', variable=self.actual_confirmed, value='siren',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=38)
+        actual_confirmed_radio_button_unknown.grid(column=0, columnspan=1, row=48)
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Bird', variable=self.actual_confirmed, value='bird',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=39) 
+        actual_confirmed_radio_button_unknown.grid(column=0, columnspan=1, row=49) 
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Car', variable=self.actual_confirmed, value='car',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=40)
+        actual_confirmed_radio_button_unknown.grid(column=0, columnspan=1, row=50)
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Rumble', variable=self.actual_confirmed, value='rumble',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=41)
+        actual_confirmed_radio_button_unknown.grid(column=0, columnspan=1, row=51)
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='White noise', variable=self.actual_confirmed, value='white_noise',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=2, columnspan=1, row=32)
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=42)
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Plane', variable=self.actual_confirmed, value='plane',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=2, columnspan=1, row=33)
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=43)
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Cow', variable=self.actual_confirmed, value='cow',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=2, columnspan=1, row=34) 
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=44) 
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Buzzy insect', variable=self.actual_confirmed, value='buzzy_insect',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=2, columnspan=1, row=35) 
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=45) 
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Morepork more-pork Part', variable=self.actual_confirmed, value='morepork_more-pork_part',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=2, columnspan=1, row=36) 
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=46) 
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Hammering', variable=self.actual_confirmed, value='hammering',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=2, columnspan=1, row=37)    
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=47)    
        
         predicted_label = ttk.Label(self, text="Predicted (by last model run)", font=LARGE_FONT)
-        predicted_label.grid(column=3, columnspan=1, row=30)       
+        predicted_label.grid(column=2, columnspan=1, row=40)       
         
         self.predicted_label_value = tk.StringVar()
         predicted_label_value_for_value = ttk.Label(self, textvariable=self.predicted_label_value)
-        predicted_label_value_for_value.grid(column=3, columnspan=1, row=31) 
+        predicted_label_value_for_value.grid(column=2, columnspan=1, row=41) 
         
         previous_button = ttk.Button(self, text="Previous", command=lambda: previous_run_result())
-        previous_button.grid(column=0, columnspan=1, row=50)
+        previous_button.grid(column=0, columnspan=1, row=60)
                             
         play_button = ttk.Button(self, text="Play Again", command=lambda: functions.play_clip(str(self.current_model_run_name_recording_id), float(self.current_model_run_name_start_time),self.current_model_run_name_duration, True))
-        play_button.grid(column=1, columnspan=1, row=50)
+        play_button.grid(column=1, columnspan=1, row=60)
         play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: functions.play_clip(str(self.current_model_run_name_recording_id), float(self.current_model_run_name_start_time),self.current_model_run_name_duration, False))
-        play_button.grid(column=1, columnspan=1, row=51)
+        play_button.grid(column=1, columnspan=1, row=61)
                             
         confirm_next_button = ttk.Button(self, text="Confirm Actual and move Next", command=lambda: next_run_result(True))
-        confirm_next_button.grid(column=2, columnspan=1, row=50)
+        confirm_next_button.grid(column=2, columnspan=1, row=60)
         
         next_button = ttk.Button(self, text="Move Next", command=lambda: next_run_result(False))
-        next_button.grid(column=2, columnspan=1, row=51)
+        next_button.grid(column=2, columnspan=1, row=61)
         
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=51) 
+        back_to_home_button.grid(column=0, columnspan=1, row=61) 
         
         def create_spectrograms():
             functions.create_spectrogram_jpg_files_for_next_model_run()
@@ -736,9 +757,10 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
       
         def get_run_results():    
             print('run_names_combo.get()', self.run_names_combo.get())   
-            print('Actual Filter', self.actual_filter.get())   
+#             print('Actual Filter', self.actual_filter.get())   
             print('Predicted Filter', self.predicted_filter.get())        
-            self.run_results = functions.get_model_run_results(self.run_names_combo.get(), self.actual_filter.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get())
+#             self.run_results = functions.get_model_run_results(self.run_names_combo.get(), self.actual_filter.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get())
+            self.run_results = functions.get_model_run_results(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get())
                                        
             number_of_results_returned = len(self.run_results)
             print('number_of_results_returned ', number_of_results_returned)
@@ -795,7 +817,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             self.current_model_run_name_duration = self.run_result[3]
             self.current_model_run_name_duration = 0.7 # The original length of 1.5 is too long for a morepork  
             
-            self.current_model_run_name_actual = self.run_result[4] 
+#             self.current_model_run_name_actual = self.run_result[4] 
           
             self.current_model_run_name_predicted = self.run_result[5]             
             self.current_model_run_name_actual_confirmed = self.run_result[6] 
@@ -809,7 +831,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             else:
                 self.current_model_run_name_probability = '?'
 
-            self.actual_label_value.set(self.current_model_run_name_actual)
+#             self.actual_label_value.set(self.current_model_run_name_actual)
             
             # Set the radio button
             print('current_model_run_name_actual_confirmed', self.current_model_run_name_actual_confirmed)
@@ -845,8 +867,8 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
                 self.actual_confirmed.set('morepork_more-pork_part')
             elif self.current_model_run_name_actual_confirmed == 'hammering':
                 self.actual_confirmed.set('hammering')    
-            else:
-                self.actual_confirmed.set(self.current_model_run_name_actual)
+#             else:
+#                 self.actual_confirmed.set(self.current_model_run_name_actual)
 
 #             self.predicted_label_value.set(self.current_model_run_name_predicted)
             self.predicted_label_value.set(self.current_model_run_name_predicted + ' with ' + self.current_model_run_name_probability + ' probability')

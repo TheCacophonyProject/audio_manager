@@ -581,44 +581,112 @@ def get_onsets_stored_locally(onset_version):
 
 
         
-def get_model_run_results(modelRunName, actualFilter, actualConfirmedFilter, predictedFilter):        
+# def get_model_run_results(modelRunName, actualFilter, actualConfirmedFilter, predictedFilter):        
+#     cur = get_database_connection().cursor()
+#     
+#     if actualConfirmedFilter == 'not-used':
+#     
+#         if actualFilter == 'not-used' and predictedFilter == 'not-used':
+#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName,)) 
+#         elif actualFilter != 'not-used' and predictedFilter == 'not-used':
+#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter)) 
+#         elif actualFilter == 'not-used' and predictedFilter != 'not-used':
+#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predictedFilter)) 
+#         else:
+#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, predictedFilter))
+#             
+#     elif actualConfirmedFilter == 'IS NULL':
+#     
+#         if actualFilter == 'not-used' and predictedFilter == 'not-used':
+#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL ORDER BY recording_id DESC, startTime ASC", (modelRunName, )) 
+#         elif actualFilter != 'not-used' and predictedFilter == 'not-used':
+#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed IS NULL ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter)) 
+#         elif actualFilter == 'not-used' and predictedFilter != 'not-used':
+#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predictedFilter)) 
+#         else:
+#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, predictedFilter)) 
+#     
+#             
+#     else: 
+#         if actualFilter == 'not-used' and predictedFilter == 'not-used':
+#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter)) 
+#         elif actualFilter != 'not-used' and predictedFilter == 'not-used':
+#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, actualConfirmedFilter)) 
+#         elif actualFilter == 'not-used' and predictedFilter != 'not-used':
+#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter, predictedFilter)) 
+#         else:
+#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, actualConfirmedFilter, predictedFilter)) 
+#     
+#     rows = cur.fetchall()
+#     return rows 
+
+def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, predicted_probability_filter, predicted_probability_filter_value_str, location_filter):   
+#     print('modelRunName ', modelRunName)  
+#     print('actualConfirmedFilter ', actualConfirmedFilter)
+#     print('predictedFilter ', predictedFilter)
+#     print('predicted_probability_filter ', predicted_probability_filter)
+#     print('predicted_probability_filter_value_str ', predicted_probability_filter_value_str)
+    
+    if predicted_probability_filter_value_str == '':
+        predicted_probability_filter = 'not_used'
+    else:    
+        if predicted_probability_filter == 'greater_than':  
+            probabilty_comparator = '>'
+            predicted_probability_filter_value = float(predicted_probability_filter_value_str)
+        elif predicted_probability_filter == 'less_than': 
+            probabilty_comparator = '<'
+            predicted_probability_filter_value = float(predicted_probability_filter_value_str)
+    
     cur = get_database_connection().cursor()
     
-    if actualConfirmedFilter == 'not-used':
+    if actualConfirmedFilter == 'not_used':
     
-        if actualFilter == 'not-used' and predictedFilter == 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName,)) 
-        elif actualFilter != 'not-used' and predictedFilter == 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter)) 
-        elif actualFilter == 'not-used' and predictedFilter != 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predictedFilter)) 
+        if predicted_probability_filter == 'not_used' and predictedFilter == 'not_used':
+            cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName,)) 
+        elif predicted_probability_filter != 'not_used' and predictedFilter == 'not_used':
+            cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND probability " + probabilty_comparator + " ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predicted_probability_filter_value)) 
+        elif predicted_probability_filter == 'not_used' and predictedFilter != 'not_used':
+            cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predictedFilter)) 
         else:
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, predictedFilter))
+            cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND probability " + probabilty_comparator + "? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predicted_probability_filter_value, predictedFilter))
             
     elif actualConfirmedFilter == 'IS NULL':
     
-        if actualFilter == 'not-used' and predictedFilter == 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL ORDER BY recording_id DESC, startTime ASC", (modelRunName, )) 
-        elif actualFilter != 'not-used' and predictedFilter == 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed IS NULL ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter)) 
-        elif actualFilter == 'not-used' and predictedFilter != 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predictedFilter)) 
+        if predicted_probability_filter == 'not_used' and predictedFilter == 'not_used':
+            cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL ORDER BY recording_id DESC, startTime ASC", (modelRunName, )) 
+        elif predicted_probability_filter != 'not_used' and predictedFilter == 'not_used':
+            cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND probability " + probabilty_comparator + " ? AND actual_confirmed IS NULL ORDER BY recording_id DESC, startTime ASC", (modelRunName, predicted_probability_filter_value)) 
+        elif predicted_probability_filter == 'not_used' and predictedFilter != 'not_used':
+            cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predictedFilter)) 
         else:
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, predictedFilter)) 
+            cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND probability " + probabilty_comparator + " ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predicted_probability_filter_value, predictedFilter)) 
     
             
     else: 
-        if actualFilter == 'not-used' and predictedFilter == 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter)) 
-        elif actualFilter != 'not-used' and predictedFilter == 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, actualConfirmedFilter)) 
-        elif actualFilter == 'not-used' and predictedFilter != 'not-used':
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter, predictedFilter)) 
+        if predicted_probability_filter == 'not_used' and predictedFilter == 'not_used':
+            cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter)) 
+        elif predicted_probability_filter != 'not_used' and predictedFilter == 'not_used':
+            cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND probability " + probabilty_comparator + " ? AND actual_confirmed = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predicted_probability_filter_value, actualConfirmedFilter)) 
+        elif predicted_probability_filter == 'not_used' and predictedFilter != 'not_used':
+            cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter, predictedFilter)) 
         else:
-            cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, actualConfirmedFilter, predictedFilter)) 
+            cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND probability " + probabilty_comparator + " ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predicted_probability_filter_value, actualConfirmedFilter, predictedFilter))
+#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter, predictedFilter))  
     
     rows = cur.fetchall()
-    return rows 
+    
+    # Now going to just return rows for selected location.  Above sql was getting far too nasty.  I'll do this with variables one day :-)
+    if location_filter == 'Not Used':
+        return rows
+    else:    
+        rowsToReturn = []
+        for row in rows:
+            # Get location via recording_id
+            recording_id = row[1]
+            device_super_name, recordingDateTime = get_single_recording_info_from_local_db(recording_id)
+            if device_super_name == location_filter:
+                rowsToReturn.append(row)
+        return rowsToReturn 
 
 def get_model_run_result(database_ID):        
     cur = get_database_connection().cursor()
@@ -1420,6 +1488,18 @@ def get_unique_model_run_names():
         unique_model_run_names.append(row[0])
         
     return unique_model_run_names  
+
+def get_unique_locations():   
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT DISTINCT device_super_name FROM recordings") 
+    rows = cur.fetchall()  
+    
+    unique_locations = []
+    unique_locations.append('Not Used')
+    for row in rows:
+        unique_locations.append(row[0])        
+        
+    return unique_locations  
 
 
 def create_arff_file_for_weka_image_filter_input():
