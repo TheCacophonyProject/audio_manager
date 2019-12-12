@@ -5,7 +5,11 @@ import main.functions as functions
 
 print('hello')
 
-functions.update_onsets_with_latest_model_run_actual_confirmed()
+# functions.update_onsets_with_latest_model_run_actual_confirmed()
+
+# functions.update_onsets_device_super_name()
+
+functions.update_model_run_result_device_super_name()
     
 
 # def test_update_recording_in_database():
