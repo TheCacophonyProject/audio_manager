@@ -3,6 +3,7 @@ Created on 5 Sep 2019
 
 @author: tim
 '''
+from tkinter.messagebox import showinfo
 
 #  https://www.youtube.com/watch?v=A0gaXfM1UN0&t=343s
 # https://www.youtube.com/watch?v=D8-snVfekto
@@ -10,7 +11,7 @@ Created on 5 Sep 2019
 # https://www.tutorialspoint.com/python3/python_gui_programming
 
 HEIGHT = 1000
-WIDTH = 1000
+WIDTH = 1100
 
 import tkinter as tk
 
@@ -26,7 +27,7 @@ import main.parameters as parameters
 from main.parameters import *
 
 import threading
-LARGE_FONT= ("Verdana", 11)
+LARGE_FONT= ("Verdana", 12)
 
 
 class Main_GUI(tk.Tk):
@@ -374,7 +375,7 @@ class CreateSpectrogramsPage(tk.Frame):
         
         onset_instructions = "Use this page to run the create spectrogram function that will create spectrograms in the spectrogram folder"
         msg = tk.Message(self, text = onset_instructions)
-        msg.config(bg='lightgreen', font=('times', 16), width=1000)
+        msg.config(bg='lightgreen', font=('times', 17), width=1000)
         msg.grid(column=0, columnspan=2, row=1)  
                 
         run_button = ttk.Button(self, text="Run", command=lambda: functions.create_focused_mel_spectrogram_jps_using_onset_pairs())
@@ -506,6 +507,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         if len(self.unique_model_run_names) > 0:
             self.run_names_combo.current(0)
             self.run_names_combo.grid(column=1, columnspan=1,row=2) 
+            self.run_names_combo.current(len(self.unique_model_run_names) - 1)       
             
         location_filter_label = ttk.Label(self, text="Location Filter")
         location_filter_label.grid(column=2, columnspan=1, row=1)      
@@ -515,9 +517,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         
         if len(self.unique_locations) > 0:
             self.location_filter_combo.current(0)
-            self.location_filter_combo.grid(column=2, columnspan=1,row=2)         
-
-            
+            self.location_filter_combo.grid(column=2, columnspan=1,row=2) 
        
         
 #         actual_filter_label = ttk.Label(self, text="Filter - Tags from Server", font=LARGE_FONT)
@@ -574,7 +574,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         self.actual_confirmed_filter.set('not_used')
         
         predicted_filter_label = ttk.Label(self, text="Filter - Predicted", font=LARGE_FONT)
-        predicted_filter_label.grid(column=2, columnspan=1, row=3)  
+        predicted_filter_label.grid(column=2, columnspan=2, row=3)  
         
         
         
@@ -675,7 +675,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
 #         actual_label_for_value.grid(column=0, columnspan=1, row=41)         
         
         actual_label_confirmed = ttk.Label(self, text="Actual Confirmed", font=LARGE_FONT)
-        actual_label_confirmed.grid(column=0, columnspan=1, row=40)
+        actual_label_confirmed.grid(column=0, columnspan=2, row=40)
 #         actual_label_confirmed2 = ttk.Label(self, text="(The default is the same as Actual - select to change and save)")
 #         actual_label_confirmed2.grid(column=0, columnspan=1, row=41) 
         
@@ -729,10 +729,10 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: functions.play_clip(str(self.current_model_run_name_recording_id), float(self.current_model_run_name_start_time),self.current_model_run_name_duration, False))
         play_button.grid(column=1, columnspan=1, row=61)
                             
-        confirm_next_button = ttk.Button(self, text="Confirm Actual and move Next", command=lambda: next_run_result(True))
+        confirm_next_button = ttk.Button(self, text="Next", command=lambda: next_run_result())
         confirm_next_button.grid(column=2, columnspan=1, row=60)
         
-        next_button = ttk.Button(self, text="Move Next", command=lambda: next_run_result(False))
+        next_button = ttk.Button(self, text="Unselect", command=lambda: unselect_actual_confirmed())
         next_button.grid(column=2, columnspan=1, row=61)
         
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
@@ -744,7 +744,11 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         def confirm_actual():
             print('self.actual_confirmed.get() ', self.actual_confirmed.get())
             functions.update_model_run_result(self.current_model_run_name_ID, self.actual_confirmed.get())
-            functions.update_onset(self.recording_id.get(), self.start_time_seconds.get(), self.actual_confirmed.get())
+            functions.update_onset(self.current_model_run_name_recording_id, self.current_model_run_name_start_time, self.actual_confirmed.get())
+        
+        def unselect_actual_confirmed():
+            self.actual_confirmed.set('not_used')
+            confirm_actual()
         
         def refresh_unique_model_run_names():
             self.unique_model_run_names = functions.get_unique_model_run_names()
@@ -771,14 +775,14 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
                 print('self.current_model_run_name_ID ', self.current_model_run_name_ID)                     
                 load_current_model_run_result()
 
-        def next_run_result(confirm): 
-            if confirm:
-                confirm_actual()           
+        def next_run_result():
           
             if self.current_model_run_result_array_pos < (len(self.run_results)) -1:
                 self.current_model_run_result_array_pos +=1
                 self.current_model_run_name_ID = self.run_results[self.current_model_run_result_array_pos][0]
                 load_current_model_run_result()
+                
+                   
              
         def previous_run_result():
             if self.current_model_run_result_array_pos > 0:
@@ -866,7 +870,10 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             elif self.current_model_run_name_actual_confirmed == 'morepork_more-pork_part':
                 self.actual_confirmed.set('morepork_more-pork_part')
             elif self.current_model_run_name_actual_confirmed == 'hammering':
-                self.actual_confirmed.set('hammering')    
+                self.actual_confirmed.set('hammering')  
+            else:
+#                 self.actual_confirmed.set(None) 
+                self.actual_confirmed.set('not_set')   
 #             else:
 #                 self.actual_confirmed.set(self.current_model_run_name_actual)
 

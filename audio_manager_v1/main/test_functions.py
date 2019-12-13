@@ -9,7 +9,9 @@ print('hello')
 
 # functions.update_onsets_device_super_name()
 
-functions.update_model_run_result_device_super_name()
+# functions.update_model_run_result_device_super_name()
+
+functions.test_query()
     
 
 # def test_update_recording_in_database():

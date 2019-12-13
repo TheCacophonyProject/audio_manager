@@ -642,14 +642,14 @@ def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, 
     if actualConfirmedFilter !='not_used':
         sqlBuilding += " AND "
         if actualConfirmedFilter == "IS NULL":
-            sqlBuilding += actualConfirmedFilter + "IS NULL"
+            sqlBuilding += "actual_confirmed IS NULL"
         else:
             sqlBuilding +=  "actual_confirmed = '" + actualConfirmedFilter + "'"
             
     if predictedFilter !='not_used':
         sqlBuilding += " AND "
         if predictedFilter == "IS NULL":
-            sqlBuilding += predictedFilter + "IS NULL"
+            sqlBuilding += "predictedByModel IS NULL"
         else:
             sqlBuilding +=  "predictedByModel = '" + predictedFilter + "'"
             
@@ -811,26 +811,48 @@ def update_local_tags_with_version():
     
 
     
-def update_model_run_result(ID, actual_confirmed):
-    if (actual_confirmed == 'None'): # This happens if the user does not select an option.  None causes issues later with creating the model as None is not valid class for the model
-        return  
+# def update_model_run_result(ID, actual_confirmed):
+#     if (actual_confirmed == 'None'): # Must not put None into the db as the model breaks - instead convert to Null as descrived here - https://johnmludwig.blogspot.com/2018/01/null-vs-none-in-sqlite3-for-python.html
+#  
+#         return  
+#     
+#     cur = get_database_connection().cursor()
+#    
+#     sql = ''' UPDATE model_run_result
+#               SET actual_confirmed = ?               
+#               WHERE ID = ?'''
+#     cur = get_database_connection().cursor()
+#     cur.execute(sql, (actual_confirmed, ID))
+#     
+#     get_database_connection().commit() 
     
+def update_model_run_result(ID, actual_confirmed):
     cur = get_database_connection().cursor()
-   
     sql = ''' UPDATE model_run_result
               SET actual_confirmed = ?               
               WHERE ID = ?'''
-    cur = get_database_connection().cursor()
-    cur.execute(sql, (actual_confirmed, ID))
+    if (actual_confirmed == 'None') or (actual_confirmed == 'not_used'): # Must not put None into the db as the model breaks - instead convert to Null as descrived here - https://johnmludwig.blogspot.com/2018/01/null-vs-none-in-sqlite3-for-python.html
+        cur.execute(sql, (None, ID))
+    else:
+        cur.execute(sql, (actual_confirmed, ID))
     
     get_database_connection().commit()  
     
-def update_onset(recording_id, start_time_seconds, actual_confirmed):
-    if (actual_confirmed == 'None'): # This happens if the user does not select an option.  None causes issues later with creating the model as None is not valid class for the model
-        return  
+# def update_onset(recording_id, start_time_seconds, actual_confirmed):
+#     if (actual_confirmed == 'None'): # This happens if the user does not select an option.  None causes issues later with creating the model as None is not valid class for the model
+#         return  
+#     
+#     cur = get_database_connection().cursor()
+#     cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE recording_id = ? AND start_time_seconds = ?", (actual_confirmed, recording_id, start_time_seconds))  
+#         
+#     get_database_connection().commit()      
     
+def update_onset(recording_id, start_time_seconds, actual_confirmed):
     cur = get_database_connection().cursor()
-    cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE recording_id = ? AND start_time_seconds = ?", (actual_confirmed, recording_id, start_time_seconds))  
+    if (actual_confirmed == 'None') or (actual_confirmed == 'not_used'): # Must not put None into the db as the model breaks - instead convert to Null as descrived here - https://johnmludwig.blogspot.com/2018/01/null-vs-none-in-sqlite3-for-python.html
+        cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE recording_id = ? AND start_time_seconds = ?", (None, recording_id, start_time_seconds))   
+    else:        
+        cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE recording_id = ? AND start_time_seconds = ?", (actual_confirmed, recording_id, start_time_seconds))  
         
     get_database_connection().commit()      
 
@@ -1738,8 +1760,21 @@ def update_model_run_result_device_super_name():
         get_database_connection().commit()
         
         
-        
-    
+def test_query():        
+    cur = get_database_connection().cursor()
+#     cur.execute("SELECT ID, device_super_name FROM model_run_result WHERE modelRunName = '2019_12_11_1' AND device_super_name = 'Hammond Park' ORDER BY recording_id DESC, startTime ASC")
+    cur.execute("SELECT ID, device_super_name FROM model_run_result WHERE modelRunName = '2019_12_11_1' ORDER BY recording_id DESC, startTime ASC")  
+    model_run_results = cur.fetchall() 
+    count = 0
+    total = len(model_run_results)
+    for model_run_result in model_run_results:
+        count+=1
+        print('Processing ', count, ' of ', total)
+        ID = model_run_result[0]
+        device_super_name = model_run_result[1] 
+        print('ID is ', ID, ' device_super_name is ', device_super_name) 
+        if count > 20:
+            break  
     
 
 
