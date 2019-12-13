@@ -579,7 +579,7 @@ def get_onsets_stored_locally(onset_version):
     rows = cur.fetchall()
     return rows 
 
-def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, predicted_probability_filter, predicted_probability_filter_value_str, location_filter):   
+def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, predicted_probability_filter, predicted_probability_filter_value_str, location_filter, actual_confirmed_other, predicted_other):   
    
     if location_filter =='Not Used':
         location_filter ='not_used'
@@ -589,16 +589,29 @@ def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, 
     if actualConfirmedFilter !='not_used':
         sqlBuilding += " AND "
         if actualConfirmedFilter == "IS NULL":
-            sqlBuilding += "actual_confirmed IS NULL"
+            if actual_confirmed_other == 'off':
+                sqlBuilding += "actual_confirmed IS NULL"
+            else: # Everything other is checked
+                sqlBuilding += "actual_confirmed IS NOT NULL"
         else:
-            sqlBuilding +=  "actual_confirmed = '" + actualConfirmedFilter + "'"
+            if actual_confirmed_other == 'off':
+                sqlBuilding +=  "actual_confirmed = '" + actualConfirmedFilter + "'"
+            else: # Everything other is checked
+                sqlBuilding +=  "actual_confirmed <> '" + actualConfirmedFilter + "'"
+                
             
     if predictedFilter !='not_used':
         sqlBuilding += " AND "
         if predictedFilter == "IS NULL":
-            sqlBuilding += "predictedByModel IS NULL"
+            if predicted_other == 'off':
+                sqlBuilding += "predictedByModel IS NULL"
+            else:
+                sqlBuilding += "predictedByModel IS NOT NULL"
         else:
-            sqlBuilding +=  "predictedByModel = '" + predictedFilter + "'"
+            if predicted_other == 'off':
+                sqlBuilding +=  "predictedByModel = '" + predictedFilter + "'"
+            else:
+                sqlBuilding +=  "predictedByModel <> '" + predictedFilter + "'"
             
     if location_filter !='not_used':
         sqlBuilding += " AND "

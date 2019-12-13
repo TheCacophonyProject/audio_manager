@@ -497,7 +497,13 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             self.location_filter_combo.grid(column=2, columnspan=1,row=2) 
    
         actual_confirmed_filter_label = ttk.Label(self, text="Filter - Actual Confirmed", font=LARGE_FONT)
-        actual_confirmed_filter_label.grid(column=0, columnspan=2, row=3)   
+        actual_confirmed_filter_label.grid(column=0, columnspan=1, row=3)   
+        
+        # http://effbot.org/tkinterbook/checkbutton.htm
+        self.actual_confirmed_other = StringVar() 
+        actual_confirmed_other_than_checkbox = ttk.Checkbutton(self,text='Everything OTHER than selected', variable=self.actual_confirmed_other, onvalue="on", offvalue="off")
+        actual_confirmed_other_than_checkbox.grid(column=1, columnspan=1, row=3)
+        self.actual_confirmed_other.set('off')
              
         self.actual_confirmed_filter = tk.StringVar()
         actual_confirmed_filter_radio_button_none = ttk.Radiobutton(self,text='Not Used', variable=self.actual_confirmed_filter, value='not_used')
@@ -539,7 +545,12 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         self.actual_confirmed_filter.set('not_used')
         
         predicted_filter_label = ttk.Label(self, text="Filter - Predicted", font=LARGE_FONT)
-        predicted_filter_label.grid(column=2, columnspan=2, row=3)  
+        predicted_filter_label.grid(column=2, columnspan=1, row=3)  
+        
+        self.predicted_other = StringVar()
+        predicted_other_than_checkbox = ttk.Checkbutton(self,text='Everything OTHER than selected', variable=self.predicted_other, onvalue="on", offvalue="off")
+        predicted_other_than_checkbox.grid(column=3, columnspan=1, row=3)
+        self.predicted_other.set('off')
              
         self.predicted_filter = tk.StringVar()        
         predicted_filter_radio_button_none = ttk.Radiobutton(self,text='Not Used', variable=self.predicted_filter, value='not_used')
@@ -588,7 +599,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         predicted_probability_filter_radio_button_less_than.grid(column=3, columnspan=1, row=26)
         self.predicted_probability_filter_value = StringVar(value='')
         self.predicted_probability_filter_entry = tk.Entry(self,  textvariable=self.predicted_probability_filter_value, width=10).grid(column=2, columnspan=1,row=27)    
-        predicted_probability_filter_radio_button_not_used = ttk.Radiobutton(self,text='Not used', variable=self.predicted_probability_filter, value='not_used')
+        predicted_probability_filter_radio_button_not_used = ttk.Radiobutton(self,text='Not used', variable=self.predicted_probability_filter, value='not_used',command=lambda: self.predicted_probability_filter_value.set(''))
         predicted_probability_filter_radio_button_not_used.grid(column=3, columnspan=1, row=27)
        
         self.predicted_probability_filter.set('not_used')        
@@ -629,7 +640,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
        
         actual_label_confirmed = ttk.Label(self, text="Actual Confirmed", font=LARGE_FONT)
         actual_label_confirmed.grid(column=0, columnspan=2, row=40)
-      
+              
         self.actual_confirmed = tk.StringVar()
 
         actual_confirmed_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork more-pork', variable=self.actual_confirmed, value='morepork_more-pork',command=lambda: confirm_actual())
@@ -714,11 +725,15 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
              
             # Need to check that the user didn't enter a probability without selecting the greater or lessor filter
             if (self.predicted_probability_filter.get() == 'not_used'):
-                if self.predicted_probability_filter_value:
+                print('self.predicted_probability_filter_value.get() ', self.predicted_probability_filter_value.get())
+                if self.predicted_probability_filter_value.get():
                     showinfo("Select Probability Sign", "Either clear the probability value, or select a probability radio button")
                     return
     
-            self.run_results = functions.get_model_run_results(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get())
+            print('self.actual_confirmed_other ', self.actual_confirmed_other.get())
+            print('self.predicted_other ', self.predicted_other.get())
+            
+            self.run_results = functions.get_model_run_results(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get(), self.actual_confirmed_other.get(), self.predicted_other.get())
                                        
             number_of_results_returned = len(self.run_results)
             print('number_of_results_returned ', number_of_results_returned)
