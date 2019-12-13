@@ -96,8 +96,6 @@ class HomePage(tk.Frame):
                             command=lambda: controller.show_frame(CreateWekaModelPage))        
         createWekaModelPage_button.pack()
         
-              
-        
         outside_normal_flow_label = tk.Label(self, text="Functions below here are outside normal model development iteration")
         outside_normal_flow_label.pack(pady=10,padx=10)
         
@@ -108,12 +106,10 @@ class HomePage(tk.Frame):
         other_or_no_longer_used_label = tk.Label(self, text="Functions below here probably no longer needed")
         other_or_no_longer_used_label.pack(pady=10,padx=10)       
               
-               
         createTagsFromOnsetsPage_button = ttk.Button(self, text="Create Tags from Onsets",
                             command=lambda: controller.show_frame(CreateTagsFromOnsetsPage))         
         createTagsFromOnsetsPage_button.pack()
-                
-        
+       
         createSpectrogramsPage_button = ttk.Button(self, text="Create Spectrograms",
                             command=lambda: controller.show_frame(CreateSpectrogramsPage))        
         createSpectrogramsPage_button.pack()
@@ -161,9 +157,7 @@ class RecordingsPage(tk.Frame):
         device_super_name = StringVar(value='Hammond Park')
         device_super_name_entry = tk.Entry(self,  textvariable=device_super_name, width=30)
         device_super_name_entry.grid(column=1, columnspan=1,row=2)
-       
-        
-        
+               
         get_recordings_button = ttk.Button(self, text="Load Recordings from local folder ",
                             command=lambda: functions.load_recordings_from_local_folder(device_name.get(), device_super_name.get()))
         get_recordings_button.grid(column=0, columnspan=1, row=3)
@@ -313,23 +307,7 @@ class ClassifyOnsetsUsingWekaModelPage(tk.Frame):
         
         evaluate_button = ttk.Button(self, text="Classify Onsets",command=lambda: functions.classify_onsets_using_weka_model())
         evaluate_button.grid(column=0, columnspan=1, row=15)     
-        
-#         update_instructions = 'Once the new model has been used to evaluate all the onsets, the new rows in the model_run_result table, need to be updated with previously confirmed sounds from the previous run (e.g. they are confirmed morepork, unknown, car etc). Enter the model run name in the box'
-#         update_actual_confirmed_msg = tk.Message(self, text = update_instructions)
-#         update_actual_confirmed_msg.config( width=600)
-#         update_actual_confirmed_msg.grid(column=0, columnspan=1, row=16)   
-#         
-#         previous_model_run_name = StringVar(value='')
-#         previous_model_run_entry = tk.Entry(self,  textvariable=previous_model_run_name, width=30)
-#         previous_model_run_entry.grid(column=1, columnspan=1, row=16) 
-#         
-#         update_actual_confirmed_button = ttk.Button(self, text="Update Actual Confirmed",command=lambda: functions.update_latest_model_run_results_with_previous_confirmed(previous_model_run_name.get()))
-#         update_actual_confirmed_button.grid(column=2, columnspan=1, row=16) 
-        
-        
-        
-             
-
+ 
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))  
         back_to_home_button.grid(column=0, columnspan=1, row=20) 
                             
@@ -338,7 +316,6 @@ class CreateOnsetsPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.clip_folder = StringVar(value='')
-       
              
         title_label = ttk.Label(self, text="Create Onsets", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)    
@@ -518,19 +495,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         if len(self.unique_locations) > 0:
             self.location_filter_combo.current(0)
             self.location_filter_combo.grid(column=2, columnspan=1,row=2) 
-       
-        
-#         actual_filter_label = ttk.Label(self, text="Filter - Tags from Server", font=LARGE_FONT)
-#         actual_filter_label.grid(column=0, columnspan=1, row=2)        
-#         self.actual_filter = tk.StringVar()
-#         actual_filter_radio_button_none = ttk.Radiobutton(self,text='Not Used', variable=self.actual_filter, value='not_used')
-#         actual_filter_radio_button_none.grid(column=0, columnspan=1, row=3)
-#         actual_filter_radio_button_morepork_classic = ttk.Radiobutton(self,text='morepork_more-pork', variable=self.actual_filter, value='morepork_more-pork')
-#         actual_filter_radio_button_morepork_classic.grid(column=0, columnspan=1, row=4)
-#         actual_filter_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_filter, value='unknown')
-#         actual_filter_radio_button_unknown.grid(column=0, columnspan=1, row=5) 
-#         self.actual_filter.set('not_used')
-        
+   
         actual_confirmed_filter_label = ttk.Label(self, text="Filter - Actual Confirmed", font=LARGE_FONT)
         actual_confirmed_filter_label.grid(column=0, columnspan=2, row=3)   
              
@@ -575,10 +540,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         
         predicted_filter_label = ttk.Label(self, text="Filter - Predicted", font=LARGE_FONT)
         predicted_filter_label.grid(column=2, columnspan=2, row=3)  
-        
-        
-        
-              
+             
         self.predicted_filter = tk.StringVar()        
         predicted_filter_radio_button_none = ttk.Radiobutton(self,text='Not Used', variable=self.predicted_filter, value='not_used')
         predicted_filter_radio_button_none.grid(column=2, columnspan=1, row=13)
@@ -628,11 +590,8 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         self.predicted_probability_filter_entry = tk.Entry(self,  textvariable=self.predicted_probability_filter_value, width=10).grid(column=2, columnspan=1,row=27)    
         predicted_probability_filter_radio_button_not_used = ttk.Radiobutton(self,text='Not used', variable=self.predicted_probability_filter, value='not_used')
         predicted_probability_filter_radio_button_not_used.grid(column=3, columnspan=1, row=27)
-        
-        
-        self.predicted_probability_filter.set('not_used')        
        
-        
+        self.predicted_probability_filter.set('not_used')        
         
         load_run_results_button = ttk.Button(self, text="Load Run Results using Filters",command=lambda: get_run_results())
         load_run_results_button.grid(column=0, columnspan=1, row=28) 
@@ -667,18 +626,10 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         self.waveform_label = ttk.Label(self, image=None)
         self.waveform_label.grid(column=1, columnspan=1, row=31)
         
-#         actual_label = ttk.Label(self, text="Tags from Server", font=LARGE_FONT)
-#         actual_label.grid(column=0, columnspan=1, row=30) 
-        
-#         self.actual_label_value = tk.StringVar()
-#         actual_label_for_value = ttk.Label(self, textvariable=self.actual_label_value)
-#         actual_label_for_value.grid(column=0, columnspan=1, row=41)         
-        
+       
         actual_label_confirmed = ttk.Label(self, text="Actual Confirmed", font=LARGE_FONT)
         actual_label_confirmed.grid(column=0, columnspan=2, row=40)
-#         actual_label_confirmed2 = ttk.Label(self, text="(The default is the same as Actual - select to change and save)")
-#         actual_label_confirmed2.grid(column=0, columnspan=1, row=41) 
-        
+      
         self.actual_confirmed = tk.StringVar()
 
         actual_confirmed_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork more-pork', variable=self.actual_confirmed, value='morepork_more-pork',command=lambda: confirm_actual())
@@ -759,11 +710,14 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             self.current_model_run_result_array_pos = 0      
             load_current_model_run_result() 
       
-        def get_run_results():    
-            print('run_names_combo.get()', self.run_names_combo.get())   
-#             print('Actual Filter', self.actual_filter.get())   
-            print('Predicted Filter', self.predicted_filter.get())        
-#             self.run_results = functions.get_model_run_results(self.run_names_combo.get(), self.actual_filter.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get())
+        def get_run_results(): 
+             
+            # Need to check that the user didn't enter a probability without selecting the greater or lessor filter
+            if (self.predicted_probability_filter.get() == 'not_used'):
+                if self.predicted_probability_filter_value:
+                    showinfo("Select Probability Sign", "Either clear the probability value, or select a probability radio button")
+                    return
+    
             self.run_results = functions.get_model_run_results(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get())
                                        
             number_of_results_returned = len(self.run_results)
@@ -781,8 +735,6 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
                 self.current_model_run_result_array_pos +=1
                 self.current_model_run_name_ID = self.run_results[self.current_model_run_result_array_pos][0]
                 load_current_model_run_result()
-                
-                   
              
         def previous_run_result():
             if self.current_model_run_result_array_pos > 0:
@@ -800,7 +752,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             self.spectrogram_label.config(image=self.spectrogram_image)
             self.waveform_label.config(image=self.waveform_image)
             
-        def load_current_model_run_result():
+        def load_current_model_run_result():           
 
             self.run_result = functions.get_model_run_result(int(self.current_model_run_name_ID)) 
             
@@ -812,30 +764,20 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             
             self.location_recorded_value.set(str(device_super_name))
             self.when_recorded_value.set(str(recordingDateTime))
-
-#             self.recorded_at_value.set(str(device_super_name) + " " + str(recordingDateTime))  
-              
+            
             self.current_model_run_name_start_time = self.run_result[2]
             self.start_time.set(self.current_model_run_name_start_time)
             
             self.current_model_run_name_duration = self.run_result[3]
             self.current_model_run_name_duration = 0.7 # The original length of 1.5 is too long for a morepork  
-            
-#             self.current_model_run_name_actual = self.run_result[4] 
-          
+        
             self.current_model_run_name_predicted = self.run_result[5]             
             self.current_model_run_name_actual_confirmed = self.run_result[6] 
-            
-#             roundedProbabilityStr = "{0:.2f}".format(self.run_result[7])
-            
-#             self.current_model_run_name_probability = self.run_result[7]  
-#             self.current_model_run_name_probability = self.run_result[7]
+
             if self.run_result[7]:
                 self.current_model_run_name_probability = "{0:.2f}".format(self.run_result[7])
             else:
                 self.current_model_run_name_probability = '?'
-
-#             self.actual_label_value.set(self.current_model_run_name_actual)
             
             # Set the radio button
             print('current_model_run_name_actual_confirmed', self.current_model_run_name_actual_confirmed)
@@ -872,12 +814,8 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             elif self.current_model_run_name_actual_confirmed == 'hammering':
                 self.actual_confirmed.set('hammering')  
             else:
-#                 self.actual_confirmed.set(None) 
                 self.actual_confirmed.set('not_set')   
-#             else:
-#                 self.actual_confirmed.set(self.current_model_run_name_actual)
 
-#             self.predicted_label_value.set(self.current_model_run_name_predicted)
             self.predicted_label_value.set(self.current_model_run_name_predicted + ' with ' + self.current_model_run_name_probability + ' probability')
             
             threading.Thread(target=play_clip(), args=(1,)).start()

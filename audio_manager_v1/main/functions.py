@@ -579,60 +579,7 @@ def get_onsets_stored_locally(onset_version):
     rows = cur.fetchall()
     return rows 
 
-
-        
-# def get_model_run_results(modelRunName, actualFilter, actualConfirmedFilter, predictedFilter):        
-#     cur = get_database_connection().cursor()
-#     
-#     if actualConfirmedFilter == 'not-used':
-#     
-#         if actualFilter == 'not-used' and predictedFilter == 'not-used':
-#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName,)) 
-#         elif actualFilter != 'not-used' and predictedFilter == 'not-used':
-#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter)) 
-#         elif actualFilter == 'not-used' and predictedFilter != 'not-used':
-#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predictedFilter)) 
-#         else:
-#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, predictedFilter))
-#             
-#     elif actualConfirmedFilter == 'IS NULL':
-#     
-#         if actualFilter == 'not-used' and predictedFilter == 'not-used':
-#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL ORDER BY recording_id DESC, startTime ASC", (modelRunName, )) 
-#         elif actualFilter != 'not-used' and predictedFilter == 'not-used':
-#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed IS NULL ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter)) 
-#         elif actualFilter == 'not-used' and predictedFilter != 'not-used':
-#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predictedFilter)) 
-#         else:
-#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, predictedFilter)) 
-#     
-#             
-#     else: 
-#         if actualFilter == 'not-used' and predictedFilter == 'not-used':
-#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter)) 
-#         elif actualFilter != 'not-used' and predictedFilter == 'not-used':
-#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, actualConfirmedFilter)) 
-#         elif actualFilter == 'not-used' and predictedFilter != 'not-used':
-#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter, predictedFilter)) 
-#         else:
-#             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualFilter, actualConfirmedFilter, predictedFilter)) 
-#     
-#     rows = cur.fetchall()
-#     return rows 
-
 def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, predicted_probability_filter, predicted_probability_filter_value_str, location_filter):   
-#     print('modelRunName ', modelRunName)  
-#     print('actualConfirmedFilter ', actualConfirmedFilter)
-#     print('predictedFilter ', predictedFilter)
-#     print('predicted_probability_filter ', predicted_probability_filter)
-#     print('predicted_probability_filter_value_str ', predicted_probability_filter_value_str)
-
-#     sql = "SELECT ID FROM model_run_result WHERE "
-#     
-# 
-# sqlPartSELECT = "SELECT ID FROM model_run_result"
-# sqlPartORDER = "ORDER BY recording_id DESC, startTime ASC" 
-    
    
     if location_filter =='Not Used':
         location_filter ='not_used'
@@ -657,7 +604,7 @@ def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, 
         sqlBuilding += " AND "
         sqlBuilding +=  "device_super_name = '" + location_filter + "'"
         
-    if predicted_probability_filter_value_str == '':
+    if (predicted_probability_filter_value_str == '') or (predicted_probability_filter == 'not_used'):
         predicted_probability_filter = 'not_used'
     else:    
         if predicted_probability_filter == 'greater_than':  
@@ -678,80 +625,12 @@ def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, 
 #     cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = '2019_12_11_1' ORDER BY recording_id DESC, startTime ASC")
     rows = cur.fetchall()
     return rows
-    
-#     
-#     cur = get_database_connection().cursor()
-#     
-#     if actualConfirmedFilter == 'not_used':
-#         
-#         if predicted_probability_filter == 'not_used' and predictedFilter == 'not_used':
-#             cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName,)) 
-#              sqlPartWHERE = "modelRunName = ?"
-#              sqlPartParameters = ", (modelRunName,)"
-#         elif predicted_probability_filter != 'not_used' and predictedFilter == 'not_used':
-#             cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND probability " + probabilty_comparator + " ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predicted_probability_filter_value))
-#             sqlPartWHERE = "modelRunName = ?"
-#             sqlPartParameters = ", (modelRunName,)"
-#         elif predicted_probability_filter == 'not_used' and predictedFilter != 'not_used':
-#             cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predictedFilter))
-#             sqlPartWHERE = "modelRunName = ?"
-#             sqlPartParameters = ", (modelRunName,)" 
-#         else:
-#             cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND probability " + probabilty_comparator + "? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predicted_probability_filter_value, predictedFilter))
-#             sqlPartWHERE = "modelRunName = ?"
-#             sqlPartParameters = ", (modelRunName,)"
-#             
-#     elif actualConfirmedFilter == 'IS NULL':
-#     
-#         if predicted_probability_filter == 'not_used' and predictedFilter == 'not_used':
-#             cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL ORDER BY recording_id DESC, startTime ASC", (modelRunName, ))
-#             sqlPartWHERE = "modelRunName = ?"
-#             sqlPartParameters = ", (modelRunName,)" 
-#         elif predicted_probability_filter != 'not_used' and predictedFilter == 'not_used':
-#             cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND probability " + probabilty_comparator + " ? AND actual_confirmed IS NULL ORDER BY recording_id DESC, startTime ASC", (modelRunName, predicted_probability_filter_value))
-#             sqlPartWHERE = "modelRunName = ?"
-#             sqlPartParameters = ", (modelRunName,)" 
-#         elif predicted_probability_filter == 'not_used' and predictedFilter != 'not_used':
-#             cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predictedFilter))
-#             sqlPartWHERE = "modelRunName = ?"
-#             sqlPartParameters = ", (modelRunName,)" 
-#         else:
-#             cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND probability " + probabilty_comparator + " ? AND actual_confirmed IS NULL AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predicted_probability_filter_value, predictedFilter)) 
-#     
-#             
-#     else: 
-#         if predicted_probability_filter == 'not_used' and predictedFilter == 'not_used':
-#             cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter)) 
-#         elif predicted_probability_filter != 'not_used' and predictedFilter == 'not_used':
-#             cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND probability " + probabilty_comparator + " ? AND actual_confirmed = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predicted_probability_filter_value, actualConfirmedFilter)) 
-#         elif predicted_probability_filter == 'not_used' and predictedFilter != 'not_used':
-#             cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter, predictedFilter)) 
-#         else:
-#             cur.execute("SELECT ID, recording_id FROM model_run_result WHERE modelRunName = ? AND probability " + probabilty_comparator + " ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, predicted_probability_filter_value, actualConfirmedFilter, predictedFilter))
-# #             cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND actual_confirmed = ? AND predictedByModel = ? ORDER BY recording_id DESC, startTime ASC", (modelRunName, actualConfirmedFilter, predictedFilter))  
-#     
-#     rows = cur.fetchall()
-#     
-#     # Now going to just return rows for selected location.  Above sql was getting far too nasty.  I'll do this with variables one day :-)
-#     if location_filter == 'Not Used':
-#         return rows
-#     else:    
-#         rowsToReturn = []
-#         for row in rows:
-#             # Get location via recording_id
-#             recording_id = row[1]
-#             device_super_name, recordingDateTime = get_single_recording_info_from_local_db(recording_id)
-#             if device_super_name == location_filter:
-#                 rowsToReturn.append(row)
-#         return rowsToReturn 
 
 def get_model_run_result(database_ID):        
     cur = get_database_connection().cursor()
     cur.execute("SELECT ID, recording_id, startTime, duration, actual, predictedByModel, actual_confirmed, probability, device_super_name FROM model_run_result WHERE ID = ?", (database_ID,)) 
     rows = cur.fetchall()
     return rows[0] 
-
-
     
 def scan_local_folder_for_recordings_not_in_local_db_and_update(device_name, device_super_name):
     recordings_folder = getRecordingsFolder()
@@ -764,14 +643,11 @@ def scan_local_folder_for_recordings_not_in_local_db_and_update(device_name, dev
         # https://stackoverflow.com/questions/16561362/python-how-to-check-if-a-result-set-is-empty
         row = cur.fetchone()
         if row == None:
-           # Get the information for this recording from server and insert into local db
-    #            update_recording_information_for_single_recording(recording_id)
+           # Get the information for this recording from server and insert into local db   
             filename = recording_id + '.m4a'
             insert_recording_into_database(recording_id,filename, device_name,device_super_name) # The device name will be updated next when getting infor from server
             # Now update this recording with information from server
             update_recording_information_for_single_recording(recording_id)
-        
-
            
 def create_tags_from_folder_of_unknown_images():
     # This will probably only get used to recreate the unknown tags from the unknown images - as I'm not sure where the text file of this is/exists
@@ -809,23 +685,6 @@ def update_local_tags_with_version():
     
     get_database_connection().commit()    
     
-
-    
-# def update_model_run_result(ID, actual_confirmed):
-#     if (actual_confirmed == 'None'): # Must not put None into the db as the model breaks - instead convert to Null as descrived here - https://johnmludwig.blogspot.com/2018/01/null-vs-none-in-sqlite3-for-python.html
-#  
-#         return  
-#     
-#     cur = get_database_connection().cursor()
-#    
-#     sql = ''' UPDATE model_run_result
-#               SET actual_confirmed = ?               
-#               WHERE ID = ?'''
-#     cur = get_database_connection().cursor()
-#     cur.execute(sql, (actual_confirmed, ID))
-#     
-#     get_database_connection().commit() 
-    
 def update_model_run_result(ID, actual_confirmed):
     cur = get_database_connection().cursor()
     sql = ''' UPDATE model_run_result
@@ -836,16 +695,7 @@ def update_model_run_result(ID, actual_confirmed):
     else:
         cur.execute(sql, (actual_confirmed, ID))
     
-    get_database_connection().commit()  
-    
-# def update_onset(recording_id, start_time_seconds, actual_confirmed):
-#     if (actual_confirmed == 'None'): # This happens if the user does not select an option.  None causes issues later with creating the model as None is not valid class for the model
-#         return  
-#     
-#     cur = get_database_connection().cursor()
-#     cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE recording_id = ? AND start_time_seconds = ?", (actual_confirmed, recording_id, start_time_seconds))  
-#         
-#     get_database_connection().commit()      
+    get_database_connection().commit()    
     
 def update_onset(recording_id, start_time_seconds, actual_confirmed):
     cur = get_database_connection().cursor()
@@ -855,9 +705,7 @@ def update_onset(recording_id, start_time_seconds, actual_confirmed):
         cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE recording_id = ? AND start_time_seconds = ?", (actual_confirmed, recording_id, start_time_seconds))  
         
     get_database_connection().commit()      
-
-
-    
+  
 def run_model(model_folder):
     # https://stackoverflow.com/questions/21406887/subprocess-changing-directory
     # https://stackoverflow.com/questions/1996518/retrieving-the-output-of-subprocess-call
@@ -895,14 +743,10 @@ def classify_onsets_using_weka_model():
 # As it takes about 24 hours to process all the onsets, I've split processing in to two stages - 
 # first it does all the onsets that already have an acntual_confirmed entry - 
 # this might only take a minute or two as there are very few of them
-# then it does the rest
+# then it does the rest.  It is now OK to stop this process before it has finished as I'll probably never look at all the predictions - unless going to create tags on the server
 
     cur = get_database_connection().cursor()
-#     cur.execute("SELECT recording_id, start_time_seconds, duration_seconds FROM onsets")  
-#     cur.execute("SELECT recording_id, start_time_seconds, duration_seconds FROM onsets ORDER BY recording_id DESC")
-#     cur.execute("SELECT recording_id, start_time_seconds, duration_seconds FROM onsets WHERE recording_id < 235441 ORDER BY recording_id DESC")
     cur.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name FROM onsets WHERE actual_confirmed IS NOT NULL ORDER BY recording_id DESC")
-#     cur.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed FROM onsets WHERE recording_id < 286809 AND actual_confirmed IS NOT NULL ORDER BY recording_id DESC")
     
     onsetsWithActualConfirmed = cur.fetchall()  
     number_of_onsets = len(onsetsWithActualConfirmed)
@@ -912,11 +756,9 @@ def classify_onsets_using_weka_model():
         count += 1        
         print('Processing onset', count, ' of ', number_of_onsets)
         classify_onsets_using_weka_model_helper(onsetWithActualConfirmed, model_folder)
-        
     
     cur2 = get_database_connection().cursor()
     cur2.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name FROM onsets WHERE actual_confirmed IS NULL ORDER BY recording_id DESC")
-#     cur2.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed FROM onsets WHERE recording_id < 286809 AND actual_confirmed IS NULL ORDER BY recording_id DESC")
     onsetsWithNoActualConfirmed = cur2.fetchall()  
     number_of_onsets = len(onsetsWithNoActualConfirmed)
     count = 0
@@ -925,31 +767,6 @@ def classify_onsets_using_weka_model():
         count += 1        
         print('Processing onset', count, ' of ', number_of_onsets)
         classify_onsets_using_weka_model_helper(onsetWithNoActualConfirmed, model_folder)
-#         print('onset', onset)
-#         recording_id = onset[0]
-#         start_time_seconds = onset[1]
-#         duration_seconds = onset[2]
-#         create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds)
-#         
-#         result = run_model(model_folder)
-# 
-#         if result.returncode == 0:
-#             print(result.stdout)
-#             
-#             classNumber = (int)(result.stdout.split(",")[0])
-# #             print("classNumber ", classNumber)
-#             
-#             predicted_class_name = parameters.class_names.split(",")[classNumber]
-# #             print("className ", predicted_class_name)
-#             
-#             probability = result.stdout.split(",")[1]        
-# #             print("probability ", probability)
-#   
-#             print('It is predicted to be  ' , predicted_class_name, ' with probability of ',probability,  '\n')
-#             insert_model_run_result_into_database(parameters.model_run_name, recording_id, start_time_seconds, duration_seconds, None, predicted_class_name, probability)
-#  
-#         else:
-#             print(result.stderr)
             
 def classify_onsets_using_weka_model_helper(onset, model_folder):     
     print('onset', onset)
@@ -966,15 +783,12 @@ def classify_onsets_using_weka_model_helper(onset, model_folder):
     if result.returncode == 0:
         print(result.stdout)
         
-        classNumber = (int)(result.stdout.split(",")[0])
-    #             print("classNumber ", classNumber)
+        classNumber = (int)(result.stdout.split(",")[0])   
         
-        predicted_class_name = parameters.class_names.split(",")[classNumber]
-    #             print("className ", predicted_class_name)
+        predicted_class_name = parameters.class_names.split(",")[classNumber] 
         
-        probability = result.stdout.split(",")[1]        
-    #             print("probability ", probability)
-    
+        probability = result.stdout.split(",")[1]      
+ 
         print('It is predicted to be  ' , predicted_class_name, ' with probability of ',probability,  '\n')
         insert_model_run_result_into_database(parameters.model_run_name, recording_id, start_time_seconds, duration_seconds, None, predicted_class_name, probability, actual_confirmed, device_super_name)
     
@@ -984,7 +798,6 @@ def classify_onsets_using_weka_model_helper(onset, model_folder):
 
     
 def insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name):
-    
     
     try:
         cur = get_database_connection().cursor()
@@ -996,7 +809,6 @@ def insert_model_run_result_into_database(modelRunName, recording_id, startTime,
             sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name)
                       VALUES(?,?,?,?,?,?,?) '''
             cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name))
-#         cur = get_database_connection().cursor()
         
         get_database_connection().commit()
     except Exception as e:
@@ -1025,7 +837,6 @@ def play_clip(recording_id, start_time, duration, applyBandPassFilter):
  
     
 def create_arff_file_headder(output_folder, arff_filename, comments, relation, attribute_labels, attribute_features): 
-   
          
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)  
@@ -1072,20 +883,15 @@ def insert_onset_into_database(version, recording_id, start_time_seconds, durati
     device_super_name = rows[0][0]       
     
     try:     
-#         sql = ''' INSERT INTO onsets(version, recording_id, start_time_seconds, duration_seconds)
-#                   VALUES(?,?,?,?) '''
         sql = ''' INSERT INTO onsets(version, recording_id, start_time_seconds, duration_seconds, device_super_name)
                   VALUES(?,?,?,?,?) '''
         cur2 = get_database_connection().cursor()
-#         cur2.execute(sql, (version, recording_id, start_time_seconds, duration_seconds))
         cur2.execute(sql, (version, recording_id, start_time_seconds, duration_seconds, device_super_name))
         get_database_connection().commit()
     except Exception as e:
         print(e, '\n')
         print('\t\tUnable to insert onest ' + str(recording_id), '\n')   
-       
-
-
+ 
 # https://stackoverflow.com/questions/25191620/creating-lowpass-filter-in-scipy-understanding-methods-and-units
 def butter_lowpass(cutoff, fs, order=5):
     nyq = 0.5 * fs
@@ -1101,15 +907,14 @@ def butter_lowpass_filter(data, cutoff, fs, order=5):
 def apply_lowpass_filter(y, sr):
     # Filter requirements.
     order = 6
-   
+       
 #     cutoff = 1000  # desired cutoff frequency of the filter, Hz
     cutoff = 900  # desired cutoff frequency of the filter, Hz
     
     y = butter_lowpass_filter(y, cutoff, sr, order)
     
     return y
-    
-
+ 
 
 #https://dsp.stackexchange.com/questions/41184/high-pass-filter-in-python-scipy/41185#41185
 def highpass_filter_with_parameters(y, sr, filter_stop_freq, filter_pass_freq ):
@@ -1125,13 +930,9 @@ def highpass_filter_with_parameters(y, sr, filter_stop_freq, filter_pass_freq ):
     # Apply high-pass filter
     filtered_audio = signal.filtfilt(filter_coefs, [1], y)
     return filtered_audio
-    
 
     
 def apply_band_pass_filter(y, sr):
-#    y = highpass_filter(y, sr)
-#     y = highpass_filter_with_parameters(y=y, sr=sr, filter_stop_freq=750, filter_pass_freq=800 )
-#     y = highpass_filter_with_parameters(y=y, sr=sr, filter_stop_freq=700, filter_pass_freq=750 )
     y = highpass_filter_with_parameters(y=y, sr=sr, filter_stop_freq=600, filter_pass_freq=650 )
     y = apply_lowpass_filter(y, sr)    
     return y
@@ -1152,21 +953,17 @@ def create_onsets_in_local_db_using_existing_tag_type(existing_tag_type):
         total_onset_pairs_including_not_including_more_20 += count_of_onset_pairs_including_not_including_more_20
         print('total_onset_pairs_including_more_than_20:', total_onset_pairs_including_more_than_20)
         print('total_onset_pairs_including_not_including_more_20:', total_onset_pairs_including_not_including_more_20, '\n')
-    
-    
+   
 def create_onsets_in_local_db_using_recordings_folder():
     
     # First need to find out what recordings have previously been used to create onsets - as we don't want to repeat
     
     cur = get_database_connection().cursor()
-
-    
+  
     recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
     total_number_of_files = len(os.listdir(recordings_folder_with_path))
     total_onset_pairs_including_more_than_40 = 0
     total_onset_pairs_including_not_including_more_40 = 0
-    
-    
     
     with os.scandir(recordings_folder_with_path) as entries:
         count = 0
@@ -1184,14 +981,11 @@ def create_onsets_in_local_db_using_recordings_folder():
                 
                 cur.execute("SELECT recording_id FROM onsets WHERE recording_id = ?", (recording_id,)) 
                
-                result = cur.fetchall() 
-    #             print('result ', result)
+                result = cur.fetchall()     
                 if result:
                     print('recording_id' , recording_id, ' has been used')
                     continue
-    #             else:
-    #                 print('recording_id' , recording_id, ' has NOT been used')
-                
+                   
                 count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 = create_onsets_in_local_db(filename)
                 total_onset_pairs_including_more_than_40 += count_of_onset_pairs_including_more_than_40
                 total_onset_pairs_including_not_including_more_40 += count_of_onset_pairs_including_not_including_more_40
@@ -1226,12 +1020,9 @@ def create_onsets_in_local_db(filename):
                 count_of_onset_pairs_including_not_including_more_40 += number_of_onsets                        
            
                 recording_id = filename.split('.')[0]  
-#                 print('recording_id', recording_id)
-                
+
                 insert_onset_list_into_db(version, recording_id, onsets)
                 
-#         print('count_of_onset_pairs_including_more_than_20 ', count_of_onset_pairs_including_more_than_20)
-#         print('count_of_onset_pairs_including_not_including_more_20 ', count_of_onset_pairs_including_not_including_more_20)
         return count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 
 
     except Exception as e:
@@ -1255,20 +1046,15 @@ def insert_onset_list_into_db(version, recording_id, onsets):
                 print("Inserting onset into database " , onset)
                 
 def find_paired_squawks_in_single_recordings(y, sr):
-#    y, sr = librosa.load(audio_in_path)
+
     squawks = FindSquawks(y, sr)
-#    print('squawks ', squawks)
     squawks_secs = []
-#    print(squawks)
+
     for squawk in squawks:
         squawk_start = squawk['start']
-#        print('squawk_start ', squawk_start, '\n')
         squawk_start_sec = squawk_start / sr
-#        print('squawk_start_sec ', squawk_start_sec, '\n\n')
         squawks_secs.append(round(squawk_start_sec, 1))
-    
-#    print('squawks ,' squawks, '\n')
-    
+      
     paired_squawks_sec = []
     prev_squawk_sec = None
     
@@ -1278,13 +1064,9 @@ def find_paired_squawks_in_single_recordings(y, sr):
             continue     
         
         time_between_squawks = squawk_sec[1] - prev_squawk_sec[1]
-#        print('time_between_squawks ', time_between_squawks)
         
         if time_between_squawks < 0.8: # sr is one second, so hoping this is the second part of more pork
-#            print('Going to keep squawk\n')
             paired_squawks_sec.append(prev_squawk_sec[1])
-#        else:
-#             print('Going to Disguard squawk\n')
         
         prev_squawk_sec = squawk_sec
         
@@ -1325,18 +1107,14 @@ def create_focused_mel_spectrogram_jps_using_onset_pairs():
         os.makedirs(mel_spectrograms_out_folder_path)
        
     count = 0
-#     total_number_of_files = len(os.listdir(onset_pairs_folder_path))
-
     onsets = get_onsets_stored_locally('')   
-       
-    
+      
 #     for entry in os.scandir(onset_pairs_folder_path): 
     for onset in onsets:
         try:
             print('Processing onset ', count, ' of ', len(onsets), ' onsets.')
-            count+=1
-    
-#                 duration_seconds = 1.5
+            count+=1    
+
             version_from_onset = onset[0] 
             recording_id = onset[1] 
             start_time_seconds = onset[2]
@@ -1362,8 +1140,6 @@ def create_focused_mel_spectrogram_jps_using_onset_pairs():
                 continue
                 
             y_part = y[start_position_array:end_position_array]  
-            #                 mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_fft=int(sr/10), hop_length=int(sr/10), n_mels=10, fmin=650,fmax=900)
-            #                 mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_fft=int(sr/10), hop_length=int(sr/10), n_mels=10, fmin=650,fmax=900)
             mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
             
             pylab.axis('off') # no axis
@@ -1387,8 +1163,7 @@ def create_spectrogram_jpg_files_for_next_model_run():
         os.makedirs(weka_model_folder_path)
   
     cur = get_database_connection().cursor()
-#     cur.execute("SELECT DISTINCT actual_confirmed FROM model_run_result WHERE actual_confirmed IS NOT NULL") 
-          
+         
     count = 0
     
 #     cur.execute("SELECT ID, recording_id, startTime, actual_confirmed FROM model_run_result WHERE actual_confirmed IS NOT NULL")
@@ -1481,9 +1256,7 @@ def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_ti
     mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + weka_model_folder + '/' + single_spectrogram_for_classification_folder 
     if not os.path.exists(mel_spectrograms_out_folder_path):
         os.makedirs(mel_spectrograms_out_folder_path)  
-        
-   
-
+ 
     try:
         
         audio_filename = str(recording_id) + '.m4a'
@@ -1515,10 +1288,7 @@ def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_ti
     except Exception as e:
         print(e, '\n')
         print('Error processing onset ', onset)
-        
-
-    
-        
+           
 def get_single_waveform_image(recording_id, start_time_seconds, duration_seconds):
 
     temp_display_images_folder_path = base_folder + '/' + run_folder + '/' + temp_display_images_folder 
@@ -1543,9 +1313,7 @@ def get_single_waveform_image(recording_id, start_time_seconds, duration_seconds
         end_position_array = start_position_array + int((sr * duration_seconds))                  
                     
         y_part = y[start_position_array:end_position_array]  
-        
-        
-        
+    
         pylab.axis('off') # no axis
         pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
         librosa.display.waveplot(y=y_part, sr=sr)
@@ -1609,45 +1377,7 @@ def create_arff_file_for_weka_image_filter_input():
         f.write(filename +',' + class_type + '\r\n')      
         
     f.close()
-    
-# def update_latest_model_run_results_with_previous_confirmed(previous_model_run):
-#     if not previous_model_run:
-#         print("Error: Enter the name of the previous model run result") 
-#         return
-#     
-#     # First find rows that have been confirmed
-#     # Then using recording_id and startTime these confirmed rows, find unconfirmed rows with the same recording_id and startTime
-#     # Then update these unconfirmed rows with the confirmed value e.g. could be morepork_morepork or unknown
-#     
-#     cur = get_database_connection().cursor()
-#     cur.execute("SELECT recording_id, startTime, actual_confirmed FROM model_run_result WHERE actual_confirmed IS NOT NULL AND modelRunName = ?", (previous_model_run,))   
-#  
-#     confirmed_rows = cur.fetchall()
-#     
-#     for confirmed_row in confirmed_rows:
-#        
-#         recording_id = confirmed_row[0]
-#         startTime = confirmed_row[1]
-#         actual_confirmed = confirmed_row[2]
-#         
-#         print(recording_id, ' ', startTime, ' ', actual_confirmed)
-#         
-#         cur2 = get_database_connection().cursor()
-#         cur2.execute("SELECT ID, recording_id, startTime, actual_confirmed FROM model_run_result WHERE actual_confirmed IS NULL AND recording_id = ? AND startTime = ?", (recording_id,startTime))  
-#         matching_unconfirmed_rows = cur2.fetchall()
-#         if len(matching_unconfirmed_rows) > 0:
-#             print('Match Found')
-#             for matching_unconfirmed_row in matching_unconfirmed_rows:
-#                 matching_unconfirmed_row_ID = matching_unconfirmed_row[0]
-#                 matching_unconfirmed_row_recording_id = matching_unconfirmed_row[1]
-#                 print('Updating actual_confirmed value in recording_id ', matching_unconfirmed_row_recording_id, ' to be ', actual_confirmed)
-#                 
-#                 cur3 = get_database_connection().cursor()
-#                 cur3.execute("UPDATE model_run_result SET actual_confirmed = ? WHERE ID = ?", (actual_confirmed, matching_unconfirmed_row_ID))  
-#                 
-#                 get_database_connection().commit()
-#        
-                
+          
             
 def create_folders_for_next_run():
     next_run_folder = parameters.base_folder + '/' + run_folder
@@ -1668,8 +1398,7 @@ def create_folders_for_next_run():
         os.makedirs(single_spectrogram_for_classification_folder_path) 
         
 def get_single_recording_info_from_local_db(recording_id):
-#     for zone in all_timezones:
-#         print(zone)
+
     cur = get_database_connection().cursor()
     cur.execute("SELECT device_super_name, recordingDateTime FROM recordings WHERE recording_id = ?", (recording_id,))  
   
@@ -1679,20 +1408,19 @@ def get_single_recording_info_from_local_db(recording_id):
     device_super_name = single_recording[0]
     recordingDateTime = single_recording[1]
     
-#     print(recordingDateTime)    
-
     date_time_obj = datetime.strptime(recordingDateTime, "%Y-%m-%dT%H:%M:%S.000Z")    
     date_time_obj_Zulu = timezone('Zulu').localize(date_time_obj)
 
-    fmt = "%Y-%m-%d %H:%M:%S %Z%z"
+#     fmt = "%Y-%m-%d %H:%M:%S %Z%z"
+#     fmt = "%Y-%m-%d %H:%M:%S"
+    fmt = "%Y-%m-%d %H:%M"
     
     date_time_obj_NZ = date_time_obj_Zulu.astimezone(timezone('Pacific/Auckland'))
-#     print(date_time_obj_NZ.strftime(fmt))
+
     return device_super_name, date_time_obj_NZ.strftime(fmt)
 
 def update_onsets_with_latest_model_run_actual_confirmed():
     cur = get_database_connection().cursor()
-#     cur.execute("SELECT modelRunName, recording_id, startTime, actual_confirmed FROM model_run_result WHERE modelRunName = ? AND  = ?", (recording_id,))
     previous_model_run = "2019_12_05_1"
     
     cur.execute("SELECT recording_id, startTime, actual_confirmed FROM model_run_result WHERE actual_confirmed IS NOT NULL AND modelRunName = ?", (previous_model_run,)) 
