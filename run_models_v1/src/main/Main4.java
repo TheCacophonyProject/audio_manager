@@ -5,7 +5,7 @@ import java.io.File;
 
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
+//import org.apache.commons.io.FileUtils;
 
 import weka.core.Instance;
 import weka.core.Instances;
@@ -14,6 +14,7 @@ import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.Remove;
 import weka.filters.unsupervised.instance.imagefilter.EdgeHistogramFilter;
+import weka.classifiers.functions.MultilayerPerceptron;
 import weka.classifiers.trees.LMT;
 
 public class Main4 {
@@ -51,7 +52,8 @@ public class Main4 {
 
 		Instance newInst = testDataset.instance(0);
 		// Load the model
-		LMT myModel = (LMT) weka.core.SerializationHelper.read(modelName);
+//		LMT myModel = (LMT) weka.core.SerializationHelper.read(modelName);
+		MultilayerPerceptron myModel = (MultilayerPerceptron) weka.core.SerializationHelper.read(modelName);
 
 		int result = (int) myModel.classifyInstance(newInst);
 		double probablilty = myModel.distributionForInstance(newInst)[result];

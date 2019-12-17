@@ -11,7 +11,16 @@ print('hello')
 
 # functions.update_model_run_result_device_super_name()
 
-functions.test_query()
+# functions.test_query()
+
+# functions.test_add_tag_to_recording()
+
+
+# functions.update_device_name_onsets_when_missing()
+
+# functions.test_time()
+
+functions.update_device_name_model_run_result_when_missing()
     
 
 # def test_update_recording_in_database():

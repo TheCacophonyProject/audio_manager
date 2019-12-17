@@ -7,38 +7,15 @@
 	</classpathentry>
 	<classpathentry kind="src" path="resources"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="lib/commons-io-2.6.jar">
-		<attributes>
-			<attribute name="module" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="lib/commons-math3-3.2.jar">
-		<attributes>
-			<attribute name="module" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="lib/java-json.jar">
-		<attributes>
-			<attribute name="module" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="lib/JOpenSurf.jar">
-		<attributes>
-			<attribute name="module" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="lib/json-simple-1.1.1.jar">
-		<attributes>
-			<attribute name="module" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="lib/opencv-249.jar">
-		<attributes>
-			<attribute name="module" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="lib/imageFilters.jar"/>
-	<classpathentry kind="lib" path="lib/weka.jar"/>
-	<classpathentry kind="lib" path="lib/lire.jar"/>
+	<classpathentry kind="lib" path="/home/tim/wekafiles/packages/Auto-WEKA/autoweka.jar"/>
+	<classpathentry kind="lib" path="/home/tim/wekafiles/packages/imageFilters/imageFilters.jar"/>
+	<classpathentry kind="lib" path="/home/tim/weka-3-8-3/weka.jar"/>
+	<classpathentry kind="lib" path="/home/tim/weka-3-8-3/weka-src.jar"/>
+	<classpathentry kind="lib" path="/home/tim/wekafiles/packages/userClassifier/userClassifier.jar"/>
+	<classpathentry kind="lib" path="/home/tim/wekafiles/packages/wekaDeeplearning4j/wekaDeeplearning4j-1.5.14.jar"/>
+	<classpathentry kind="lib" path="/home/tim/wekafiles/packages/imageFilters/lib/commons-math3-3.2.jar"/>
+	<classpathentry kind="lib" path="/home/tim/wekafiles/packages/imageFilters/lib/JOpenSurf.jar"/>
+	<classpathentry kind="lib" path="/home/tim/wekafiles/packages/imageFilters/lib/lire.jar"/>
+	<classpathentry kind="lib" path="/home/tim/wekafiles/packages/imageFilters/lib/opencv-249.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

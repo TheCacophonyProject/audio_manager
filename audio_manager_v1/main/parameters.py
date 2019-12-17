@@ -3,7 +3,16 @@ import sys
 # model_run_name='2019_11_28_1'
 # model_run_name='2019_12_03_1'
 # model_run_name='2019_12_05_1'
-model_run_name='2019_12_11_1'
+# model_run_name='2019_12_11_1'
+# model_run_name='2019_12_14_1'
+# model_run_name='2019_12_16_1'
+model_run_name='2019_12_17_1'
+
+model_version = 257 # update this to be the same as the name of the model stored in the model_run_result folder
+
+probability_cutoff_for_tag_creation = 0.8
+
+predictedByModel_tag_to_create = 'morepork_more-pork'
 
 #### Cacophony Server Configuration
 server_endpoint = 'https://api.cacophony.org.nz' # Production
@@ -40,7 +49,7 @@ temp_folder = 'Temp'
 # arff_folder_for_next_run = 'arff_folder_for_next_run'
 
 relation_name = model_run_name
-class_names = 'morepork_more-pork,unknown,siren,dog,duck,dove,human,bird,car,rumble,white_noise,cow,buzzy_insect,plane'
+class_names = 'morepork_more-pork,unknown,siren,dog,duck,dove,human,bird,car,rumble,white_noise,cow,buzzy_insect,plane,hammering,morepork_more-pork_part'
 
 weka_model_folder = 'weka_model'
 weka_model_filename = "model.model"
@@ -61,6 +70,7 @@ list_of_tags_folder = 'list_of_tags'
 files_for_testing_folder = 'files_for_testing'
 tagged_recordings_folder = 'wavfiles'
 version = '5'
+model_version = 257 # update this to be the same as the name of the model stored in the model_run_result folder
 squawk_duration_seconds = 0.8
 morepork_more_pork_call_duration = 0.9
 

@@ -14,9 +14,13 @@ import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.Remove;
 import weka.filters.unsupervised.instance.imagefilter.EdgeHistogramFilter;
+import weka.classifiers.AbstractClassifier;
+import weka.classifiers.Classifier;
+import weka.classifiers.functions.MultilayerPerceptron;
 import weka.classifiers.trees.LMT;
+import weka.classifiers.trees.RandomForest;
 
-public class MainRunInIDE {
+public class Main5RunInIDE {
 	// https://www.youtube.com/watch?v=6o19TPn181g
 	// https://www.youtube.com/watch?v=fh4ouoKs8H0&list=PLea0WJq13cnBVfsPVNyRAus2NK-KhCuzJ&index=14
 	// https://www.youtube.com/watch?v=wSB5oByt7ko
@@ -26,7 +30,8 @@ public class MainRunInIDE {
 //	static String imageDirectory = "./images";
 //	static String imageToProcess = "input.jpg";
 	
-	static String modelName = "/home/tim/Work/Cacophony/Audio_Analysis/Weka/folder_for_running_model_from_eclipse/weka_model/model.model";
+//	static String modelName = "/home/tim/Work/Cacophony/Audio_Analysis/Weka/folder_for_running_model_from_eclipse/weka_model/model5.model";
+	static String modelName = "/home/tim/Work/Cacophony/Audio_Analysis/Weka/folder_for_running_model_from_eclipse/weka_model/model6.model"; // MultilayerPerceptron
 	static String imageDirectory = "/home/tim/Work/Cacophony/Audio_Analysis/Weka/folder_for_running_model_from_eclipse/weka_model/images";
 //	static String imageToProcess = "/home/tim/Work/Cacophony/Audio_Analysis/Weka/folder_for_running_model_from_eclipse/weka_model/morepork_more-pork$381004$19.6.jpg";	
 	
@@ -48,6 +53,9 @@ public class MainRunInIDE {
 		remove.setOptions(opts);
 		remove.setInputFormat(dataWithAttributes);
 		Instances testDataset = Filter.useFilter(dataWithAttributes, remove);
+		
+//		Classifier classifier = AbstractClassifier.forName("weka.classifiers.trees.RandomForest", new String[]{"-I", "10", "-K", "0", "-depth", "0"});
+//		classifier.buildClassifier(testDataset);
 
 		// Run through model
 		
@@ -57,7 +65,9 @@ public class MainRunInIDE {
 		
 		
 		// Load the model
-		LMT myModel = (LMT) weka.core.SerializationHelper.read(modelName);
+//		LMT myModel = (LMT) weka.core.SerializationHelper.read(modelName);
+//		RandomForest myModel = (RandomForest) weka.core.SerializationHelper.read(modelName);
+		MultilayerPerceptron myModel = (MultilayerPerceptron) weka.core.SerializationHelper.read(modelName);
 		
 		double[] classProbabilities = myModel.distributionForInstance(newInst);
 		for (double classProbability : classProbabilities){
@@ -73,5 +83,6 @@ public class MainRunInIDE {
 	}
 
 }
+
 
 

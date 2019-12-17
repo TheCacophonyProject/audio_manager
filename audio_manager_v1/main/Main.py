@@ -326,16 +326,17 @@ class CreateOnsetsPage(tk.Frame):
         msg.config(bg='lightgreen', font=('times', 16), width=1200)
         msg.grid(column=0, columnspan=6, row=1)   
         
-        existing_tag_type_message = "Leave this box empty to create onsets from ALL recordings that haven't yet had an onset created from them.  OR enter the name of an existing tag type - onsets will only be created from recordings that already been tagged with this type"
-        existing_tag_type_msg = tk.Message(self, text = existing_tag_type_message)
-        existing_tag_type_msg.config(width=600)
-        existing_tag_type_msg.grid(column=0, columnspan=1, row=2) 
-
-        existing_tag_type = StringVar()
-        existing_tag_type_entry = tk.Entry(self,  textvariable=existing_tag_type, width=30)   
-        existing_tag_type_entry.grid(column=1, columnspan=1,row=2) 
+#         existing_tag_type_message = "Leave this box empty to create onsets from ALL recordings that haven't yet had an onset created from them.  OR enter the name of an existing tag type - onsets will only be created from recordings that already been tagged with this type"
+#         existing_tag_type_msg = tk.Message(self, text = existing_tag_type_message)
+#         existing_tag_type_msg.config(width=600)
+#         existing_tag_type_msg.grid(column=0, columnspan=1, row=2) 
+# 
+#         existing_tag_type = StringVar()
+#         existing_tag_type_entry = tk.Entry(self,  textvariable=existing_tag_type, width=30)   
+#         existing_tag_type_entry.grid(column=1, columnspan=1,row=2) 
                
-        run_button = ttk.Button(self, text="Run", command=lambda: functions.create_onsets(existing_tag_type.get()))
+#         run_button = ttk.Button(self, text="Run", command=lambda: functions.create_onsets(existing_tag_type.get()))
+        run_button = ttk.Button(self, text="Run", command=lambda: functions.create_onsets_in_local_db_using_recordings_folder())        
         run_button.grid(column=0, columnspan=1, row=3)        
 
         back_to_home_button = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(HomePage))                            
@@ -741,19 +742,22 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             if number_of_results_returned > 0:
                 first_result = self.run_results[0]
                 self.current_model_run_name_ID = first_result[0]
-                print('self.current_model_run_name_ID ', self.current_model_run_name_ID)                     
+                print('self.current_model_run_name_ID ', self.current_model_run_name_ID) 
+                self.current_model_run_result_array_pos = 0                    
                 load_current_model_run_result()
 
         def next_run_result():
           
             if self.current_model_run_result_array_pos < (len(self.run_results)) -1:
                 self.current_model_run_result_array_pos +=1
+                print('current_model_run_result_array_pos ', self.current_model_run_result_array_pos)
                 self.current_model_run_name_ID = self.run_results[self.current_model_run_result_array_pos][0]
                 load_current_model_run_result()
              
         def previous_run_result():
             if self.current_model_run_result_array_pos > 0:
                 self.current_model_run_result_array_pos -=1
+                print('current_model_run_result_array_pos ', self.current_model_run_result_array_pos)
                 self.current_model_run_name_ID = self.run_results[self.current_model_run_result_array_pos][0]
                 load_current_model_run_result()
                 
@@ -842,8 +846,46 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.current_onset_array_pos = 0
                      
-        title_label = ttk.Label(self, text="Create Tags On Cacophony Server / Still to do - will modify create from onsets page", font=LARGE_FONT)
-        title_label.grid(column=0, columnspan=1, row=0)    
+        title_label = ttk.Label(self, text="Create Tags On Cacophony Server using the latest model_run_result predictions.", font=LARGE_FONT)
+        title_label.grid(column=0, columnspan=1, row=0) 
+        
+        msg1_instructions = "The Model version is currently set to: " + str(parameters.model_version) + " Before you continue, you should change this in the parameters file, so that it is the same as the actual model version that created the model_run_results. "
+        msg1 = tk.Message(self, text = msg1_instructions)
+        msg1.config(width=600)
+        msg1.grid(column=0, columnspan=1, row=1) 
+        
+        msg2_instructions = "The model_run_result is currently set to: " + parameters.model_run_name + " Before you continue, you should change this in the parameters file, so that it uses the correct (latest?) model_run_results. "
+        msg2 = tk.Message(self, text = msg2_instructions)
+        msg2.config(width=600)
+        msg2.grid(column=0, columnspan=1, row=2)
+        
+        msg3_instructions = "You will need to close and reopen this program to refresh those parameters."
+        msg3 = tk.Message(self, text = msg3_instructions)
+        msg3.config(width=600)
+        msg3.grid(column=0, columnspan=1, row=3)
+        
+        msg4_instructions = "Press the 'Create Local Tags' button to create tags in the local database only."
+        msg4 = tk.Message(self, text = msg4_instructions)
+        msg4.config(width=600)
+        msg4.grid(column=0, columnspan=1, row=4) 
+        
+        create_local_tags_button = ttk.Button(self, text="Create Local Tags",command=lambda: functions.create_local_tags_from_model_run_result())
+        create_local_tags_button.grid(column=1, columnspan=1, row=4)   
+        
+        msg5_instructions = "Check that the tags have been created in the tags table of the local database.  You can filter on version column using the model version of " + int(parameters.model_version)
+        msg5 = tk.Message(self, text = msg5_instructions)
+        msg5.config(width=600)
+        msg5.grid(column=0, columnspan=1, row=5)
+        
+        msg6_instructions = "When you are sure that these are DEFINATELY the tags you want to create on the Cacophony Server press the 'Upload Tags To Cacophony Server' button."
+        msg6 = tk.Message(self, text = msg6_instructions)
+        msg6.config(width=600)
+        msg6.grid(column=0, columnspan=1, row=6)
+        
+        upload_tags_button = ttk.Button(self, text="Upload Tags To Cacophony Server",command=lambda: functions.upload_tags_to_cacophony_server())
+        upload_tags_button.grid(column=1, columnspan=1, row=6)
+        
+        
                                                                                
         
 app = Main_GUI()

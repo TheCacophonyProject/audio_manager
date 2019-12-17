@@ -507,7 +507,7 @@ def insert_tag_into_database(recording_id,server_Id, what, detail, confidence, s
         print('\t\tUnable to insert tag ' + str(recording_id), '\n')   
         
 def insert_locally_created_tag_into_database(recording_id,what, detail, confidence, startTime, duration, createdAt, tagger_username, deviceId, device_name, device_super_name ):
-    # Use this is the tag was created in this application, rather than being downloaded from the server - becuase some fiels are mission e.g. server_Id
+    # Use this is the tag was created in this application, rather than being downloaded from the server - becuase some fields are missing e.g. server_Id
     try:        
 
         sql = ''' INSERT INTO tags(recording_id, what, detail, confidence, startTime, duration, createdAt, tagger_username, deviceId, device_name, device_super_name)
@@ -662,22 +662,7 @@ def scan_local_folder_for_recordings_not_in_local_db_and_update(device_name, dev
             # Now update this recording with information from server
             update_recording_information_for_single_recording(recording_id)
            
-def create_tags_from_folder_of_unknown_images():
-    # This will probably only get used to recreate the unknown tags from the unknown images - as I'm not sure where the text file of this is/exists
-    home = str(Path.home())
-    unknown_images_folder =  home + '/Work/Cacophony/images/unknown'
-    for filename in os.listdir(unknown_images_folder):
-        fileparts = filename.replace('_','.').split('.')
-        recording_id = fileparts[0]
-        print('recording_id ', recording_id)
-        startWholeSecond = fileparts[1]
-        print('startWholeSecond ', startWholeSecond)
-        startPartSecond = fileparts[2]
-        print('startPartSecond ', startPartSecond)
-        startTimeSeconds = startWholeSecond + '.' + startPartSecond
-        insert_locally_created_tag_into_database(recording_id=recording_id, what='unknown', detail=None, confidence=None, startTime=startTimeSeconds, duration=1.5, createdAt='2019-06-20T05:39:28.391Z', tagger_username='timhot', deviceId=378, device_name='fpF7B9AFNn6hvfVgdrJB', device_super_name='Hammond Park')
-    print('Finished creating unknown tags from image files')
-    
+
 
     
 def update_local_tags_with_version():
@@ -759,7 +744,7 @@ def classify_onsets_using_weka_model():
 # then it does the rest.  It is now OK to stop this process before it has finished as I'll probably never look at all the predictions - unless going to create tags on the server
 
     cur = get_database_connection().cursor()
-    cur.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name FROM onsets WHERE actual_confirmed IS NOT NULL ORDER BY recording_id DESC")
+    cur.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name, device_name FROM onsets WHERE actual_confirmed IS NOT NULL ORDER BY recording_id DESC")
     
     onsetsWithActualConfirmed = cur.fetchall()  
     number_of_onsets = len(onsetsWithActualConfirmed)
@@ -771,7 +756,7 @@ def classify_onsets_using_weka_model():
         classify_onsets_using_weka_model_helper(onsetWithActualConfirmed, model_folder)
     
     cur2 = get_database_connection().cursor()
-    cur2.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name FROM onsets WHERE actual_confirmed IS NULL ORDER BY recording_id DESC")
+    cur2.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name, device_name FROM onsets WHERE actual_confirmed IS NULL ORDER BY recording_id DESC")
     onsetsWithNoActualConfirmed = cur2.fetchall()  
     number_of_onsets = len(onsetsWithNoActualConfirmed)
     count = 0
@@ -787,7 +772,8 @@ def classify_onsets_using_weka_model_helper(onset, model_folder):
     start_time_seconds = onset[1]
     duration_seconds = onset[2]
     actual_confirmed = onset[3]
-    device_super_name = onset[4]    
+    device_super_name = onset[4] 
+    device_name = onset[5]   
    
     create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds)
        
@@ -803,25 +789,25 @@ def classify_onsets_using_weka_model_helper(onset, model_folder):
         probability = result.stdout.split(",")[1]      
  
         print('It is predicted to be  ' , predicted_class_name, ' with probability of ',probability,  '\n')
-        insert_model_run_result_into_database(parameters.model_run_name, recording_id, start_time_seconds, duration_seconds, None, predicted_class_name, probability, actual_confirmed, device_super_name)
+        insert_model_run_result_into_database(parameters.model_run_name, recording_id, start_time_seconds, duration_seconds, None, predicted_class_name, probability, actual_confirmed, device_super_name, device_name)
     
     else:
         print(result.stderr)
               
 
     
-def insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name):
+def insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name):
     
     try:
         cur = get_database_connection().cursor()
         if actual_confirmed:
-            sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name)
-                      VALUES(?,?,?,?,?,?,?,?) '''
-            cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name))
+            sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name)
+                      VALUES(?,?,?,?,?,?,?,?,?,?) '''
+            cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name))
         else:
-            sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name)
-                      VALUES(?,?,?,?,?,?,?) '''
-            cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name))
+            sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name)
+                      VALUES(?,?,?,?,?,?,?,?,?) '''
+            cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name))
         
         get_database_connection().commit()
     except Exception as e:
@@ -878,28 +864,29 @@ def create_arff_file_headder(output_folder, arff_filename, comments, relation, a
     f.close()
   
     
-def create_onsets(existing_tag_type):
-    print("create_onsets")
-    if existing_tag_type is None:
-        create_onsets_in_local_db_using_recordings_folder()
-    elif not existing_tag_type:
-        create_onsets_in_local_db_using_recordings_folder()
-    else:
-        create_onsets_in_local_db_using_existing_tag_type(existing_tag_type)
+# def create_onsets(existing_tag_type):
+#     print("create_onsets")
+#     if existing_tag_type is None:
+#         create_onsets_in_local_db_using_recordings_folder()
+#     elif not existing_tag_type:
+#         create_onsets_in_local_db_using_recordings_folder()
+#     else:
+#         create_onsets_in_local_db_using_existing_tag_type(existing_tag_type)
         
 def insert_onset_into_database(version, recording_id, start_time_seconds, duration_seconds):
     
     print('duration_seconds', duration_seconds)
     cur1 = get_database_connection().cursor()
-    cur1.execute("SELECT device_super_name FROM recordings WHERE recording_id = ?", (recording_id,)) 
+    cur1.execute("SELECT device_super_name, device_name FROM recordings WHERE recording_id = ?", (recording_id,)) 
     rows = cur1.fetchall() 
-    device_super_name = rows[0][0]       
+    device_super_name = rows[0][0]  
+    device_name = rows[0][1]     
     
     try:     
-        sql = ''' INSERT INTO onsets(version, recording_id, start_time_seconds, duration_seconds, device_super_name)
-                  VALUES(?,?,?,?,?) '''
+        sql = ''' INSERT INTO onsets(version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name)
+                  VALUES(?,?,?,?,?,?) '''
         cur2 = get_database_connection().cursor()
-        cur2.execute(sql, (version, recording_id, start_time_seconds, duration_seconds, device_super_name))
+        cur2.execute(sql, (version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name))
         get_database_connection().commit()
     except Exception as e:
         print(e, '\n')
@@ -950,22 +937,23 @@ def apply_band_pass_filter(y, sr):
     y = apply_lowpass_filter(y, sr)    
     return y
     
-def create_onsets_in_local_db_using_existing_tag_type(existing_tag_type):
-    # Get recording names that have already been tagged with existing_tag_type e.g somewhere in the recording a morepork tag has already been created
-    recording_ids_with_tag_type = get_unique_recording_ids_that_have_been_tagged_with_this_tag_stored_locally(existing_tag_type)
-    count = 0
-    number_of_recordings = len(recording_ids_with_tag_type)
-    total_onset_pairs_including_more_than_20 = 0
-    total_onset_pairs_including_not_including_more_20 = 0
-    for recording_id_with_tag_type in recording_ids_with_tag_type:
-        count+=1
-        print('Processing recording ', count, ' of ', number_of_recordings, ' recordings.')
-        recording_filename = str(recording_id_with_tag_type[0]) + '.m4a'
-        count_of_onset_pairs_including_more_than_20, count_of_onset_pairs_including_not_including_more_20 = create_onsets_in_local_db(recording_filename)
-        total_onset_pairs_including_more_than_20 += count_of_onset_pairs_including_more_than_20
-        total_onset_pairs_including_not_including_more_20 += count_of_onset_pairs_including_not_including_more_20
-        print('total_onset_pairs_including_more_than_20:', total_onset_pairs_including_more_than_20)
-        print('total_onset_pairs_including_not_including_more_20:', total_onset_pairs_including_not_including_more_20, '\n')
+# def create_onsets_in_local_db_using_existing_tag_type(existing_tag_type):
+#     # Get recording names that have already been tagged with existing_tag_type e.g somewhere in the recording a morepork tag has already been created
+#     recording_ids_with_tag_type = get_unique_recording_ids_that_have_been_tagged_with_this_tag_stored_locally(existing_tag_type)
+#     count = 0
+#     number_of_recordings = len(recording_ids_with_tag_type)
+#     total_onset_pairs_including_more_than_20 = 0
+#     total_onset_pairs_including_not_including_more_20 = 0
+#     for recording_id_with_tag_type in recording_ids_with_tag_type:
+#         count+=1
+#         print('Processing recording ', count, ' of ', number_of_recordings, ' recordings.')
+#         recording_filename = str(recording_id_with_tag_type[0]) + '.m4a'
+#         count_of_onset_pairs_including_more_than_20, count_of_onset_pairs_including_not_including_more_20 = create_onsets_in_local_db(recording_filename)
+#         total_onset_pairs_including_more_than_20 += count_of_onset_pairs_including_more_than_20
+#         total_onset_pairs_including_not_including_more_20 += count_of_onset_pairs_including_not_including_more_20
+#         print('total_onset_pairs_including_more_than_20:', total_onset_pairs_including_more_than_20)
+#         print('total_onset_pairs_including_not_including_more_20:', total_onset_pairs_including_not_including_more_20, '\n')
+        
    
 def create_onsets_in_local_db_using_recordings_folder():
     
@@ -973,40 +961,75 @@ def create_onsets_in_local_db_using_recordings_folder():
     
     cur = get_database_connection().cursor()
   
-    recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
-    total_number_of_files = len(os.listdir(recordings_folder_with_path))
+#     recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+#     total_number_of_files = len(os.listdir(recordings_folder_with_path))
     total_onset_pairs_including_more_than_40 = 0
     total_onset_pairs_including_not_including_more_40 = 0
     
-    with os.scandir(recordings_folder_with_path) as entries:
-        count = 0
-        for entry in entries:   
-            try:        
-                print(entry.name)
-                if entry.is_file():                  
-                    filename = entry.name
-                else:
-                    continue
-                 
-                count+=1
-                print('Processing recording ', count, ' of ', total_number_of_files, ' recordings.')
-                recording_id = filename.split('.')[0]
-                
-                cur.execute("SELECT recording_id FROM onsets WHERE recording_id = ?", (recording_id,)) 
-               
-                result = cur.fetchall()     
-                if result:
-                    print('recording_id' , recording_id, ' has been used')
-                    continue
-                   
-                count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 = create_onsets_in_local_db(filename)
-                total_onset_pairs_including_more_than_40 += count_of_onset_pairs_including_more_than_40
-                total_onset_pairs_including_not_including_more_40 += count_of_onset_pairs_including_not_including_more_40
-                print('total_onset_pairs_including_more_than_40:', total_onset_pairs_including_more_than_40)
-                print('total_onset_pairs_including_not_including_more_40:', total_onset_pairs_including_not_including_more_40, '\n')
-            except Exception as e:
-                print(e, '\n')
-                print('Error processing file ', filename)
+    # https://stackoverflow.com/questions/2686254/how-to-select-all-records-from-one-table-that-do-not-exist-in-another-table
+    # It is possible that some recordings will not produce any onsets, so will also write to recording table that the recording has been processed.
+    # Perhaps if I was starting again, I could drop the sub query (if I update the recordings db so show that the old ones have been processed.
+
+    cur.execute("SELECT recording_id, filename, device_name FROM recordings WHERE processed_for_onsets IS NULL AND recording_id NOT IN (SELECT recording_id FROM onsets) ORDER BY recording_id DESC")
+    recordings_with_no_onsets = cur.fetchall()
+    print('There are ', len(recordings_with_no_onsets), ' recordings with no onsets')     
+      
+    
+
+    count = 0
+    number_of_recordings_with_no_onsets = len(recordings_with_no_onsets)
+    for recording_with_no_onsets in recordings_with_no_onsets: 
+        try: 
+            count += 1
+            recording_id = recording_with_no_onsets[0]
+            filename = recording_with_no_onsets[1]
+            device_name = recording_with_no_onsets[2]
+            print('Processing ',count, ' of ', number_of_recordings_with_no_onsets)
+            print('Recording id is ', recording_with_no_onsets) 
+            count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 = create_onsets_in_local_db(filename)
+            
+            # Update recordings table to show that this recording has been processed for onsets
+#             cur2 = get_database_connection().cursor()
+            cur.execute("UPDATE recordings SET processed_for_onsets = 1 WHERE recording_id = ?", (recording_id,))  
+            get_database_connection().commit()
+            
+            total_onset_pairs_including_more_than_40 += count_of_onset_pairs_including_more_than_40
+            total_onset_pairs_including_not_including_more_40 += count_of_onset_pairs_including_not_including_more_40
+            print('total_onset_pairs_including_more_than_40:', total_onset_pairs_including_more_than_40)
+            print('total_onset_pairs_including_not_including_more_40:', total_onset_pairs_including_not_including_more_40, '\n')
+        except Exception as e:
+            print(e, '\n')
+            print('Error processing file ', recording_id)
+    
+#     with os.scandir(recordings_folder_with_path) as entries:
+#         count = 0
+#         for entry in entries:   
+#             try:                      
+#                 print(entry.name)
+#                 if entry.is_file():                  
+#                     filename = entry.name
+#                 else:
+#                     continue
+#                  
+#                 count+=1
+#                 print('Processing recording ', count, ' of ', total_number_of_files, ' recordings.')
+#                 recording_id = filename.split('.')[0]
+#                 
+#                 cur.execute("SELECT recording_id FROM onsets WHERE recording_id = ?", (recording_id,)) 
+#                
+#                 result = cur.fetchall()     
+#                 if result:
+#                     print('recording_id' , recording_id, ' has been used')
+#                     continue
+#                    
+#                 count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 = create_onsets_in_local_db(filename)
+#                 total_onset_pairs_including_more_than_40 += count_of_onset_pairs_including_more_than_40
+#                 total_onset_pairs_including_not_including_more_40 += count_of_onset_pairs_including_not_including_more_40
+#                 print('total_onset_pairs_including_more_than_40:', total_onset_pairs_including_more_than_40)
+#                 print('total_onset_pairs_including_not_including_more_40:', total_onset_pairs_including_not_including_more_40, '\n')
+#             except Exception as e:
+#                 print(e, '\n')
+#                 print('Error processing file ', filename)
     
     
 def create_onsets_in_local_db(filename): 
@@ -1520,19 +1543,148 @@ def test_query():
 
 
 
+# def add_tag_to_server(recordingId, what, startTime, duration):
+#     user_token = get_cacophony_user_token()
+#     tag = {}
+# #    tag['what'] = what # use this when tag api updated
+#     tag['animal'] = what
+#     tag['startTime'] = startTime
+#     tag['duration'] = duration
+#     json_tag = json.dumps(tag)
+#     print('json_tag ', json_tag)
+#     resp = add_tag_to_recording(user_token, recordingId, json_tag)
+#     print('resp is: ', resp.text)
+    
 
 
+def add_tag_to_recording(user_token, recordingId, json_data):
+    url = parameters.server_endpoint + parameters.tags_url
+    
+
+    payload = "recordingId=" + recordingId + \
+        "&tag=" \
+        + json_data        
+        
+    headers = {
+            'Content-Type': "application/x-www-form-urlencoded",
+            'Authorization': user_token
+            }
+
+    response = requests.request("POST", url, data=payload, headers=headers)
+
+    return response
+
+def test_add_tag_to_recording():
+    user_token = get_cacophony_user_token()
+    tag = {}
+    tag['animal'] = 'bigBirdYY'
+    tag['startTime'] = 1
+    tag['duration'] = 2
+    tag['automatic'] = True
+    tag['confidence'] = 0.9
+    tag['confirmed'] = True
+    json_tag = json.dumps(tag)
+    resp = add_tag_to_recording(user_token, "158698", json_tag)
+    print('resp is: ', resp.text)
+
+def create_local_tags_from_model_run_result():
+    # This will create tags on the local db for using the latest model_run_result
+    # Only model_run_results with a probablility >= probability_cutoff_for_tag_creation will used
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT modelRunName, recording_id, startTime, duration, predictedByModel, probability, actual_confirmed, device_super_name, device_name FROM model_run_result WHERE probability >= ? AND modelRunName = ? AND predictedByModel = ?", (probability_cutoff_for_tag_creation, model_run_name, predictedByModel_tag_to_create)) 
+    model_run_results = cur.fetchall()
+    count = 0
+    for model_run_result in model_run_results:
+        try:
+            modelRunName = model_run_result[0]
+            recording_id = model_run_result[1]
+            startTime = model_run_result[2]
+            duration = model_run_result[3]
+            predictedByModel = model_run_result[4] 
+            probability = model_run_result[5] # probability
+            actual_confirmed = model_run_result[6]
+            device_super_name = model_run_result[7]
+            device_name = model_run_result[8]
+            
+            automatic = 'True'
+            created_locally = 1 # 1 is true as using integer in db
+            
+            now = datetime.now(timezone('Zulu')) 
+            fmt = "%Y-%m-%dT%H:%M:%S %Z"
+            createdAtDate = now.strftime(fmt)
+                  
+            confirmed_by_human = 0 # using 0 is false in db
+            # If actual_confirmed is NOT NULL, then only create a tag if actual_confirmed == predictedByModel
+            if actual_confirmed:
+                if actual_confirmed != predictedByModel:
+                    print(actual_confirmed, ' ', predictedByModel)
+                    print('actual_confirmed != predictedByModel')
+                    continue # Don't create tag if actual_confirmed is not the same as predicted (I'm not tempted to upload actual_confirmed, as this would make model look better than it is)
+                else:
+                    count +=1
+                    print('Inserting tag ', count, ' for: ', recording_id, ' ', predictedByModel)
+                    confirmed_by_human = 1
+                 
+            
+            cur1 = get_database_connection().cursor()
+           
+            sql = ''' INSERT INTO tags(modelRunName, recording_id, startTime, duration, what, confidence, device_super_name, device_name, version, automatic, confirmed_by_human, created_locally, createdAt, tagger_username)
+                          VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) '''
+            cur1.execute(sql, (modelRunName, recording_id, startTime, duration, predictedByModel, probability, device_super_name, device_name, model_version, automatic, confirmed_by_human, created_locally, createdAtDate, cacophony_user_name))
+            
+            get_database_connection().commit()
+        except Exception as e:
+            print(e, '\n')
+            print('Error processing modelRunName ', modelRunName)
+        
+    print('Finished creating ', count, ' tags in local database')
+
+def update_device_name_onsets_when_missing():
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT ID, recording_id FROM onsets WHERE device_name IS NULL")  
+    onsets_with_null_device_name = cur.fetchall()
+    count = 0
+    for onset_with_null_device_name in onsets_with_null_device_name:
+        count+=1
+        print('Updating ', count, ' of ', len(onsets_with_null_device_name))
+        ID = onset_with_null_device_name[0]
+        recording_id = onset_with_null_device_name[1]
+        
+        cur1 = get_database_connection().cursor()
+        cur1.execute("SELECT device_name FROM recordings WHERE recording_id = ?", (recording_id,)) 
+        rows = cur1.fetchall() 
+        device_name = rows[0][0]
+        
+        cur2 = get_database_connection().cursor()                
+        cur2.execute("UPDATE onsets SET device_name = ? WHERE ID = ?", (device_name, ID))  
+                
+        get_database_connection().commit()
+        
+def update_device_name_model_run_result_when_missing():
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT ID, recording_id FROM model_run_result WHERE device_name IS NULL")  
+    onsets_with_null_device_name = cur.fetchall()
+    count = 0
+    for onset_with_null_device_name in onsets_with_null_device_name:
+        count+=1
+        print('Updating ', count, ' of ', len(onsets_with_null_device_name))
+        ID = onset_with_null_device_name[0]
+        recording_id = onset_with_null_device_name[1]
+        
+        cur1 = get_database_connection().cursor()
+        cur1.execute("SELECT device_name FROM recordings WHERE recording_id = ?", (recording_id,)) 
+        rows = cur1.fetchall() 
+        device_name = rows[0][0]
+        
+        cur2 = get_database_connection().cursor()                
+        cur2.execute("UPDATE model_run_result SET device_name = ? WHERE ID = ?", (device_name, ID))  
+                
+        get_database_connection().commit()   
+    print('Finished updating model_run_result device_names') 
 
 
-
-
-
-
-
-
-
-
-
+def upload_tags_to_cacophony_server():
+    print("About to upload tags to Cacophony Server")
 
 
 
