@@ -873,7 +873,7 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
         create_local_tags_button = ttk.Button(self, text="Create Local Tags",command=lambda: functions.create_local_tags_from_model_run_result())
         create_local_tags_button.grid(column=1, columnspan=1, row=4)   
         
-        msg5_instructions = "Check that the tags have been created in the tags table of the local database.  You can filter on version column using the model version of " + int(parameters.model_version)
+        msg5_instructions = "Check that the tags have been created in the tags table of the local database.  You can filter on version column using the model version of " + str(parameters.model_version)
         msg5 = tk.Message(self, text = msg5_instructions)
         msg5.config(width=600)
         msg5.grid(column=0, columnspan=1, row=5)
