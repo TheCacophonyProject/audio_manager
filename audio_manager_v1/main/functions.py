@@ -1684,7 +1684,7 @@ def update_device_name_model_run_result_when_missing():
 
 
 def upload_tags_to_cacophony_server():
-    print("About to upload tags to Cacophony Serverr")
+    print("About to upload tags to Cacophony Server")
 
 
 
