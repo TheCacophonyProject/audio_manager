@@ -33,7 +33,7 @@ from pytz import timezone
 from pytz import all_timezones
 
 
-db_file = "/home/tim/Work/Cacophony/eclipse-workspace/audio_manager_v1/audio_analysis_db2.db"
+# db_file = "/home/tim/Work/Cacophony/eclipse-workspace/audio_manager_v1/audio_analysis_db2.db"
 conn = None
 
 def get_database_connection():
@@ -733,7 +733,7 @@ def classify_onsets_using_weka_model():
         print(weka_input_arff_filename, " is missing") 
         return  
     
-     # Need to check model file is there, otherwise run.jar will break later on
+    # Need to check model file is there, otherwise run.jar will break later on
     weka_model_filename_path = model_folder + '/' + weka_model_filename        
     if not os.path.isfile(weka_model_filename_path):
         print(weka_model_filename_path, " is missing") 
@@ -774,7 +774,15 @@ def classify_onsets_using_weka_model_helper(onset, model_folder):
     duration_seconds = onset[2]
     actual_confirmed = onset[3]
     device_super_name = onset[4] 
-    device_name = onset[5]   
+    device_name = onset[5] 
+    
+    # Skip if it already exists
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = ? AND recording_id = ? AND startTime = ? AND duration = ?", (model_run_name, recording_id, start_time_seconds, duration_seconds)) 
+    row = cur.fetchone()
+    if row != None:
+        print("Already done this one")
+        return  
    
     create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds)
        
@@ -1382,9 +1390,12 @@ def get_unique_model_run_names():
         
     return unique_model_run_names  
 
-def get_unique_locations():   
+def get_unique_locations(table_name):   
     cur = get_database_connection().cursor()
-    cur.execute("SELECT DISTINCT device_super_name FROM recordings") 
+    if table_name == 'recordings':
+        cur.execute("SELECT DISTINCT device_super_name FROM recordings") 
+    else:
+        cur.execute("SELECT DISTINCT device_super_name FROM tags") 
     rows = cur.fetchall()  
     
     unique_locations = []
@@ -1684,10 +1695,80 @@ def update_device_name_model_run_result_when_missing():
     print('Finished updating model_run_result device_names') 
 
 
-def upload_tags_to_cacophony_server():
+def upload_tags_to_cacophony_server(location_filter):
     print("About to upload tags to Cacophony Server")
-    #test2
+    user_token = get_cacophony_user_token()
+    cur = get_database_connection().cursor()
     
+    if location_filter !='not_used':
+        cur.execute("SELECT ID, recording_id, startTime, duration, what, automatic, confidence, confirmed_by_human, modelRunName FROM tags WHERE modelRunName = ? AND (copied_to_server IS NULL OR copied_to_server = 0) AND device_super_name = ?", (model_run_name, location_filter))   
+    else:            
+        cur.execute("SELECT ID, recording_id, startTime, duration, what, automatic, confidence, confirmed_by_human, modelRunName FROM tags WHERE modelRunName = ? AND (copied_to_server IS NULL OR copied_to_server = 0)", (model_run_name,))   
+    
+    tags_to_send_to_server = cur.fetchall()
+    count_of_tags_to_send_to_server = len(tags_to_send_to_server)
+    
+    if count_of_tags_to_send_to_server < 1:
+        print('There are no tags to process :-(')
+        return 
+    
+    count = 0
+    for tag_to_send_to_server in tags_to_send_to_server:
+        try:
+            count+=1
+            print('Processing ', count, ' of ', count_of_tags_to_send_to_server)
+            ID = tag_to_send_to_server[0]
+            recording_id = tag_to_send_to_server[1]
+            recording_id_str = str(recording_id)
+            startTime = tag_to_send_to_server[2]
+            duration = tag_to_send_to_server[3]
+            what = tag_to_send_to_server[4]
+            automatic_str = tag_to_send_to_server[5]
+            
+            automatic_bool = (automatic_str == 'True')
+            confidence = tag_to_send_to_server[6]
+            confirmed_by_human_int = tag_to_send_to_server[7]
+            confirmed_by_human_bool = bool(confirmed_by_human_int)
+            
+#             modelRunName = tag_to_send_to_server[8]
+                
+            tag = {}
+            tag['what'] = what
+            tag['startTime'] = str(startTime)
+            tag['duration'] = str(duration)
+            tag['automatic'] = automatic_bool
+            tag['confidence'] = str(confidence)
+            tag['confirmed'] = confirmed_by_human_bool
+            json_tag = json.dumps(tag)
+
+            resp = add_tag_to_recording(user_token, recording_id_str, json_tag)
+            resp_dict = json.loads(resp.text)
+            
+            cur2 = get_database_connection().cursor()  
+            
+            print('Going to update tags table for recording: ', recording_id_str, ' startTime: ', startTime, ' at ', location_filter, ' with a ', what)
+                          
+            if resp.ok:                
+                success = resp_dict['success']
+                print('success is: ', success)
+                if success:
+                    
+                    cur2.execute("UPDATE tags SET copied_to_server = ? WHERE ID = ?", (1, ID)) 
+                     
+                else:
+                    print('Error processing ', recording_id_str, ' ', resp.text)
+                    cur2.execute("UPDATE tags SET copied_to_server = ? WHERE ID = ?", (-1, ID))
+                
+            else:
+                error_message = resp_dict['message']
+                print('Server returned the error: ', error_message)
+                cur2.execute("UPDATE tags SET copied_to_server = ? WHERE ID = ?", (-1, ID))
+                
+            get_database_connection().commit() 
+        
+        except Exception as e:
+            print(e, '\n')
+            print('Error processing tag ', recording_id_str,  ' ', resp.text)
 
 
 
