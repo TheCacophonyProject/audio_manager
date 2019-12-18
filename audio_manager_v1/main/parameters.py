@@ -8,7 +8,7 @@ import sys
 # model_run_name='2019_12_16_1'
 model_run_name='2019_12_17_1'
 
-model_version = 257 # update this to be the same as the name of the model stored in the model_run_result folder
+model_version = '000001' # update this to be the same as the name of the model stored in the model_run_result folder. Cacophony API says: version (hex coded, e.g. 0x0110 would be v1.10)
 
 probability_cutoff_for_tag_creation = 0.8
 
@@ -70,7 +70,7 @@ list_of_tags_folder = 'list_of_tags'
 files_for_testing_folder = 'files_for_testing'
 tagged_recordings_folder = 'wavfiles'
 version = '5'
-model_version = 257 # update this to be the same as the name of the model stored in the model_run_result folder
+
 squawk_duration_seconds = 0.8
 morepork_more_pork_call_duration = 0.9
 
@@ -103,5 +103,6 @@ search_path = '/home/tim/Work/Cacophony/opensmile_weka/TestAudioInput'
 arff_path = '/home/tim/Work/Cacophony/opensmile_weka/TestAudioOutput'
 
 
-db_file = "/home/tim/Work/Cacophony/eclipse-workspace/audio_manager_v1/audio_analysis_db2.db"
+# db_file = "/home/tim/Work/Cacophony/eclipse-workspace/audio_manager_v1/audio_analysis_db2.db"
+db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2.db"
 conn = None

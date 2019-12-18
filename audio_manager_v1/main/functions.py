@@ -1554,21 +1554,6 @@ def test_query():
     
 
 
-
-# def add_tag_to_server(recordingId, what, startTime, duration):
-#     user_token = get_cacophony_user_token()
-#     tag = {}
-# #    tag['what'] = what # use this when tag api updated
-#     tag['animal'] = what
-#     tag['startTime'] = startTime
-#     tag['duration'] = duration
-#     json_tag = json.dumps(tag)
-#     print('json_tag ', json_tag)
-#     resp = add_tag_to_recording(user_token, recordingId, json_tag)
-#     print('resp is: ', resp.text)
-    
-
-
 def add_tag_to_recording(user_token, recordingId, json_data):
     url = parameters.server_endpoint + parameters.tags_url
     
@@ -1730,7 +1715,7 @@ def upload_tags_to_cacophony_server(location_filter):
             confirmed_by_human_int = tag_to_send_to_server[7]
             confirmed_by_human_bool = bool(confirmed_by_human_int)
             
-#             modelRunName = tag_to_send_to_server[8]
+
                 
             tag = {}
             tag['what'] = what

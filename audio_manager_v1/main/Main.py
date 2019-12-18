@@ -76,6 +76,16 @@ class HomePage(tk.Frame):
         instuctions_msg.config(width=600)
         instuctions_msg.pack(pady=10,padx=10)
         
+        instuctions_text2 = "SQLite is used as the database, without any wrapper (such as GRDB) to allow for concurrent db write access.  This means if you run two versions of this application at once, you will get errors."
+        instuctions_msg2 = tk.Message(self, text = instuctions_text2)
+        instuctions_msg2.config(width=600)
+        instuctions_msg2.pack(pady=10,padx=10)
+        
+        instuctions_text3 = "Keep an eye on the Console - you will need to enter your Cacophony server password, and view other messages"
+        instuctions_msg3 = tk.Message(self, text = instuctions_text3)
+        instuctions_msg3.config(width=600)
+        instuctions_msg3.pack(pady=10,padx=10)
+        
         recordings_button = ttk.Button(self, text="Step 1: Recordings (Do not always use)",
                             command=lambda: controller.show_frame(RecordingsPage))        
         recordings_button.pack()
@@ -469,7 +479,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         self.current_model_run_name_ID = 0        
         
         self.unique_model_run_names = functions.get_unique_model_run_names()  
-        self.unique_locations = functions.get_unique_locations()            
+        self.unique_locations = functions.get_unique_locations('recordings')            
                     
         title_label = ttk.Label(self, text="Evaluate Model Run Results", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)   
@@ -845,6 +855,7 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
     
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        self.unique_locations = functions.get_unique_locations('tags')
         self.current_onset_array_pos = 0
                      
         title_label = ttk.Label(self, text="Create Tags On Cacophony Server using the latest model_run_result predictions.", font=LARGE_FONT)
@@ -881,12 +892,23 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
         msg6_instructions = "When you are sure that these are DEFINATELY the tags you want to create on the Cacophony Server press the 'Upload Tags To Cacophony Server' button."
         msg6 = tk.Message(self, text = msg6_instructions)
         msg6.config(width=600)
-        msg6.grid(column=0, columnspan=1, row=6)
+        msg6.grid(column=0, columnspan=1, row=10)
         
-        upload_tags_button = ttk.Button(self, text="Upload Tags To Cacophony Server",command=lambda: functions.upload_tags_to_cacophony_server())
-        upload_tags_button.grid(column=1, columnspan=1, row=6)
+        location_filter_label = ttk.Label(self, text="Location Filter")
+        location_filter_label.grid(column=1, columnspan=1, row=10)      
+                                    
+        self.location_filter = StringVar()
+        self.location_filter_combo = ttk.Combobox(self, textvariable=self.location_filter, values=self.unique_locations)
         
+        if len(self.unique_locations) > 0:
+            self.location_filter_combo.current(0)
+            self.location_filter_combo.grid(column=1, columnspan=1,row=11) 
         
+        upload_tags_button = ttk.Button(self, text="Upload Tags To Cacophony Server",command=lambda: functions.upload_tags_to_cacophony_server(self.location_filter_combo.get()))
+        upload_tags_button.grid(column=2, columnspan=1, row=11)
+        
+        back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
+        back_to_home_button.grid(column=0, columnspan=1, row=61) 
                                                                                
         
 app = Main_GUI()

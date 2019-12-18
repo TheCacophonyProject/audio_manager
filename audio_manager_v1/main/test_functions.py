@@ -20,7 +20,9 @@ print('hello')
 
 # functions.test_time()
 
-functions.update_device_name_model_run_result_when_missing()
+# functions.update_device_name_model_run_result_when_missing()
+
+functions.upload_tags_to_cacophony_server()
     
 
 # def test_update_recording_in_database():
