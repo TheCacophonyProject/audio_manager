@@ -102,7 +102,7 @@ def retrieve_available_recordings_from_server(device_name, device_super_name):
         if not recording_id in already_downloaded_set:
             ids_of_recordings_to_still_to_download.append(recording_id)
         else:
-            print('Aleady have recording ',recording_id, ' so will not download')
+            print('Already have recording ',recording_id, ' so will not download')
        
     for recording_id in ids_of_recordings_to_still_to_download:
 #         print('About to get token for downloading ',recording_id)
@@ -114,10 +114,12 @@ def retrieve_available_recordings_from_server(device_name, device_super_name):
         update_recording_information_for_single_recording(recording_id)
      
     print('Finished retrieving recordings')  
-    print('Now going to retrieve tags')  
-    get_all_tags_for_all_devices_in_local_database()
-    print('Finished retrieving tags') 
-    print('Finished all')  
+#     print('Now going to retrieve tags')  
+#     
+#     # 19 Dec 2019 Decided not to get tags, but maybe later I'll put this on a separate button, as it could be useful to use tags that others have created.
+# #     get_all_tags_for_all_devices_in_local_database() 
+#     print('Finished retrieving tags') 
+#     print('Finished all')  
         
 def get_recording_from_server(token_for_retrieving_recording, recording_id, device_name, device_super_name):
     try:
@@ -165,24 +167,35 @@ def get_token_for_retrieving_recording(recording_id):
     return recording_download_token
     
 def get_recording_ids_for_device_name(device_name): 
+    
+    # Get the highest recording id for this device that has already been downloaded
+    cur = get_database_connection().cursor()   
+    cur.execute("SELECT MAX(recording_id) FROM recordings WHERE device_name = ?", (device_name,))
+    rows = cur.fetchall() 
+    current_max_recording_id_for_this_device = rows[0][0]
+    
         
     print('device_name ', device_name)
+    print('max_recording_id ', current_max_recording_id_for_this_device)
     
     device_id = get_device_id_using_device_name(device_name)
     print('device_id is ', device_id)
     ids_recordings_for_device_name = []
     offset = 0
     while True:
-        ids_of_recordings_to_download= get_ids_of_recordings_to_download_using_deviceId(device_id,offset)
+        ids_of_recordings_to_download= get_ids_of_recordings_to_download_using_deviceId(device_id,offset, current_max_recording_id_for_this_device)
         print('ids_of_recordings_to_download ', ids_of_recordings_to_download)
         ids_recordings_for_device_name += ids_of_recordings_to_download
+        
+        # Check to see if the list from the server contains the previous max recording_id.  If it does, then don't get anymore ids
+        
         if (len(ids_of_recordings_to_download) > 0):
             offset+=300
         else:
             break
     return ids_recordings_for_device_name
 
-def get_ids_of_recordings_to_download_using_deviceId(deviceId, offset):
+def get_ids_of_recordings_to_download_using_deviceId(deviceId, offset, current_max_recording_id):
     # This will get a list of the recording ids for every recording of length 59,60,61,62 from device_name
     user_token = get_cacophony_user_token()
    
@@ -191,8 +204,56 @@ def get_ids_of_recordings_to_download_using_deviceId(deviceId, offset):
     where_param = {}
     where_param['DeviceId'] = deviceId
     where_param['duration'] = 59,60,61,62
+    
+    grt_id_param = {}
+#     grt_id_param['$gt'] = 463000
+    grt_id_param['$gt'] = current_max_recording_id
+#     print('grt_id_param ', max_recording_id)
+#     json_grt_id_param = json.dumps(grt_id_param)
+#     print('json_grt_id_param ', json_grt_id_param)
+    
+    
+#     where_param['id'] = 463080
+#     where_param['id'] = json_grt_id_param
+
+    where_param['id'] = grt_id_param
     json_where_param = json.dumps(where_param) 
-    querystring = {"offset":offset, "where":json_where_param}   
+#     querystring = {"offset":offset, "where":json_where_param}
+
+#     order_param = {}
+#     order_param["dateTime"] = "ASC"
+
+#     order_param = {"dateTime", "ASC"}
+
+#     json_order_param = json.dumps(order_param)
+#     querystring = {"offset":offset, "where":json_where_param, "order":json_order_param}  
+   
+#     mylist = []
+#     mylist2 = []
+#     mylist.append("recordingDateTime")
+#     mylist.append("DESC") 
+#     mylist2.append(mylist)
+#     mylist2_json = json.dumps(mylist2)
+
+#    # I didn't know correct way to create required format :-)
+#     mylist = []
+#     mylist2 = []
+#     mylist.append("id")
+#     mylist.append("DESC") 
+#     mylist2.append(mylist)
+#     mylist2_json = json.dumps(mylist2)
+
+#     mylist = []
+#     
+#     mylist.append("dateTime")
+#     mylist.append("ASC") 
+#     mylist2.append(mylist)
+#     mylist2_json = json.dumps(mylist2)
+  
+#     querystring = {"offset":offset, "where":json_where_param, "order":'[["dateTime", "ASC"]]'} 
+#     querystring = {"offset":offset, "where":json_where_param, "order":"[[\"dateTime\", \"ASC\"]]"}  
+#     querystring = {"offset":offset, "where":json_where_param, "order":mylist2_json} 
+    querystring = {"offset":offset, "where":json_where_param}    
     
     headers = {'Authorization': user_token}  
 
@@ -1757,6 +1818,8 @@ def upload_tags_to_cacophony_server(location_filter):
 
 
 
+
+#     
 
 
 

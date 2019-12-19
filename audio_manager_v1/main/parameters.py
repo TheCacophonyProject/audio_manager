@@ -42,6 +42,7 @@ downloaded_recordings_folder = 'downloaded_recordings/all_recordings' # All the 
 # downloaded_recordings_folder = 'downloaded_recordings/temp_for_testing' # Use this if doing a test
 #run_folder = 'Analysis_5' # Change this when doing a new analyis
 
+
 run_folder = 'Audio_Analysis/audio_classifier_runs' + '/' + model_run_name
 # exported_jars_folder = 'exported_jars'
 single_spectrogram_for_classification_folder = 'images'
