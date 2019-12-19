@@ -554,6 +554,10 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=17)
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Hammering', variable=self.actual_confirmed_filter, value='hammering')
         actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=18)
+        actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Frog', variable=self.actual_confirmed_filter, value='frog')
+        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=19)
+        actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Chainsaw', variable=self.actual_confirmed_filter, value='chainsaw')
+        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=20)
         self.actual_confirmed_filter.set('not_used')
         
         predicted_filter_label = ttk.Label(self, text="Filter - Predicted", font=LARGE_FONT)
@@ -598,7 +602,11 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Morepork more-pork Part', variable=self.predicted_filter, value='morepork_more-pork_part')
         predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=17) 
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Hammering', variable=self.predicted_filter, value='hammering')
-        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=18) 
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=18)
+        predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Frog', variable=self.predicted_filter, value='frog')
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=19)  
+        predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Chainsaw', variable=self.predicted_filter, value='chainsaw')
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=20)  
         self.predicted_filter.set('not_used')    
         
         run_probability_label = ttk.Label(self, text="Probability")
@@ -686,7 +694,11 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Morepork more-pork Part', variable=self.actual_confirmed, value='morepork_more-pork_part',command=lambda: confirm_actual())
         actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=46) 
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Hammering', variable=self.actual_confirmed, value='hammering',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=47)    
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=47)  
+        actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Frog', variable=self.actual_confirmed, value='frog',command=lambda: confirm_actual())
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=48)
+        actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Chainsaw', variable=self.actual_confirmed, value='chainsaw',command=lambda: confirm_actual())
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=49)     
        
         predicted_label = ttk.Label(self, text="Predicted (by last model run)", font=LARGE_FONT)
         predicted_label.grid(column=2, columnspan=1, row=40)       
@@ -842,7 +854,11 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             elif self.current_model_run_name_actual_confirmed == 'morepork_more-pork_part':
                 self.actual_confirmed.set('morepork_more-pork_part')
             elif self.current_model_run_name_actual_confirmed == 'hammering':
-                self.actual_confirmed.set('hammering')  
+                self.actual_confirmed.set('hammering')
+            elif self.current_model_run_name_actual_confirmed == 'frog':
+                self.actual_confirmed.set('frog') 
+            elif self.current_model_run_name_actual_confirmed == 'chainsaw':
+                self.actual_confirmed.set('chainsaw') 
             else:
                 self.actual_confirmed.set('not_set')   
 
@@ -871,28 +887,33 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
         msg2.config(width=600)
         msg2.grid(column=0, columnspan=1, row=2)
         
-        msg3_instructions = "You will need to close and reopen this program to refresh those parameters."
+        msg3_instructions = "The probability / confidence level cutoff (probability_cutoff_for_tag_creation in the parameters file) is currently set to: " + str(parameters.probability_cutoff_for_tag_creation) + " Only tags that have a confidence equal or greater than this will be created.  Also, if the predicted tag (onset) location has been confirmed by a human to NOT be a morepork, then no tag will be created.  This means that for locations that have had a lot of checking the quality of the tags will be higher than the model predicts - and better than for locations that haven't been checked as much."
         msg3 = tk.Message(self, text = msg3_instructions)
         msg3.config(width=600)
         msg3.grid(column=0, columnspan=1, row=3)
-        
-        msg4_instructions = "Press the 'Create Local Tags' button to create tags in the local database only."
+                
+        msg4_instructions = "You will need to close and reopen this program to refresh those parameters."
         msg4 = tk.Message(self, text = msg4_instructions)
         msg4.config(width=600)
-        msg4.grid(column=0, columnspan=1, row=4) 
+        msg4.grid(column=0, columnspan=1, row=4)
         
-        create_local_tags_button = ttk.Button(self, text="Create Local Tags",command=lambda: functions.create_local_tags_from_model_run_result())
-        create_local_tags_button.grid(column=1, columnspan=1, row=4)   
-        
-        msg5_instructions = "Check that the tags have been created in the tags table of the local database.  You can filter on version column using the model version of " + str(parameters.model_version)
+        msg5_instructions = "Press the 'Create Local Tags' button to create tags in the local database only."
         msg5 = tk.Message(self, text = msg5_instructions)
         msg5.config(width=600)
-        msg5.grid(column=0, columnspan=1, row=5)
+        msg5.grid(column=0, columnspan=1, row=5) 
         
-        msg6_instructions = "When you are sure that these are DEFINATELY the tags you want to create on the Cacophony Server press the 'Upload Tags To Cacophony Server' button."
+        create_local_tags_button = ttk.Button(self, text="Create Local Tags",command=lambda: functions.create_local_tags_from_model_run_result())
+        create_local_tags_button.grid(column=1, columnspan=1, row=6)   
+        
+        msg6_instructions = "Check that the tags have been created in the tags table of the local database.  You can filter on version column using the model version of " + str(parameters.model_version)
         msg6 = tk.Message(self, text = msg6_instructions)
         msg6.config(width=600)
-        msg6.grid(column=0, columnspan=1, row=10)
+        msg6.grid(column=0, columnspan=1, row=7)
+        
+        msg7_instructions = "When you are sure that these are DEFINATELY the tags you want to create on the Cacophony Server press the 'Upload Tags To Cacophony Server' button."
+        msg7 = tk.Message(self, text = msg7_instructions)
+        msg7.config(width=600)
+        msg7.grid(column=0, columnspan=1, row=10)
         
         location_filter_label = ttk.Label(self, text="Location Filter")
         location_filter_label.grid(column=1, columnspan=1, row=10)      
