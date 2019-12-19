@@ -206,53 +206,11 @@ def get_ids_of_recordings_to_download_using_deviceId(deviceId, offset, current_m
     where_param['duration'] = 59,60,61,62
     
     grt_id_param = {}
-#     grt_id_param['$gt'] = 463000
     grt_id_param['$gt'] = current_max_recording_id
-#     print('grt_id_param ', max_recording_id)
-#     json_grt_id_param = json.dumps(grt_id_param)
-#     print('json_grt_id_param ', json_grt_id_param)
-    
-    
-#     where_param['id'] = 463080
-#     where_param['id'] = json_grt_id_param
-
     where_param['id'] = grt_id_param
+    
     json_where_param = json.dumps(where_param) 
-#     querystring = {"offset":offset, "where":json_where_param}
 
-#     order_param = {}
-#     order_param["dateTime"] = "ASC"
-
-#     order_param = {"dateTime", "ASC"}
-
-#     json_order_param = json.dumps(order_param)
-#     querystring = {"offset":offset, "where":json_where_param, "order":json_order_param}  
-   
-#     mylist = []
-#     mylist2 = []
-#     mylist.append("recordingDateTime")
-#     mylist.append("DESC") 
-#     mylist2.append(mylist)
-#     mylist2_json = json.dumps(mylist2)
-
-#    # I didn't know correct way to create required format :-)
-#     mylist = []
-#     mylist2 = []
-#     mylist.append("id")
-#     mylist.append("DESC") 
-#     mylist2.append(mylist)
-#     mylist2_json = json.dumps(mylist2)
-
-#     mylist = []
-#     
-#     mylist.append("dateTime")
-#     mylist.append("ASC") 
-#     mylist2.append(mylist)
-#     mylist2_json = json.dumps(mylist2)
-  
-#     querystring = {"offset":offset, "where":json_where_param, "order":'[["dateTime", "ASC"]]'} 
-#     querystring = {"offset":offset, "where":json_where_param, "order":"[[\"dateTime\", \"ASC\"]]"}  
-#     querystring = {"offset":offset, "where":json_where_param, "order":mylist2_json} 
     querystring = {"offset":offset, "where":json_where_param}    
     
     headers = {'Authorization': user_token}  
@@ -265,7 +223,6 @@ def get_ids_of_recordings_to_download_using_deviceId(deviceId, offset, current_m
         sys.exit('Could not download file - exiting')            
     
     data = resp.json() 
-    
     
     recordings = data['rows'] 
     
