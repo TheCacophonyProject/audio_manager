@@ -245,7 +245,7 @@ class CreateWekaModelPage(tk.Frame):
         create_folders_button = ttk.Button(self, text="Create folders for next run. ",command=lambda: functions.create_folders_for_next_run())
         create_folders_button.grid(column=1, columnspan=1, row=4)  
         
-        using_weka_instructions1 = "You are now ready to use Weka.  From a terminal command prompt, cd into the directory where Weka has been installed (e.g. weka-3-8-3) and launch Weka using the command: java -jar weka.jar"
+        using_weka_instructions1 = "You are now ready to use Weka. BUT, weka needs to use Java 1.8 (unlike Eclipse/Audio Manager which is using openjdk 11 - so at a terminal type 'sudo update-alternatives --config java' without the quotes and choose option (5 on my computer) for jdk1.8 Once the java version has been changed, from a terminal command prompt, cd into the directory where Weka has been installed (e.g. ~/weka-3-8-4b (on my computer) and launch Weka using the command: java -jar weka.jar"
         using_weka_msg1 = tk.Message(self, text = using_weka_instructions1)
         using_weka_msg1.config(width=800)
         using_weka_msg1.grid(column=0, columnspan=2, row=5)  
@@ -266,7 +266,7 @@ Then click on the Box with the name of the Filter (EdgeHistogramFilter) and past
         using_weka_msg4.config(width=800)
         using_weka_msg4.grid(column=0, columnspan=2, row=8)  
         
-        using_weka_instructions5 = "Now you need to remove the filename attribute by selecting the box and press the Remove button.  Now select the Classify tab (at the top). Press the Choose button and navigate to  Weka|classifiers|Trees|LMT.  Use Cross-validation Folds 10 and press start. The weka image does it's dance and then the results displayed"
+        using_weka_instructions5 = "Now you need to remove the filename attribute by selecting the box and press the Remove button.  \n\nIf you want to use AutoWeka follow A instructions next otherwise follow B instructions. \n\nA) Select the Auto-Weka tab (in Weka) then right click on AUTOWEKAClassifier | Show properties and change timeLimit to something suitable say 4320 (ie 3 days), or first test with 10 minutes :-), press OK, check that (Nom) class is selected and then press start. The weka icon does its dance.  Make sure computer Power Saving is Off, and come back in 3 days!  \n\nB) If don't want to use AutoWeka try this - select the Classify tab (at the top). Press the Choose button and navigate to  Weka|classifiers|Trees|LMT.  Use Cross-validation Folds 10 and press start. The weka image does it's dance and then the results displayed"
         using_weka_msg5 = tk.Message(self, text = using_weka_instructions5)
         using_weka_msg5.config(width=800)
         using_weka_msg5.grid(column=0, columnspan=2, row=9) 
@@ -558,6 +558,10 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=19)
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Chainsaw', variable=self.actual_confirmed_filter, value='chainsaw')
         actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=20)
+        actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Crackle', variable=self.actual_confirmed_filter, value='crackle')
+        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=21)
+        actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Car horn', variable=self.actual_confirmed_filter, value='car_horn')
+        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=22)
         self.actual_confirmed_filter.set('not_used')
         
         predicted_filter_label = ttk.Label(self, text="Filter - Predicted", font=LARGE_FONT)
@@ -606,7 +610,11 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Frog', variable=self.predicted_filter, value='frog')
         predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=19)  
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Chainsaw', variable=self.predicted_filter, value='chainsaw')
-        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=20)  
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=20) 
+        predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Crackle', variable=self.predicted_filter, value='crackle')
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=21)  
+        predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Car horn', variable=self.predicted_filter, value='car_horn')
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=22)  
         self.predicted_filter.set('not_used')    
         
         run_probability_label = ttk.Label(self, text="Probability")
@@ -698,7 +706,11 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Frog', variable=self.actual_confirmed, value='frog',command=lambda: confirm_actual())
         actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=48)
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Chainsaw', variable=self.actual_confirmed, value='chainsaw',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=49)     
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=49) 
+        actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Crackle', variable=self.actual_confirmed, value='crackle',command=lambda: confirm_actual())
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=50)  
+        actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Car horn', variable=self.actual_confirmed, value='car_horn',command=lambda: confirm_actual())
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=51)      
        
         predicted_label = ttk.Label(self, text="Predicted (by last model run)", font=LARGE_FONT)
         predicted_label.grid(column=2, columnspan=1, row=40)       
@@ -859,6 +871,10 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
                 self.actual_confirmed.set('frog') 
             elif self.current_model_run_name_actual_confirmed == 'chainsaw':
                 self.actual_confirmed.set('chainsaw') 
+            elif self.current_model_run_name_actual_confirmed == 'crackle':
+                self.actual_confirmed.set('crackle')
+            elif self.current_model_run_name_actual_confirmed == 'car_horn':
+                self.actual_confirmed.set('car_horn')
             else:
                 self.actual_confirmed.set('not_set')   
 

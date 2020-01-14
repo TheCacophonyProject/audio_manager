@@ -6,7 +6,8 @@ import sys
 # model_run_name='2019_12_11_1'
 # model_run_name='2019_12_14_1'
 # model_run_name='2019_12_16_1'
-model_run_name='2019_12_17_1'
+# model_run_name='2019_12_17_1'
+model_run_name='2020_01_14_1'
 
 model_version = '000001' # update this to be the same as the name of the model stored in the model_run_result folder. Cacophony API says: version (hex coded, e.g. 0x0110 would be v1.10)
 
@@ -50,7 +51,7 @@ temp_folder = 'Temp'
 # arff_folder_for_next_run = 'arff_folder_for_next_run'
 
 relation_name = model_run_name
-class_names = 'morepork_more-pork,unknown,siren,dog,duck,dove,human,bird,car,rumble,white_noise,cow,buzzy_insect,plane,hammering,morepork_more-pork_part'
+class_names = 'morepork_more-pork,unknown,siren,dog,duck,dove,human,bird,car,rumble,white_noise,cow,buzzy_insect,plane,hammering,frog,morepork_more-pork_part,chainsaw,crackle,car_horn'
 
 weka_model_folder = 'weka_model'
 weka_model_filename = "model.model"

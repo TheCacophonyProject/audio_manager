@@ -173,6 +173,8 @@ def get_recording_ids_for_device_name(device_name):
     cur.execute("SELECT MAX(recording_id) FROM recordings WHERE device_name = ?", (device_name,))
     rows = cur.fetchall() 
     current_max_recording_id_for_this_device = rows[0][0]
+    if current_max_recording_id_for_this_device is None:
+        current_max_recording_id_for_this_device = 0
     
         
     print('device_name ', device_name)
