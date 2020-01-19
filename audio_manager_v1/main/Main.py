@@ -477,11 +477,8 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         self.unique_locations = functions.get_unique_locations('recordings')            
                     
         title_label = ttk.Label(self, text="Evaluate Model Run Results", font=LARGE_FONT)
-        title_label.grid(column=0, columnspan=1, row=0)   
-        
-        title_label2 = ttk.Label(self, text="DO NOT use this between creating the last model and using that model to classify onsets - as that will corrupt the history/record of which of these results were also used to create the model or not")
-        title_label2.grid(column=0, columnspan=4, row=1)   
-        
+        title_label.grid(column=0, columnspan=1, row=0)           
+                
         refresh_model_run_names_button = ttk.Button(self, text="Refresh Unique Model Run Names",command=lambda: refresh_unique_model_run_names())
         refresh_model_run_names_button.grid(column=0, columnspan=1, row=3) 
         
@@ -613,7 +610,20 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=21)  
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Car horn', variable=self.predicted_filter, value='car_horn')
         predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=22)  
-        self.predicted_filter.set('not_used')    
+        self.predicted_filter.set('not_used') 
+        
+        used_to_create_model_label = ttk.Label(self, text="Used to create Model")
+        used_to_create_model_label.grid(column=0, columnspan=1, row=25)  
+        
+        self.used_to_create_model_filter = tk.StringVar()
+        used_to_create_model_filter_radio_button_greater_than = ttk.Radiobutton(self,text='Yes', variable=self.used_to_create_model_filter, value='yes')
+        used_to_create_model_filter_radio_button_greater_than.grid(column=0, columnspan=1, row=26)
+        used_to_create_model_filter_radio_button_less_than = ttk.Radiobutton(self,text='No', variable=self.used_to_create_model_filter, value='no')
+        used_to_create_model_filter_radio_button_less_than.grid(column=1, columnspan=1, row=26) 
+        used_to_create_model_filter_radio_button_not_used = ttk.Radiobutton(self,text='Not used', variable=self.used_to_create_model_filter, value='not_used',command=lambda: self.predicted_probability_filter_value.set(''))
+        used_to_create_model_filter_radio_button_not_used.grid(column=1, columnspan=1, row=27)
+        self.used_to_create_model_filter.set('not_used')
+                 
         
         run_probability_label = ttk.Label(self, text="Probability")
         run_probability_label.grid(column=2, columnspan=1, row=25)  
@@ -631,37 +641,37 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         self.predicted_probability_filter.set('not_used')        
         
         load_run_results_button = ttk.Button(self, text="Load Run Results using Filters",command=lambda: get_run_results())
-        load_run_results_button.grid(column=0, columnspan=1, row=28) 
+        load_run_results_button.grid(column=0, columnspan=1, row=33) 
         
         self.number_of_results_label_value = tk.StringVar()
         number_of_results_label_for_value = ttk.Label(self, textvariable=self.number_of_results_label_value)
-        number_of_results_label_for_value.grid(column=0, columnspan=1, row=29)   
+        number_of_results_label_for_value.grid(column=0, columnspan=1, row=34)   
         
         self.recording_id_and_result_place_value = tk.StringVar()
         recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value) 
-        recording_id_label.grid(column=0, columnspan=1, row=30) 
+        recording_id_label.grid(column=0, columnspan=1, row=35) 
         self.recording_id_and_result_place_value.set("Recording Id")
                    
         start_time_label = ttk.Label(self, text="Start Time")
-        start_time_label.grid(column=1, columnspan=1, row=29)        
+        start_time_label.grid(column=1, columnspan=1, row=34)        
         self.start_time = StringVar(value='0.0')
-        self.start_time_entry = tk.Entry(self,  textvariable=self.start_time, width=30).grid(column=1, columnspan=1,row=30)
+        self.start_time_entry = tk.Entry(self,  textvariable=self.start_time, width=30).grid(column=1, columnspan=1,row=35)
         
         self.location_recorded_value = tk.StringVar()
         location_recorded_label = ttk.Label(self, textvariable=self.location_recorded_value) 
-        location_recorded_label.grid(column=2, columnspan=1, row=29) 
+        location_recorded_label.grid(column=2, columnspan=1, row=34) 
         self.location_recorded_value.set("Location: ")   
         
         self.when_recorded_value = tk.StringVar()
         when_recorded_label = ttk.Label(self, textvariable=self.when_recorded_value) 
-        when_recorded_label.grid(column=2, columnspan=1, row=30) 
+        when_recorded_label.grid(column=2, columnspan=1, row=35) 
         self.when_recorded_value.set("When: ")     
         
         self.spectrogram_label = ttk.Label(self, image=None)
-        self.spectrogram_label.grid(column=0, columnspan=1, row=31)
+        self.spectrogram_label.grid(column=0, columnspan=1, row=36)
         
         self.waveform_label = ttk.Label(self, image=None)
-        self.waveform_label.grid(column=1, columnspan=1, row=31)
+        self.waveform_label.grid(column=1, columnspan=1, row=36)
         
        
         actual_label_confirmed = ttk.Label(self, text="Actual Confirmed", font=LARGE_FONT)
@@ -767,7 +777,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             print('self.actual_confirmed_other ', self.actual_confirmed_other.get())
             print('self.predicted_other ', self.predicted_other.get())
             
-            self.run_results = functions.get_model_run_results(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get(), self.actual_confirmed_other.get(), self.predicted_other.get())
+            self.run_results = functions.get_model_run_results(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get(), self.actual_confirmed_other.get(), self.predicted_other.get(), self.used_to_create_model_filter.get())
                                        
             number_of_results_returned = len(self.run_results)
             print('number_of_results_returned ', number_of_results_returned)
