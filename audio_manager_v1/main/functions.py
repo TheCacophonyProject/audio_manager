@@ -785,7 +785,7 @@ def classify_onsets_using_weka_model():
     for onsetWithNoActualConfirmed in onsetsWithNoActualConfirmed:
         count += 1        
         print('Processing onset', count, ' of ', number_of_onsets)
-        classify_onsets_using_weka_model_helper(onsetWithNoActualConfirmed, model_folder)
+        classify_onsets_using_weka_model_helper(onsetWithNoActualConfirmed, model_folder)        
             
 def classify_onsets_using_weka_model_helper(onset, model_folder):     
     print('onset', onset)
@@ -826,16 +826,16 @@ def classify_onsets_using_weka_model_helper(onset, model_folder):
 
     
 def insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name):
-    
+       
     try:
         cur = get_database_connection().cursor()
         if actual_confirmed:
             sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name)
-                      VALUES(?,?,?,?,?,?,?,?,?,?) '''
+                      VALUES(?,?,?,?,?,?,?,?,?,?,?) '''
             cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name))
         else:
             sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name)
-                      VALUES(?,?,?,?,?,?,?,?,?) '''
+                      VALUES(?,?,?,?,?,?,?,?,?,?) '''
             cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name))
         
         get_database_connection().commit()
@@ -892,15 +892,7 @@ def create_arff_file_headder(output_folder, arff_filename, comments, relation, a
         
     f.close()
   
-    
-# def create_onsets(existing_tag_type):
-#     print("create_onsets")
-#     if existing_tag_type is None:
-#         create_onsets_in_local_db_using_recordings_folder()
-#     elif not existing_tag_type:
-#         create_onsets_in_local_db_using_recordings_folder()
-#     else:
-#         create_onsets_in_local_db_using_existing_tag_type(existing_tag_type)
+
         
 def insert_onset_into_database(version, recording_id, start_time_seconds, duration_seconds):
     
@@ -1027,8 +1019,8 @@ def create_onsets_in_local_db_using_recordings_folder():
             print('total_onset_pairs_including_more_than_40:', total_onset_pairs_including_more_than_40)
             print('total_onset_pairs_including_not_including_more_40:', total_onset_pairs_including_not_including_more_40, '\n')
         except Exception as e:
-            print(e, '\n')
-            print('Error processing file ', recording_id)
+#             print(e, '\n')
+            print('Error processing file ', recording_id, '\n')
     
 #     with os.scandir(recordings_folder_with_path) as entries:
 #         count = 0
@@ -1070,6 +1062,12 @@ def create_onsets_in_local_db(filename):
         
         audio_in_path = recordings_folder_with_path + "/" + filename
         
+        # Some recordings are not available
+        if not os.path.isfile(audio_in_path):
+            print("This recording is not available ", filename)
+            
+            
+        
         y, sr = librosa.load(audio_in_path)
         y = apply_band_pass_filter(y, sr)            
     
@@ -1090,9 +1088,9 @@ def create_onsets_in_local_db(filename):
                 
         return count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 
 
-    except Exception as e:
-        print(e, '\n')
-        print('Error processing file ', filename)
+    except Exception:
+#         print(e, '\n')
+        pass
                 
 def insert_onset_list_into_db(version, recording_id, onsets):
     global squawk_duration_seconds
@@ -1427,6 +1425,7 @@ def get_unique_locations(table_name):
 
 
 def create_arff_file_for_weka_image_filter_input():
+   
 
     run_folder_path = base_folder + '/' + run_folder
     f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+")
@@ -1775,10 +1774,34 @@ def upload_tags_to_cacophony_server(location_filter):
             print(e, '\n')
             print('Error processing tag ', recording_id_str,  ' ', resp.text)
 
-
-
-
-#     
+def update_model_run_results_with_onsets_used_to_create_model(model_run_name, arff_filename):
+    print(model_run_name)   
+    print("\n")   
+    print(arff_filename)   
+    
+    # Extract onsets from arff file. I couldn't get re.split to work with $ and .jpg so did it in two steps :-(
+    with open(arff_filename) as fp:
+        line = fp.readline()        
+        while line:
+#             print(line,'\n')
+            
+            if line[0] != '@':
+                line_part_a = line.split('.jpg')[0]
+                recording_id = line_part_a.split('$')[1]
+                start_time = line_part_a.split('$')[2]
+                print('recording id is ', recording_id, '\n')
+                print('start time is ', start_time, '\n\n')
+                
+                # now update model_run_result
+                cur = get_database_connection().cursor()                
+                cur.execute("UPDATE model_run_result SET used_to_create_model = 1 WHERE modelRunName = ? AND recording_id = ? AND startTime = ?", (model_run_name, recording_id, start_time))  
+                
+                            
+                get_database_connection().commit()  
+                
+            line = fp.readline()
+            
+    print("Finished updating model run result table")   
 
 
 

@@ -9,7 +9,8 @@ import sys
 # model_run_name='2019_12_17_1'
 model_run_name='2020_01_14_1'
 
-model_version = '000001' # update this to be the same as the name of the model stored in the model_run_result folder. Cacophony API says: version (hex coded, e.g. 0x0110 would be v1.10)
+
+model_version = '000002' # update this to be the same as the name of the model stored in the model_run_result folder. Cacophony API says: version (hex coded, e.g. 0x0110 would be v1.10)
 
 probability_cutoff_for_tag_creation = 0.8
 
@@ -72,6 +73,7 @@ list_of_tags_folder = 'list_of_tags'
 files_for_testing_folder = 'files_for_testing'
 tagged_recordings_folder = 'wavfiles'
 version = '5'
+initial_locatation_for_choosing_arff_file_dialog = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs/"
 
 squawk_duration_seconds = 0.8
 morepork_more_pork_call_duration = 0.9

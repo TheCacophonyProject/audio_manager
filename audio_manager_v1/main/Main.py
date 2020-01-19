@@ -19,6 +19,8 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import *
 from tkinter.ttk import *
+from tkinter import filedialog
+
 
 # import os
 from PIL import ImageTk,Image 
@@ -48,7 +50,7 @@ class Main_GUI(tk.Tk):
        
         self.frames = {}
         
-        for F in (HomePage, RecordingsPage, TaggingPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage, CreateTagsFromOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage):
+        for F in (HomePage, RecordingsPage, TaggingPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage, CreateTagsFromOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage, ModelAccuracyAnalysisPage):
       
             frame = F(container, self)
             self.frames[F] = frame            
@@ -100,12 +102,15 @@ class HomePage(tk.Frame):
           
         evaluateWekaModelRunResultPage_button = ttk.Button(self, text="Step 4: Manually Evaluate Weka model Run Result",
                             command=lambda: controller.show_frame(EvaluateWekaModelRunResultPage))        
-        evaluateWekaModelRunResultPage_button.pack()
+        evaluateWekaModelRunResultPage_button.pack()       
         
+        modelAccuracyAnalysisPage_button = ttk.Button(self, text="Step 5: Model Accuracy Analysis",
+                            command=lambda: controller.show_frame(ModelAccuracyAnalysisPage))        
+        modelAccuracyAnalysisPage_button.pack()
         
-        createWekaModelPage_button = ttk.Button(self, text="Step 5: Create Weka Model",
+        createWekaModelPage_button = ttk.Button(self, text="Step 6: Create Weka Model",
                             command=lambda: controller.show_frame(CreateWekaModelPage))        
-        createWekaModelPage_button.pack()
+        createWekaModelPage_button.pack()  
         
         outside_normal_flow_label = tk.Label(self, text="Functions below here are outside normal model development iteration")
         outside_normal_flow_label.pack(pady=10,padx=10)
@@ -337,16 +342,6 @@ class CreateOnsetsPage(tk.Frame):
         msg.config(bg='lightgreen', font=('times', 16), width=1200)
         msg.grid(column=0, columnspan=6, row=1)   
         
-#         existing_tag_type_message = "Leave this box empty to create onsets from ALL recordings that haven't yet had an onset created from them.  OR enter the name of an existing tag type - onsets will only be created from recordings that already been tagged with this type"
-#         existing_tag_type_msg = tk.Message(self, text = existing_tag_type_message)
-#         existing_tag_type_msg.config(width=600)
-#         existing_tag_type_msg.grid(column=0, columnspan=1, row=2) 
-# 
-#         existing_tag_type = StringVar()
-#         existing_tag_type_entry = tk.Entry(self,  textvariable=existing_tag_type, width=30)   
-#         existing_tag_type_entry.grid(column=1, columnspan=1,row=2) 
-               
-#         run_button = ttk.Button(self, text="Run", command=lambda: functions.create_onsets(existing_tag_type.get()))
         run_button = ttk.Button(self, text="Run", command=lambda: functions.create_onsets_in_local_db_using_recordings_folder())        
         run_button.grid(column=0, columnspan=1, row=3)        
 
@@ -484,37 +479,40 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         title_label = ttk.Label(self, text="Evaluate Model Run Results", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)   
         
+        title_label2 = ttk.Label(self, text="DO NOT use this between creating the last model and using that model to classify onsets - as that will corrupt the history/record of which of these results were also used to create the model or not")
+        title_label2.grid(column=0, columnspan=4, row=1)   
+        
         refresh_model_run_names_button = ttk.Button(self, text="Refresh Unique Model Run Names",command=lambda: refresh_unique_model_run_names())
-        refresh_model_run_names_button.grid(column=0, columnspan=1, row=2) 
+        refresh_model_run_names_button.grid(column=0, columnspan=1, row=3) 
         
         run_names_label = ttk.Label(self, text="Run Names")
-        run_names_label.grid(column=1, columnspan=1, row=1)      
+        run_names_label.grid(column=1, columnspan=1, row=2)      
                                     
         self.run_name = StringVar()
         self.run_names_combo = ttk.Combobox(self, textvariable=self.run_name, values=self.unique_model_run_names)
         
         if len(self.unique_model_run_names) > 0:
             self.run_names_combo.current(0)
-            self.run_names_combo.grid(column=1, columnspan=1,row=2) 
+            self.run_names_combo.grid(column=1, columnspan=1,row=3) 
             self.run_names_combo.current(len(self.unique_model_run_names) - 1)       
             
         location_filter_label = ttk.Label(self, text="Location Filter")
-        location_filter_label.grid(column=2, columnspan=1, row=1)      
+        location_filter_label.grid(column=2, columnspan=1, row=2)      
                                     
         self.location_filter = StringVar()
         self.location_filter_combo = ttk.Combobox(self, textvariable=self.location_filter, values=self.unique_locations)
         
         if len(self.unique_locations) > 0:
             self.location_filter_combo.current(0)
-            self.location_filter_combo.grid(column=2, columnspan=1,row=2) 
+            self.location_filter_combo.grid(column=2, columnspan=1,row=3) 
    
         actual_confirmed_filter_label = ttk.Label(self, text="Filter - Actual Confirmed", font=LARGE_FONT)
-        actual_confirmed_filter_label.grid(column=0, columnspan=1, row=3)   
+        actual_confirmed_filter_label.grid(column=0, columnspan=1, row=4)   
         
         # http://effbot.org/tkinterbook/checkbutton.htm
         self.actual_confirmed_other = StringVar() 
         actual_confirmed_other_than_checkbox = ttk.Checkbutton(self,text='Everything OTHER than selected', variable=self.actual_confirmed_other, onvalue="on", offvalue="off")
-        actual_confirmed_other_than_checkbox.grid(column=1, columnspan=1, row=3)
+        actual_confirmed_other_than_checkbox.grid(column=1, columnspan=1, row=4)
         self.actual_confirmed_other.set('off')
              
         self.actual_confirmed_filter = tk.StringVar()
@@ -565,11 +563,11 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         self.actual_confirmed_filter.set('not_used')
         
         predicted_filter_label = ttk.Label(self, text="Filter - Predicted", font=LARGE_FONT)
-        predicted_filter_label.grid(column=2, columnspan=1, row=3)  
+        predicted_filter_label.grid(column=2, columnspan=1, row=4)  
         
         self.predicted_other = StringVar()
         predicted_other_than_checkbox = ttk.Checkbutton(self,text='Everything OTHER than selected', variable=self.predicted_other, onvalue="on", offvalue="off")
-        predicted_other_than_checkbox.grid(column=3, columnspan=1, row=3)
+        predicted_other_than_checkbox.grid(column=3, columnspan=1, row=4)
         self.predicted_other.set('off')
              
         self.predicted_filter = tk.StringVar()        
@@ -883,6 +881,64 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             threading.Thread(target=play_clip(), args=(1,)).start()
             threading.Thread(target=display_images(), args=(1,)).start()
             
+class ModelAccuracyAnalysisPage(tk.Frame):    
+    
+    
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        
+        self.current_model_run_result_array_pos = 0
+        self.current_model_run_name_ID = 0        
+        
+        self.unique_model_run_names = functions.get_unique_model_run_names()  
+        self.unique_locations = functions.get_unique_locations('recordings')            
+                    
+        title_label = ttk.Label(self, text="Analyse Model Accuracy", font=LARGE_FONT)
+        title_label.grid(column=0, columnspan=1, row=5)
+        
+        refresh_model_run_names_button = ttk.Button(self, text="Refresh Unique Model Run Names",command=lambda: refresh_unique_model_run_names())
+        refresh_model_run_names_button.grid(column=0, columnspan=1, row=10) 
+        
+        run_names_label = ttk.Label(self, text="Model Run Names")
+        run_names_label.grid(column=1, columnspan=1, row=10)      
+                                    
+        self.run_name = StringVar()
+        self.run_names_combo = ttk.Combobox(self, textvariable=self.run_name, values=self.unique_model_run_names)
+        
+        
+        if len(self.unique_model_run_names) > 0:
+            self.run_names_combo.current(0)
+            self.run_names_combo.grid(column=1, columnspan=1,row=11) 
+            self.run_names_combo.current(len(self.unique_model_run_names) - 1)   
+            
+        select_arff_file_label = ttk.Label(self, text="Select the arff file that was used to create this model.")
+        select_arff_file_label.grid(column=0, columnspan=2, row=15)   
+        
+        select_arff_file_label = ttk.Label(self, text="Important - the arff file is probably in the previous model run folder to the model run result that you are updating!")
+        select_arff_file_label.grid(column=0, columnspan=2, row=16)       
+            
+        select_arff_file_used_to_create_model_button = ttk.Button(self, text="Select arff file",command=lambda: select_arff_file_used_to_create_model())
+        select_arff_file_used_to_create_model_button.grid(column=0, columnspan=1, row=17)    
+            
+        update_model_run_results_with_was_used_to_create_model_button = ttk.Button(self, text="Update model run results with onsets used to create model",command=lambda: update_model_run_results_with_onsets_used_to_create_model())
+        update_model_run_results_with_was_used_to_create_model_button.grid(column=0, columnspan=1, row=20) 
+        
+        back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
+        back_to_home_button.grid(column=0, columnspan=1, row=25) 
+            
+        def refresh_unique_model_run_names():
+                self.unique_model_run_names = functions.get_unique_model_run_names()
+                self.run_names_combo['values'] = self.unique_model_run_names  
+                
+        def select_arff_file_used_to_create_model():
+#             print(initial_locatation_for_choosing_arff_file_dialog)            
+            self.arff_filename = filedialog.askopenfilename(initialdir = initial_locatation_for_choosing_arff_file_dialog,title = "Select file",filetypes = (("arff files","*.arff"),("all files","*.*")))
+            
+                
+        def update_model_run_results_with_onsets_used_to_create_model():               
+                functions.update_model_run_results_with_onsets_used_to_create_model(self.run_names_combo.get(), self.arff_filename)
+                 
+        
 class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):  
     
     def __init__(self, parent, controller):
