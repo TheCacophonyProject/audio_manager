@@ -557,6 +557,8 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=21)
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Car horn', variable=self.actual_confirmed_filter, value='car_horn')
         actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=22)
+        actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Fire work', variable=self.actual_confirmed_filter, value='fire_work')
+        actual_confirmed_filter_radio_button_unknown.grid(column=1, columnspan=1, row=23)
         self.actual_confirmed_filter.set('not_used')
         
         predicted_filter_label = ttk.Label(self, text="Filter - Predicted", font=LARGE_FONT)
@@ -609,7 +611,9 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Crackle', variable=self.predicted_filter, value='crackle')
         predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=21)  
         predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Car horn', variable=self.predicted_filter, value='car_horn')
-        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=22)  
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=22)
+        predicted_filter_radio_button_unknown = ttk.Radiobutton(self,text='Fire work', variable=self.predicted_filter, value='fire_work')
+        predicted_filter_radio_button_unknown.grid(column=3, columnspan=1, row=23)  
         self.predicted_filter.set('not_used') 
         
         used_to_create_model_label = ttk.Label(self, text="Used to create Model")
@@ -718,7 +722,9 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Crackle', variable=self.actual_confirmed, value='crackle',command=lambda: confirm_actual())
         actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=50)  
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Car horn', variable=self.actual_confirmed, value='car_horn',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=51)      
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=51)
+        actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Fire work', variable=self.actual_confirmed, value='fire_work',command=lambda: confirm_actual())
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=52)       
        
         predicted_label = ttk.Label(self, text="Predicted (by last model run)", font=LARGE_FONT)
         predicted_label.grid(column=2, columnspan=1, row=40)       
@@ -883,6 +889,8 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
                 self.actual_confirmed.set('crackle')
             elif self.current_model_run_name_actual_confirmed == 'car_horn':
                 self.actual_confirmed.set('car_horn')
+            elif self.current_model_run_name_actual_confirmed == 'fire_work':
+                self.actual_confirmed.set('fire_work')
             else:
                 self.actual_confirmed.set('not_set')   
 

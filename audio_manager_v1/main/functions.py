@@ -657,7 +657,8 @@ def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, 
         if used_to_create_model_filter == 'yes':
             sqlBuilding +=  "used_to_create_model = 1"
         else:
-            sqlBuilding +=  "used_to_create_model = 0"
+#             sqlBuilding +=  "used_to_create_model = 0"
+            sqlBuilding +=  "used_to_create_model IS NULL"
         
     sqlBuilding += " ORDER BY recording_id DESC, startTime ASC"
         
@@ -839,11 +840,11 @@ def insert_model_run_result_into_database(modelRunName, recording_id, startTime,
         cur = get_database_connection().cursor()
         if actual_confirmed:
             sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name)
-                      VALUES(?,?,?,?,?,?,?,?,?,?,?) '''
+                      VALUES(?,?,?,?,?,?,?,?,?,?) '''
             cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name))
         else:
             sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name)
-                      VALUES(?,?,?,?,?,?,?,?,?,?) '''
+                      VALUES(?,?,?,?,?,?,?,?,?) '''
             cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name))
         
         get_database_connection().commit()
