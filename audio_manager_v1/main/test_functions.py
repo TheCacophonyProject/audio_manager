@@ -1,9 +1,10 @@
 import main.functions as functions
+import main.parameters as parameters
 
 # Uncomment a test to run it :-)
 
 
-print('hello')
+# print('hello')
 
 # functions.update_onsets_with_latest_model_run_actual_confirmed()
 
@@ -24,7 +25,7 @@ print('hello')
 
 # functions.upload_tags_to_cacophony_server()
 
-functions.test_json_stuff()
+# functions.test_json_stuff()
     
 
 # def test_update_recording_in_database():
@@ -122,7 +123,13 @@ functions.test_json_stuff()
 # def test_update_recording_information_for_single_recording():
 #     update_recording_information_for_single_recording('291047')
 
+# def test_add_device_number_to_arff():
+print('boo')
+# input_filename = 'arff_file_for_weka_model_creation_image_filtered.arff'
+# 
+# functions.add_device_names_to_arff(input_filename)
 
+functions.create_input_arff_file_for_single_onset_prediction("tim")
     
     
     

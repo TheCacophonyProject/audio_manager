@@ -756,11 +756,11 @@ def classify_onsets_using_weka_model():
         print(weka_run_jar_filename, " is missing") 
         return 
     
-    # Need to check arff file is there, otherwise run.jar will break later on
-    arff_filename_path = model_folder + '/' + weka_input_arff_filename        
-    if not os.path.isfile(arff_filename_path):
-        print(weka_input_arff_filename, " is missing") 
-        return  
+#     # Need to check arff file is there, otherwise run.jar will break later on
+#     arff_filename_path = model_folder + '/' + weka_input_arff_filename        
+#     if not os.path.isfile(arff_filename_path):
+#         print(weka_input_arff_filename, " is missing") 
+#         return  
     
     # Need to check model file is there, otherwise run.jar will break later on
     weka_model_filename_path = model_folder + '/' + weka_model_filename        
@@ -814,6 +814,16 @@ def classify_onsets_using_weka_model_helper(onset, model_folder):
         return  
    
     create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds)
+    
+    # Create the input.arff file for this onset
+    arff_filename_path = model_folder + '/' + weka_input_arff_filename  
+    create_input_arff_file_for_single_onset_prediction(arff_filename_path, device_super_name)
+    
+    # Need to check arff file is there, otherwise run.jar will break later on
+#     arff_filename_path = model_folder + '/' + weka_input_arff_filename        
+    if not os.path.isfile(arff_filename_path):
+        print(weka_input_arff_filename, " is missing") 
+        return  
        
     result = run_model(model_folder)
     
@@ -1240,6 +1250,7 @@ def create_spectrogram_jpg_files_for_next_model_run():
     
 #     cur.execute("SELECT ID, recording_id, startTime, actual_confirmed FROM model_run_result WHERE actual_confirmed IS NOT NULL")
     cur.execute("SELECT ID, recording_id, startTime, actual_confirmed FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NOT NULL", (model_run_name, ))  
+#     cur.execute("SELECT ID, recording_id, startTime, actual_confirmed FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NOT NULL and device_super_name = 'Lockmara'", (model_run_name, )) 
     rows = cur.fetchall()  
     
     for row in rows:
@@ -1253,7 +1264,17 @@ def create_spectrogram_jpg_files_for_next_model_run():
 #             
             audio_filename = str(recording_id) + '.m4a'
             audio_in_path = base_folder  + '/' + downloaded_recordings_folder + '/' +  audio_filename 
-            image_out_name = actual_confirmed + '$' + str(recording_id) + '$' + str(start_time_seconds) + '.jpg'
+            
+            # Also need the device super name in the filename so that it can be used by the model
+            cur1 = get_database_connection().cursor()    
+            cur1.execute("select distinct device_super_name from recordings where recording_id = ?", (recording_id,))      
+            device_super_name = cur1.fetchall()
+            print('device_super_name', device_super_name[0][0])
+                
+#             print('recording_id ', recording_id)
+            
+#             image_out_name = actual_confirmed + '$' + str(recording_id) + '$' + str(start_time_seconds) + '.jpg'
+            image_out_name = device_super_name[0][0] + '$' + actual_confirmed + '$' + str(recording_id) + '$' + str(start_time_seconds) + '.jpg'
             print('image_out_name', image_out_name)           
             
             image_out_path = mel_spectrograms_out_folder_path + '/' + image_out_name
@@ -1440,6 +1461,28 @@ def create_arff_file_for_weka_image_filter_input():
     f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+")
     f.write('@relation ' + relation_name + '\r\n')
     f.write('@attribute filename string' + '\r\n')
+    # Add in the device super names attribute
+    # Get list of unique 
+    cur = get_database_connection().cursor()    
+    cur.execute("select distinct device_super_name from model_run_result where modelRunName = ?", (model_run_name,))      
+    device_super_names = cur.fetchall()
+    numberOfSuperNames = len(device_super_names)
+    print('numberOfSuperNames ', numberOfSuperNames)
+    
+    device_super_names_str = ''
+    print(device_super_names_str)
+    
+    count = 0
+    for device_super_name in device_super_names:  
+        count+=1    
+        print(device_super_name[0])  
+        device_super_names_str+= device_super_name[0]
+        if count < numberOfSuperNames: # Do not want a comma at the end of the string for arff format
+            device_super_names_str+= ', '
+   
+    print(device_super_names_str)
+    f.write('@attribute deviceSuperName {' + device_super_names_str +'}' + '\r\n')
+    
     f.write('@attribute class {' + class_names +'}' + '\r\n')
     f.write('@data' + '\r\n')    
     
@@ -1447,10 +1490,12 @@ def create_arff_file_for_weka_image_filter_input():
    
     for filename in os.listdir(spectrograms_for_model_creation_folder_path):
         filename_parts = filename.split('$')
-        class_type = filename_parts[0]
+        deviceSuperName = filename_parts[0]
+        class_type = filename_parts[1]
         print('image', filename)
         print('class_type', class_type)
-        f.write(filename +',' + class_type + '\r\n')      
+#         f.write(filename +',' + class_type + '\r\n')deviceSuperName
+        f.write(filename +',' + deviceSuperName +',' + class_type + '\r\n')
         
     f.close()
           
@@ -1814,9 +1859,117 @@ def update_model_run_results_with_onsets_used_to_create_model(model_run_name, ar
 
 
 
+def add_device_names_to_arff():
+    input_filename = 'arff_file_for_weka_model_creation_image_filtered.arff'
+    input_filename_path = parameters.base_folder + '/' + parameters.run_folder + '/' + input_filename
+    
+    if not os.path.isfile(input_filename_path):
+        print(input_filename_path + ' does not exist - stopping')
+    
+    
+    output_filename_path = parameters.base_folder + '/' + parameters.run_folder + '/device_names_added_' + input_filename
+    # Get list of unique 
+    cur = get_database_connection().cursor()    
+    cur.execute("select distinct device_super_name from model_run_result where modelRunName = ?", (model_run_name,))      
+    device_super_names = cur.fetchall()
+    numberOfSuperNames = len(device_super_names)
+    print('numberOfSuperNames ', numberOfSuperNames)
+    
+    device_super_names_str = ''
+    print(device_super_names_str)
+    
+    count = 0
+    for device_super_name in device_super_names:  
+        count+=1    
+        print(device_super_name[0])  
+        device_super_names_str+= device_super_name[0]
+        if count < numberOfSuperNames: # Do not want a comma at the end of the string for arff format
+            device_super_names_str+= ', '
+   
+    print(device_super_names_str)
+    
+    print('input_filename_path ', input_filename_path)
+    print('output_filename_path ', output_filename_path)
+    
+    f_output_filename_path=open(output_filename_path,'w+')
+    
+    with open(input_filename_path) as fp:
+        line = fp.readline()
+        data_found = False 
+        first_attribute_found = False       
+        while line:
+            # First need to add the extra @attribute definition
+            if not first_attribute_found:
+                if line.startswith('@attribute'):
+                    first_attribute_found = True
+                    # Add in the new attribute description
+#                     f_output_filename_path.write('@attribute deviceName { sunny, overcast }\n')
+                    f_output_filename_path.write('@attribute deviceName { ' + device_super_names_str +' }\n')
+            
+            if not data_found:
+                if line.startswith('@data'):
+                    data_found = TRUE
+#                     continue # data will start on next line
+                f_output_filename_path.write(line)
+            else:
+                # Need to find the device name for this recording id
+                line_parts = line.split('$')
+                recording_id = line_parts[1]
+                
+                cur2 = get_database_connection().cursor()    
+                cur2.execute("select distinct device_super_name from recordings where recording_id = ?", (recording_id,))      
+                device_super_name = cur2.fetchall()
+                print('device_super_name', device_super_name[0][0])
+                
+                print('recording_id ', recording_id)
+#                 f_output_filename_path.write('adeviceName,' + line)
+                f_output_filename_path.write(device_super_name[0][0] + ',' + line)
+                
+            print(line)
+            line = fp.readline()
+            
+    f_output_filename_path.close()    
+            
+   
 
-
-
+def create_input_arff_file_for_single_onset_prediction(output_filename_path, device_super_name_for_this_onset):
+    
+#     arff_filename_path = model_folder + '/' + weka_input_arff_filename 
+    
+#     output_filename_path = parameters.base_folder + '/' + parameters.run_folder + '/weka_model/input.arff'
+    f_output_filename_path=open(output_filename_path,'w+')
+    f_output_filename_path.write('@relation morepork_more-pork_vs\n')
+    f_output_filename_path.write('@attribute filename string\n')
+    
+    # Add in the device super names attribute
+    # Get list of unique 
+    cur = get_database_connection().cursor()    
+    cur.execute("select distinct device_super_name from recordings")      
+    device_super_names = cur.fetchall()
+    numberOfSuperNames = len(device_super_names)
+    print('numberOfSuperNames ', numberOfSuperNames)
+    
+    device_super_names_str = ''
+    print(device_super_names_str)
+    
+    count = 0
+    for device_super_name in device_super_names:  
+        count+=1    
+        print(device_super_name[0])  
+        device_super_names_str+= device_super_name[0]
+        if count < numberOfSuperNames: # Do not want a comma at the end of the string for arff format
+            device_super_names_str+= ', '
+   
+    print(device_super_names_str)
+    f_output_filename_path.write('@attribute deviceSuperName {' + device_super_names_str +'}' + '\r\n')
+    
+    f_output_filename_path.write('@attribute class {' + class_names +'}' + '\r\n')
+    f_output_filename_path.write('@data' + '\r\n')  
+#     f_output_filename_path.write('input_image.jpg,unknown' + '\r\n')
+    f_output_filename_path.write('input_image.jpg,' + device_super_name_for_this_onset + ',unknown' + '\r\n')    
+   
+    
+    f_output_filename_path.close()
 
 
 

@@ -14,7 +14,7 @@ import weka.classifiers.functions.Logistic;
 //import weka.classifiers.functions.MultilayerPerceptron;
 import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.supportVector.RBFKernel;
-//import weka.classifiers.trees.LMT;
+import weka.classifiers.trees.LMT;
 
 public class Main4 {
 	// https://www.youtube.com/watch?v=6o19TPn181g
@@ -51,9 +51,9 @@ public class Main4 {
 
 		Instance newInst = testDataset.instance(0);
 		// Load the model
-//		LMT myModel = (LMT) weka.core.SerializationHelper.read(modelName);
+		LMT myModel = (LMT) weka.core.SerializationHelper.read(modelName);
 //		MultilayerPerceptron myModel = (MultilayerPerceptron) weka.core.SerializationHelper.read(modelName);
-		SMO myModel = (SMO) weka.core.SerializationHelper.read(modelName);
+//		SMO myModel = (SMO) weka.core.SerializationHelper.read(modelName);
 //		RBFKernel myModel = (RBFKernel) weka.core.SerializationHelper.read(modelName);
 //		Logistic myModel = (Logistic) weka.core.SerializationHelper.read(modelName);
 
