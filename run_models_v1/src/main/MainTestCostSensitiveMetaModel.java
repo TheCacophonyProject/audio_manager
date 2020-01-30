@@ -17,20 +17,20 @@ import weka.classifiers.functions.supportVector.RBFKernel;
 import weka.classifiers.trees.LMT;
 import weka.classifiers.meta.CostSensitiveClassifier;
 
-public class Main4 {
+public class MainTestCostSensitiveMetaModel {
 	// https://www.youtube.com/watch?v=6o19TPn181g
 	// https://www.youtube.com/watch?v=fh4ouoKs8H0&list=PLea0WJq13cnBVfsPVNyRAus2NK-KhCuzJ&index=14
 	// https://www.youtube.com/watch?v=wSB5oByt7ko
 
 
-	static String modelName = "model.model";
-	static String imageDirectory = "./images";
-	static String imageToProcess = "input.jpg";
+	static String modelName = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs/2020_01_28_2/weka_model/model.model";
+	static String imageDirectory = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs/2020_01_28_2/weka_model/images";
+	//static String imageToProcess = "input.jpg";
 
 	public static void main(String[] args) throws Exception {
 		// see https://weka.8497.n7.nabble.com/warnings-td42935.html for suppressing warning when running from command line
 		
-		DataSource source = new DataSource("input.arff");																						
+		DataSource source = new DataSource("/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs/2020_01_28_2/weka_model/input.arff");																						
 		Instances data = source.getDataSet();
 
 		final EdgeHistogramFilter filter = new EdgeHistogramFilter();
@@ -52,12 +52,12 @@ public class Main4 {
 
 		Instance newInst = testDataset.instance(0);
 		// Load the model
-		LMT myModel = (LMT) weka.core.SerializationHelper.read(modelName);
+//		LMT myModel = (LMT) weka.core.SerializationHelper.read(modelName);
 //		MultilayerPerceptron myModel = (MultilayerPerceptron) weka.core.SerializationHelper.read(modelName);
 //		SMO myModel = (SMO) weka.core.SerializationHelper.read(modelName);
 //		RBFKernel myModel = (RBFKernel) weka.core.SerializationHelper.read(modelName);
 //		Logistic myModel = (Logistic) weka.core.SerializationHelper.read(modelName);
-//		CostSensitiveClassifier myModel = (CostSensitiveClassifier) weka.core.SerializationHelper.read(modelName);
+		CostSensitiveClassifier myModel = (CostSensitiveClassifier) weka.core.SerializationHelper.read(modelName);
 //		LMT lmt = new LMT();
 //		
 //		

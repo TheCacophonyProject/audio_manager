@@ -1040,6 +1040,8 @@ def create_onsets_in_local_db_using_recordings_folder():
         except Exception as e:
 #             print(e, '\n')
             print('Error processing file ', recording_id, '\n')
+            cur.execute("UPDATE recordings SET processed_for_onsets = -1 WHERE recording_id = ?", (recording_id,))  
+            get_database_connection().commit()
     
 #     with os.scandir(recordings_folder_with_path) as entries:
 #         count = 0
@@ -1084,6 +1086,8 @@ def create_onsets_in_local_db(filename):
         # Some recordings are not available
         if not os.path.isfile(audio_in_path):
             print("This recording is not available ", filename)
+            # Update the db to say that it has been processed
+            
             
             
         
@@ -1841,8 +1845,10 @@ def update_model_run_results_with_onsets_used_to_create_model(model_run_name, ar
             
             if line[0] != '@':
                 line_part_a = line.split('.jpg')[0]
-                recording_id = line_part_a.split('$')[1]
-                start_time = line_part_a.split('$')[2]
+#                 recording_id = line_part_a.split('$')[1]
+#                 start_time = line_part_a.split('$')[2]
+                recording_id = line_part_a.split('$')[2]
+                start_time = line_part_a.split('$')[3]
                 print('recording id is ', recording_id, '\n')
                 print('start time is ', start_time, '\n\n')
                 
@@ -1947,20 +1953,20 @@ def create_input_arff_file_for_single_onset_prediction(output_filename_path, dev
     cur.execute("select distinct device_super_name from recordings")      
     device_super_names = cur.fetchall()
     numberOfSuperNames = len(device_super_names)
-    print('numberOfSuperNames ', numberOfSuperNames)
+#     print('numberOfSuperNames ', numberOfSuperNames)
     
     device_super_names_str = ''
-    print(device_super_names_str)
+#     print(device_super_names_str)
     
     count = 0
     for device_super_name in device_super_names:  
         count+=1    
-        print(device_super_name[0])  
+#         print(device_super_name[0])  
         device_super_names_str+= device_super_name[0]
         if count < numberOfSuperNames: # Do not want a comma at the end of the string for arff format
             device_super_names_str+= ', '
    
-    print(device_super_names_str)
+#     print(device_super_names_str)
     f_output_filename_path.write('@attribute deviceSuperName {' + device_super_names_str +'}' + '\r\n')
     
     f_output_filename_path.write('@attribute class {' + class_names +'}' + '\r\n')

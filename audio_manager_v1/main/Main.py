@@ -170,7 +170,7 @@ class RecordingsPage(tk.Frame):
         device_super_name_label = ttk.Label(self, text="Device Super name (e.g. Hammond_Park)")
         device_super_name_label.grid(column=0, columnspan=1, row=2)
         
-        device_super_name = StringVar(value='Hammond Park')
+        device_super_name = StringVar(value='Hammond_Park')
         device_super_name_entry = tk.Entry(self,  textvariable=device_super_name, width=30)
         device_super_name_entry.grid(column=1, columnspan=1,row=2)
                
