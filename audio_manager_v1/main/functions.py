@@ -600,9 +600,8 @@ def get_onsets_stored_locally(onset_version):
     rows = cur.fetchall()
     return rows 
 
-def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, predicted_probability_filter, predicted_probability_filter_value_str, location_filter, actual_confirmed_other, predicted_other, used_to_create_model_filter):   
+def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, predicted_probability_filter, predicted_probability_filter_value_str, location_filter, actual_confirmed_other, predicted_other, used_to_create_model_filter, recording_id_filter_value):   
        
-   
     if location_filter =='Not Used':
         location_filter ='not_used'
          
@@ -659,6 +658,11 @@ def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, 
         else:
 #             sqlBuilding +=  "used_to_create_model = 0"
             sqlBuilding +=  "used_to_create_model IS NULL"
+            
+    if recording_id_filter_value:
+        sqlBuilding += " AND "        
+        sqlBuilding +=  "recording_id = '" + recording_id_filter_value + "'"
+        
         
     sqlBuilding += " ORDER BY recording_id DESC, startTime ASC"
         

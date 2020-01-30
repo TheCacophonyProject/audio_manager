@@ -511,11 +511,20 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         location_filter_label.grid(column=2, columnspan=1, row=2)      
                                     
         self.location_filter = StringVar()
-        self.location_filter_combo = ttk.Combobox(self, textvariable=self.location_filter, values=self.unique_locations)
+        self.location_filter_combo = ttk.Combobox(self, textvariable=self.location_filter, values=self.unique_locations)        
+                                    
+        self.recording_id_filter = StringVar()
+#         self.recording_id_filter_combo = ttk.Combobox(self, textvariable=self.recording_id_filter, values=self.unique_locations)
         
         if len(self.unique_locations) > 0:
             self.location_filter_combo.current(0)
             self.location_filter_combo.grid(column=2, columnspan=1,row=3) 
+            
+        recording_id_filter_label = ttk.Label(self, text="Recording ID Filter (leave blank if not used)")
+        recording_id_filter_label.grid(column=3, columnspan=1, row=2)   
+        
+        self.recording_id_filter_value = StringVar(value='')
+        self.recording_id_filter_entry = tk.Entry(self,  textvariable=self.recording_id_filter_value, width=10).grid(column=3, columnspan=1,row=3)   
    
         actual_confirmed_filter_label = ttk.Label(self, text="Filter - Current Actual Confirmed", font=LARGE_FONT)
         actual_confirmed_filter_label.grid(column=0, columnspan=1, row=4)   
@@ -821,7 +830,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
             print('self.actual_confirmed_other ', self.actual_confirmed_other.get())
             print('self.predicted_other ', self.predicted_other.get())
             
-            self.run_results = functions.get_model_run_results(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get(), self.actual_confirmed_other.get(), self.predicted_other.get(), self.used_to_create_model_filter.get())
+            self.run_results = functions.get_model_run_results(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get(), self.actual_confirmed_other.get(), self.predicted_other.get(), self.used_to_create_model_filter.get(), self.recording_id_filter_value.get())
                                        
             number_of_results_returned = len(self.run_results)
             print('number_of_results_returned ', number_of_results_returned)
