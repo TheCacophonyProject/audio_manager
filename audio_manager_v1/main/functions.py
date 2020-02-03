@@ -1242,23 +1242,31 @@ def create_focused_mel_spectrogram_jps_using_onset_pairs():
             print(e, '\n')
             print('Error processing onset ', onset)
 
-def create_spectrogram_jpg_files_for_next_model_run():
-    mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + spectrograms_for_model_creation_folder 
+def create_spectrogram_jpg_files_for_next_model_run_or_model_test(testing):
+    
+    cur = get_database_connection().cursor()
+    
+    if testing:
+        mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + spectrograms_for_model_testing_folder 
+        cur.execute("SELECT ID, recording_id, startTime, actual_confirmed FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NOT NULL AND used_to_create_model IS NULL", (model_run_name, )) 
+    else:        
+        mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + spectrograms_for_model_creation_folder 
+        cur.execute("SELECT ID, recording_id, startTime, actual_confirmed FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NOT NULL", (model_run_name, ))
+        
+        # Also going to take this opportunity to create the model_run directory so it is available later in Weka for saving the model
+        weka_model_folder_path = base_folder + '/' + run_folder + '/' + weka_model_folder 
+        if not os.path.exists(weka_model_folder_path):
+            os.makedirs(weka_model_folder_path)
+        
     if not os.path.exists(mel_spectrograms_out_folder_path):
         os.makedirs(mel_spectrograms_out_folder_path)
         
-    # Also going to take this opportunity to create the model_run directory so it is available later in Weka for saving the model
-    weka_model_folder_path = base_folder + '/' + run_folder + '/' + weka_model_folder 
-    if not os.path.exists(weka_model_folder_path):
-        os.makedirs(weka_model_folder_path)
+        
   
-    cur = get_database_connection().cursor()
-         
+
     count = 0
     
-#     cur.execute("SELECT ID, recording_id, startTime, actual_confirmed FROM model_run_result WHERE actual_confirmed IS NOT NULL")
-    cur.execute("SELECT ID, recording_id, startTime, actual_confirmed FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NOT NULL", (model_run_name, ))  
-#     cur.execute("SELECT ID, recording_id, startTime, actual_confirmed FROM model_run_result WHERE modelRunName = ? AND actual_confirmed IS NOT NULL and device_super_name = 'Lockmara'", (model_run_name, )) 
+
     rows = cur.fetchall()  
     
     for row in rows:
@@ -1268,7 +1276,11 @@ def create_spectrogram_jpg_files_for_next_model_run():
             print('row ', row)
             recording_id = row[1] 
             start_time_seconds = row[2]
-            actual_confirmed = row[3]       
+            actual_confirmed = row[3]  
+            
+            if not actual_confirmed:
+                # actual_confirmed will be null for testing
+                actual_confirmed = "unknown"
 #             
             audio_filename = str(recording_id) + '.m4a'
             audio_in_path = base_folder  + '/' + downloaded_recordings_folder + '/' +  audio_filename 
@@ -1462,17 +1474,26 @@ def get_unique_locations(table_name):
     return unique_locations  
 
 
-def create_arff_file_for_weka_image_filter_input():
-   
-
+def create_arff_file_for_weka_image_filter_input(test_arff):
+    
     run_folder_path = base_folder + '/' + run_folder
-    f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+")
+    
+    if test_arff:
+        spectrograms_folder_path = run_folder_path + '/' + spectrograms_for_model_testing_folder
+        f= open(run_folder_path + '/' + arff_file_for_weka_model_testing,"w+")
+    else:        
+        spectrograms_folder_path = run_folder_path + '/' + spectrograms_for_model_creation_folder 
+        f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+") 
+    
+   
+#     f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+")
     f.write('@relation ' + relation_name + '\r\n')
     f.write('@attribute filename string' + '\r\n')
     # Add in the device super names attribute
     # Get list of unique 
     cur = get_database_connection().cursor()    
-    cur.execute("select distinct device_super_name from model_run_result where modelRunName = ?", (model_run_name,))      
+#     cur.execute("select distinct device_super_name from model_run_result where modelRunName = ?", (model_run_name,))    
+    cur.execute("select distinct device_super_name from recordings") # This means that any device has had recordings downloaded will be included in arff file header. Previously I was using model_run_result, which wouldn't have new names.   
     device_super_names = cur.fetchall()
     numberOfSuperNames = len(device_super_names)
     print('numberOfSuperNames ', numberOfSuperNames)
@@ -1493,10 +1514,9 @@ def create_arff_file_for_weka_image_filter_input():
     
     f.write('@attribute class {' + class_names +'}' + '\r\n')
     f.write('@data' + '\r\n')    
-    
-    spectrograms_for_model_creation_folder_path = run_folder_path + '/' + spectrograms_for_model_creation_folder    
+     
    
-    for filename in os.listdir(spectrograms_for_model_creation_folder_path):
+    for filename in os.listdir(spectrograms_folder_path):
         filename_parts = filename.split('$')
         deviceSuperName = filename_parts[0]
         class_type = filename_parts[1]

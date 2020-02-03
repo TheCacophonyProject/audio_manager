@@ -231,7 +231,7 @@ class CreateWekaModelPage(tk.Frame):
         create_spectrograms_msg.config(width=600)
         create_spectrograms_msg.grid(column=0, columnspan=1, row=2)  
         
-        create_spectrograms_button = ttk.Button(self, text="Create Spectrograms for Next Run", command=lambda: functions.create_spectrogram_jpg_files_for_next_model_run())
+        create_spectrograms_button = ttk.Button(self, text="Create Spectrograms for Next Run", command=lambda: functions.create_spectrogram_jpg_files_for_next_model_run_or_model_test(False))
         create_spectrograms_button.grid(column=1, columnspan=1, row=2)
         
         create_arff_instructions = "Pressing the Create Arff file for Weka input button will put the names of the previously created spectrograms into an .arff file, that Weka will then use. You can find the file called " + arff_file_for_weka_model_creation + " in the " + model_run_name + " folder."
@@ -239,7 +239,7 @@ class CreateWekaModelPage(tk.Frame):
         create_arff_file_msg.config(width=600)
         create_arff_file_msg.grid(column=0, columnspan=1, row=3)  
         
-        create_arff_file_for_weka_button = ttk.Button(self, text="Create Arff file for Weka input", command=lambda: functions.create_arff_file_for_weka_image_filter_input())
+        create_arff_file_for_weka_button = ttk.Button(self, text="Create Arff file for Weka input", command=lambda: functions.create_arff_file_for_weka_image_filter_input(False))
         create_arff_file_for_weka_button.grid(column=1, columnspan=1, row=3)
         
         create_folders_instructions = "BEFORE pressing the next button, update the model_run_name parameter in the parameters file with a new name AND exit/close this program and restart to refresh - check it has.  It is currently set to " + model_run_name + " which is most likely the previous model run folder that you used - you don't want to use the same folder - it will end in tears!! (Once pressed, check that the folders have been created in the file system).  This will give you a place to save your next Weka model.model file. You can now press the Create folders for next run button to create all the necessary folders for the next iteration/run. "
@@ -266,7 +266,7 @@ Then click on the Box with the name of the Filter (EdgeHistogramFilter) and past
         using_weka_msg3.config(width=600)
         using_weka_msg3.grid(column=0, columnspan=1, row=7)  
         
-        using_weka_instructions4 = "The Weka image in the bottom right corner will do a dance while it is processing and when finished you should see a list of Attiributes (with the first being filename) and then MPEG-7 etc"
+        using_weka_instructions4 = "The Weka image in the bottom right corner will do a dance while it is processing and when finished you should see a list of Attiributes (with the first being filename) and then MPEG-7 etc. Save the file with the name: device_names_added_arff_file_for_weka_model_creation_image_filtered.arff"
         using_weka_msg4 = tk.Message(self, text = using_weka_instructions4)
         using_weka_msg4.config(width=600)
         using_weka_msg4.grid(column=0, columnspan=1, row=8) 
@@ -279,13 +279,13 @@ Then click on the Box with the name of the Filter (EdgeHistogramFilter) and past
 #         add_device_names_to_arff_button = ttk.Button(self, text="Add Device names to arff file",command=lambda: functions.add_device_names_to_arff())
 #         add_device_names_to_arff_button.grid(column=1, columnspan=1, row=9) 
         
-        using_weka_instructions6 = "Back in Weka, open this new arff file - it should be called - device_names_added_arff_file_for_weka_model_creation_image_filtered.arff"
+        using_weka_instructions6 = "Open this new arff file."
         using_weka_msg6 = tk.Message(self, text = using_weka_instructions6)
         using_weka_msg6.config(width=600)
         using_weka_msg6.grid(column=0, columnspan=1, row=10) 
          
         
-        using_weka_instructions7 = "Now you need to remove the filename attribute by selecting the box and press the Remove button.  \n\nIf you want to use AutoWeka follow A instructions next otherwise follow B instructions. \n\nA) Select the Auto-Weka tab (in Weka) then right click on AUTOWEKAClassifier | Show properties and change timeLimit to something suitable say 4320 (ie 3 days), or first test with 10 minutes :-), press OK, check that (Nom) class is selected and then press start. The weka icon does its dance.  Make sure computer Power Saving is Off, and come back in 3 days!  \n\nB) If don't want to use AutoWeka try this - select the Classify tab (at the top). Press the Choose button and navigate to  Weka|classifiers|Trees|LMT (or you may have another model - and had saved the result buffer, if so in there you can copy the Scheme e.g. weka.classifiers.functions.SMO -C 1.0322930159130057 -L 0.001 -P 1.0E-12 -N 0 -M -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.RBFKernel -C 250007 -G 0.4733376743447805\" -calibrator \"weka.classifiers.functions.Logistic -R 1.0E-8 -M -1 -num-decimal-places 4\" - and paste it here.  Use Cross-validation Folds 10 and press start. The weka image does it's dance and then the results displayed"
+        using_weka_instructions7 = "Now you need to remove the filename attribute by selecting the box and press the Remove button.  Save this as device_names_added_arff_file_for_weka_model_creation_image_filtered_filename_removed.arff  \n\nIf you want to use AutoWeka follow A instructions next otherwise follow B instructions. \n\nA) Select the Auto-Weka tab (in Weka) then right click on AUTOWEKAClassifier | Show properties and change timeLimit to something suitable say 4320 (ie 3 days), or first test with 10 minutes :-), press OK, check that (Nom) class is selected and then press start. The weka icon does its dance.  Make sure computer Power Saving is Off, and come back in 3 days!  \n\nB) If don't want to use AutoWeka try this - select the Classify tab (at the top). Press the Choose button and navigate to  Weka|classifiers|Trees|LMT (or you may have another model - and had saved the result buffer, if so in there you can copy the Scheme e.g. weka.classifiers.functions.SMO -C 1.0322930159130057 -L 0.001 -P 1.0E-12 -N 0 -M -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.RBFKernel -C 250007 -G 0.4733376743447805\" -calibrator \"weka.classifiers.functions.Logistic -R 1.0E-8 -M -1 -num-decimal-places 4\" - and paste it here.  Use Cross-validation Folds 10 and press start. The weka image does it's dance and then the results displayed"
         using_weka_msg7 = tk.Message(self, text = using_weka_instructions7)
         using_weka_msg7.config(width=600)
         using_weka_msg7.grid(column=0, columnspan=1, row=11) 
@@ -798,7 +798,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
         back_to_home_button.grid(column=0, columnspan=1, row=261) 
         
         def create_spectrograms():
-            functions.create_spectrogram_jpg_files_for_next_model_run()
+            functions.create_spectrogram_jpg_files_for_next_model_run_or_model_test(False)
 
         def confirm_actual():
             print('self.actual_confirmed.get() ', self.actual_confirmed.get())
@@ -984,10 +984,10 @@ class ModelAccuracyAnalysisPage(tk.Frame):
             self.run_names_combo.current(len(self.unique_model_run_names) - 1)   
             
         select_arff_file_label = ttk.Label(self, text="Select the arff file that was used to create this model.")
-        select_arff_file_label.grid(column=0, columnspan=2, row=15)   
+        select_arff_file_label.grid(column=0, columnspan=1, row=15)   
         
         select_arff_file_label = ttk.Label(self, text="Important - the arff file is probably in the previous model run folder to the model run result that you are updating!")
-        select_arff_file_label.grid(column=0, columnspan=2, row=16)       
+        select_arff_file_label.grid(column=0, columnspan=1, row=16)       
             
         select_arff_file_used_to_create_model_button = ttk.Button(self, text="Select arff file",command=lambda: select_arff_file_used_to_create_model())
         select_arff_file_used_to_create_model_button.grid(column=0, columnspan=1, row=17)    
@@ -995,8 +995,38 @@ class ModelAccuracyAnalysisPage(tk.Frame):
         update_model_run_results_with_was_used_to_create_model_button = ttk.Button(self, text="Update model run results with onsets used to create model",command=lambda: update_model_run_results_with_onsets_used_to_create_model())
         update_model_run_results_with_was_used_to_create_model_button.grid(column=0, columnspan=1, row=20) 
         
+        select_arff_file_label = ttk.Label(self, text="After you have used the Evaluate Model Run Results page to confirm (or otherwise) a few hundred predictions, \nyou can use them to perform an independent test of the model.\nFirst press the \'Create Spectrograms for testing model\' button then the \'Create arff file for testing model\' button.  \nThe images will be created in the  " + parameters.spectrograms_for_model_testing_folder + " folder of this model run, and the arff file will \nbe created as " + spectrograms_for_model_testing_folder)
+        select_arff_file_label.grid(column=0, columnspan=1, row=25) 
+        
+        create_spectrograms_button = ttk.Button(self, text="Create Spectrograms for testing model", command=lambda: functions.create_spectrogram_jpg_files_for_next_model_run_or_model_test(True))
+        create_spectrograms_button.grid(column=0, columnspan=1, row=26)
+        
+        create_test_arff_file_button = ttk.Button(self, text="Create arff file for testing model",command=lambda: functions.create_arff_file_for_weka_image_filter_input(True))
+        create_test_arff_file_button.grid(column=0, columnspan=1, row=27)
+        
+        weka_testing_instructions_text = """\n
+        We need two separate arff files to do the testing: 1) The arff file (that has was saved as \n
+        arff_file_for_weka_model_creation_image_filtered_no_filename.arff that you used to create the model \n
+        and 2) the arff_file_for_weka_model_testing.arff file for the test data.  First, in the Weka Preprocess \n
+        tab, you will need to process this arff file by applying the image EdgeHistogramFilter and also remove the \n
+        filename attribute (just like you did for the training arff file). Save the test arff file as \n
+        arff_file_for_weka_model_testing_image_filtered_no_filename.arff. \n\n
+        
+        Still in the Preprocess tab, repeat the steps that you previously did to train the model \n
+        (you should have saved the result buffer from when you created the model, which will have the details) \n
+        - we need to create the model again - but this time, \n
+        in the Classify tab, do not use Cross-validation, but use the \'Supplied test set option\', and choose the newly created \n
+        \'arff_file_for_weka_model_testing_image_filtered_no_filename.arff\' file. \n          
+        Press Close and then press the \'Start\' button.\n\n
+        See the video Data Mining with Weka (2.2: Training and testing) for help.\n\n"""
+        
+        
+        weka_testing_instructions_label = ttk.Label(self, text=weka_testing_instructions_text)
+                                                   
+        weka_testing_instructions_label.grid(column=0, columnspan=1, row=30) 
+        
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=25) 
+        back_to_home_button.grid(column=0, columnspan=1, row=35) 
             
         def refresh_unique_model_run_names():
                 self.unique_model_run_names = functions.get_unique_model_run_names()
