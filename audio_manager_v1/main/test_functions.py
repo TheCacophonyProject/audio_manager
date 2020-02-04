@@ -129,7 +129,11 @@ print('boo')
 # 
 # functions.add_device_names_to_arff(input_filename)
 
-functions.create_input_arff_file_for_single_onset_prediction("tim")
+#functions.create_input_arff_file_for_single_onset_prediction("tim")
+
+# functions.update_onsets_with_datetime()
+
+functions.update_recording_information_for_single_recording('510561')
     
     
     

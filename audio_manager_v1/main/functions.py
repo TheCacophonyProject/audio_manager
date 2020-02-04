@@ -778,7 +778,7 @@ def classify_onsets_using_weka_model():
 # then it does the rest.  It is now OK to stop this process before it has finished as I'll probably never look at all the predictions - unless going to create tags on the server
 
     cur = get_database_connection().cursor()
-    cur.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name, device_name FROM onsets WHERE actual_confirmed IS NOT NULL ORDER BY recording_id DESC")
+    cur.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name, device_name, recordingDateTime FROM onsets WHERE actual_confirmed IS NOT NULL ORDER BY recording_id DESC")
     
     onsetsWithActualConfirmed = cur.fetchall()  
     number_of_onsets = len(onsetsWithActualConfirmed)
@@ -790,7 +790,7 @@ def classify_onsets_using_weka_model():
         classify_onsets_using_weka_model_helper(onsetWithActualConfirmed, model_folder)
     
     cur2 = get_database_connection().cursor()
-    cur2.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name, device_name FROM onsets WHERE actual_confirmed IS NULL ORDER BY recording_id DESC")
+    cur2.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name, device_name, recordingDateTime FROM onsets WHERE actual_confirmed IS NULL ORDER BY recording_id DESC")
     onsetsWithNoActualConfirmed = cur2.fetchall()  
     number_of_onsets = len(onsetsWithNoActualConfirmed)
     count = 0
@@ -808,6 +808,7 @@ def classify_onsets_using_weka_model_helper(onset, model_folder):
     actual_confirmed = onset[3]
     device_super_name = onset[4] 
     device_name = onset[5] 
+    recordingDateTime = onset[6] 
     
     # Skip if it already exists
     cur = get_database_connection().cursor()
@@ -841,25 +842,25 @@ def classify_onsets_using_weka_model_helper(onset, model_folder):
         probability = result.stdout.split(",")[1]      
  
         print('It is predicted to be  ' , predicted_class_name, ' with probability of ',probability,  '\n')
-        insert_model_run_result_into_database(parameters.model_run_name, recording_id, start_time_seconds, duration_seconds, None, predicted_class_name, probability, actual_confirmed, device_super_name, device_name)
+        insert_model_run_result_into_database(parameters.model_run_name, recording_id, start_time_seconds, duration_seconds, None, predicted_class_name, probability, actual_confirmed, device_super_name, device_name, recordingDateTime)
     
     else:
         print(result.stderr)
               
 
     
-def insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name):
+def insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime):
        
     try:
         cur = get_database_connection().cursor()
         if actual_confirmed:
-            sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name)
-                      VALUES(?,?,?,?,?,?,?,?,?,?) '''
-            cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name))
+            sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime)
+                      VALUES(?,?,?,?,?,?,?,?,?,?,?) '''
+            cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime))
         else:
-            sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name)
-                      VALUES(?,?,?,?,?,?,?,?,?) '''
-            cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name))
+            sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name, recordingDateTime)
+                      VALUES(?,?,?,?,?,?,?,?,?,?) '''
+            cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name, recordingDateTime))
         
         get_database_connection().commit()
     except Exception as e:
@@ -921,16 +922,17 @@ def insert_onset_into_database(version, recording_id, start_time_seconds, durati
     
     print('duration_seconds', duration_seconds)
     cur1 = get_database_connection().cursor()
-    cur1.execute("SELECT device_super_name, device_name FROM recordings WHERE recording_id = ?", (recording_id,)) 
+    cur1.execute("SELECT device_super_name, device_name, recordingDateTime FROM recordings WHERE recording_id = ?", (recording_id,)) 
     rows = cur1.fetchall() 
     device_super_name = rows[0][0]  
-    device_name = rows[0][1]     
+    device_name = rows[0][1]
+    recordingDateTime = rows[0][2]  
     
     try:     
-        sql = ''' INSERT INTO onsets(version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name)
-                  VALUES(?,?,?,?,?,?) '''
+        sql = ''' INSERT INTO onsets(version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime)
+                  VALUES(?,?,?,?,?,?,?) '''
         cur2 = get_database_connection().cursor()
-        cur2.execute(sql, (version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name))
+        cur2.execute(sql, (version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime))
         get_database_connection().commit()
     except Exception as e:
         print(e, '\n')
@@ -1014,7 +1016,7 @@ def create_onsets_in_local_db_using_recordings_folder():
     # It is possible that some recordings will not produce any onsets, so will also write to recording table that the recording has been processed.
     # Perhaps if I was starting again, I could drop the sub query (if I update the recordings db so show that the old ones have been processed.
 
-    cur.execute("SELECT recording_id, filename, device_name FROM recordings WHERE processed_for_onsets IS NULL AND recording_id NOT IN (SELECT recording_id FROM onsets) ORDER BY recording_id DESC")
+    cur.execute("SELECT recording_id, filename,  recordingDateTime FROM recordings WHERE processed_for_onsets IS NULL AND recording_id NOT IN (SELECT recording_id FROM onsets) ORDER BY recording_id DESC")
     recordings_with_no_onsets = cur.fetchall()
     print('There are ', len(recordings_with_no_onsets), ' recordings with no onsets')     
       
@@ -1027,7 +1029,8 @@ def create_onsets_in_local_db_using_recordings_folder():
             count += 1
             recording_id = recording_with_no_onsets[0]
             filename = recording_with_no_onsets[1]
-            device_name = recording_with_no_onsets[2]
+           
+            
             print('Processing ',count, ' of ', number_of_recordings_with_no_onsets)
             print('Recording id is ', recording_with_no_onsets) 
             count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 = create_onsets_in_local_db(filename)
@@ -1132,7 +1135,7 @@ def insert_onset_list_into_db(version, recording_id, onsets):
                 print("Onset too close to previous, not inserting into database " , onset) 
             else:
                 prev_onset = onset 
-                insert_onset_into_database(version, recording_id, onset, squawk_duration_seconds )
+                insert_onset_into_database(version, recording_id, onset, squawk_duration_seconds)
                 print("Inserting onset into database " , onset)
                 
 def find_paired_squawks_in_single_recordings(y, sr):
@@ -2004,6 +2007,35 @@ def create_input_arff_file_for_single_onset_prediction(output_filename_path, dev
 
 
 
+def update_onsets_with_datetime():
+    cur = get_database_connection().cursor()
+    cur.execute("select ID, recording_id from onsets where recordingDateTime IS NULL")      
+    onsets = cur.fetchall()
+    numOfOnsets = len(onsets)
+    count = 0
     
+    for onset in onsets:
+        print('Processing ' + str(count) + ' of ' + str(numOfOnsets))
+        ID = onset[0]
+        recording_id = onset[1]
+        print(str(ID) + " " + str(recording_id))
+        cur.execute("select recordingDateTime from recordings where recording_id = ?", (recording_id,)) 
+        recordingDateTime_results = cur.fetchall()
+        recordingDateTime = recordingDateTime_results[0][0]
+        print(recordingDateTime)
+        
+        sql = ''' UPDATE onsets
+                SET recordingDateTime = ?               
+                WHERE ID = ?'''
+        
+        cur.execute(sql, (recordingDateTime, ID))
+        count+=1
+        get_database_connection().commit() 
+    
+#     get_database_connection().commit()    
+             
+        
+     
+      
 
 

@@ -250,7 +250,7 @@ class CreateWekaModelPage(tk.Frame):
         create_folders_button = ttk.Button(self, text="Create folders for next run",command=lambda: functions.create_folders_for_next_run())
         create_folders_button.grid(column=1, columnspan=1, row=4)  
         
-        using_weka_instructions1 = "You are now ready to use Weka. BUT, if you are going to use AutoWeka it needs to use Java 1.8 (unlike Weka or Eclipse/Audio Manager which can use openjdk 11 - so at a terminal type 'sudo update-alternatives --config java' without the quotes and choose option (5 on my computer) for jdk1.8 Once the java version has been changed, from a terminal command prompt, cd into the directory where Weka has been installed (e.g. ~/weka-3-8-4b (on my computer) and launch Weka using the command: java -jar weka.jar"
+        using_weka_instructions1 = "You are now ready to use Weka. BUT, if you are going to use AutoWeka it needs to use Java 1.8 (unlike Weka or Eclipse/Audio Manager which can use openjdk 11 - so at a terminal type 'sudo update-alternatives --config java' without the quotes and choose option (5 on my computer) for jdk1.8 Once the java version has been changed, from a terminal command prompt, cd into the directory where Weka has been installed (e.g. ~/weka-3-8-4b (on my computer) and launch Weka using the command: java -Xmx16384m -jar weka.jar"
         using_weka_msg1 = tk.Message(self, text = using_weka_instructions1)
         using_weka_msg1.config(width=600)
         using_weka_msg1.grid(column=0, columnspan=1, row=5)  
