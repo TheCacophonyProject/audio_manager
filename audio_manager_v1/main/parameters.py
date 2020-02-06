@@ -16,7 +16,7 @@ model_run_name='2020_02_01_1'
 
 model_version = '000002' # update this to be the same as the name of the model stored in the model_run_result folder. Cacophony API says: version (hex coded, e.g. 0x0110 would be v1.10)
 
-probability_cutoff_for_tag_creation = 0.8
+probability_cutoff_for_tag_creation = 0.7
 
 predictedByModel_tag_to_create = 'morepork_more-pork'
 
@@ -62,6 +62,7 @@ weka_model_folder = 'weka_model'
 weka_model_filename = "model.model"
 weka_input_arff_filename = "input.arff"
 weka_run_jar_filename = "run.jar"
+get_edge_histogram_jar_filename = "getEdgeHistogramFeatures.jar"
 
 onset_pairs_folder = 'onset_pairs'
 # mel_spectrograms_folder = 'mel_spectrograms'

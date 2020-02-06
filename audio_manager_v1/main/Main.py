@@ -339,7 +339,7 @@ class ClassifyOnsetsUsingWekaModelPage(tk.Frame):
         evaluate_button.grid(column=0, columnspan=1, row=15)     
  
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))  
-        back_to_home_button.grid(column=0, columnspan=1, row=20) 
+        back_to_home_button.grid(column=0, columnspan=1, row=25) 
                             
 class CreateOnsetsPage(tk.Frame):    
     
@@ -354,13 +354,16 @@ class CreateOnsetsPage(tk.Frame):
 
         msg = tk.Message(self, text = onset_instructions)
         msg.config(bg='lightgreen', font=('times', 16), width=1200)
-        msg.grid(column=0, columnspan=6, row=1)   
+        msg.grid(column=0, columnspan=6, row=10)   
         
         run_button = ttk.Button(self, text="Run", command=lambda: functions.create_onsets_in_local_db_using_recordings_folder())        
-        run_button.grid(column=0, columnspan=1, row=3)        
+        run_button.grid(column=0, columnspan=1, row=20) 
+        
+        run_button = ttk.Button(self, text="Update Onsets with Edge Histogram Features", command=lambda: functions.update_onsets_with_edge_histogram_features()())        
+        run_button.grid(column=0, columnspan=1, row=30)        
 
         back_to_home_button = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(HomePage))                            
-        back_to_home_button.grid(column=0, columnspan=1, row=4)                  
+        back_to_home_button.grid(column=0, columnspan=1, row=40)                  
 
 class CreateSpectrogramsPage(tk.Frame):    
     

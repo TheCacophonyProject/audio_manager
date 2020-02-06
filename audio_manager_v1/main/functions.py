@@ -760,11 +760,7 @@ def classify_onsets_using_weka_model():
         print(weka_run_jar_filename, " is missing") 
         return 
     
-#     # Need to check arff file is there, otherwise run.jar will break later on
-#     arff_filename_path = model_folder + '/' + weka_input_arff_filename        
-#     if not os.path.isfile(arff_filename_path):
-#         print(weka_input_arff_filename, " is missing") 
-#         return  
+
     
     # Need to check model file is there, otherwise run.jar will break later on
     weka_model_filename_path = model_folder + '/' + weka_model_filename        
@@ -773,7 +769,7 @@ def classify_onsets_using_weka_model():
         return    
 
 # As it takes about 24 hours to process all the onsets, I've split processing in to two stages - 
-# first it does all the onsets that already have an acntual_confirmed entry - 
+# first it does all the onsets that already have an actual_confirmed entry - 
 # this might only take a minute or two as there are very few of them
 # then it does the rest.  It is now OK to stop this process before it has finished as I'll probably never look at all the predictions - unless going to create tags on the server
 
@@ -794,12 +790,245 @@ def classify_onsets_using_weka_model():
     onsetsWithNoActualConfirmed = cur2.fetchall()  
     number_of_onsets = len(onsetsWithNoActualConfirmed)
     count = 0
-    print('Processing onsets with actual_confirmed entry')
+    print('Processing onsets with NO actual_confirmed entry')
     for onsetWithNoActualConfirmed in onsetsWithNoActualConfirmed:
         count += 1        
         print('Processing onset', count, ' of ', number_of_onsets)
-        classify_onsets_using_weka_model_helper(onsetWithNoActualConfirmed, model_folder)        
+        classify_onsets_using_weka_model_helper(onsetWithNoActualConfirmed, model_folder)   
+        
+def update_onsets_with_edge_histogram_features():  
+    model_folder = base_folder + '/' + run_folder + '/' + weka_model_folder
+    
+    # Need to check if run.jar is there, otherwise run.jar will break later on
+    get_edge_histogram_jar_filename_path = model_folder + '/' + get_edge_histogram_jar_filename        
+    if not os.path.isfile(get_edge_histogram_jar_filename_path):
+        print(get_edge_histogram_jar_filename_path, " is missing") 
+        return 
+        
+    # Need to check model file is there, otherwise run.jar will break later on
+    weka_model_filename_path = model_folder + '/' + weka_model_filename        
+    if not os.path.isfile(weka_model_filename_path):
+        print(weka_model_filename_path, " is missing") 
+        return  
+    
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds  FROM onsets WHERE MPEG7_Edge_Histogram0 IS NULL ORDER BY recording_id DESC")
+   
+    onsetsWithNoEdgeHistogramData = cur.fetchall()  
+    number_of_onsets = len(onsetsWithNoEdgeHistogramData)
+    count = 0
+    print('Processing onsets with with No EdgeHistogram Data')
+    for onsetWithNoEdgeHistogramData in onsetsWithNoEdgeHistogramData:
+        count += 1        
+        
+        ID = onsetWithNoEdgeHistogramData[0]
+        recording_id = onsetWithNoEdgeHistogramData[1]
+        start_time_seconds = onsetWithNoEdgeHistogramData[2]
+        duration_seconds = onsetWithNoEdgeHistogramData[3]  
+        
+        print('Processing onset', count, ' of ', number_of_onsets)
+        create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds)
+                
+        os.chdir(model_folder)  
+        command = ['java', '--add-opens=java.base/java.lang=ALL-UNNAMED', '-jar', 'getEdgeHistogramFeatures.jar', 'shell=True']     
+    
+        result = run(command, stdout=PIPE, stderr=PIPE, text=True)   
+        if result.returncode == 0:
+#             print(result.stdout)
+          
+            result_stdout = result.stdout
+            result_stdout_parts = result_stdout.split(',')
+#             print('length', len(result_stdout_parts))
+#             print('result_stdout_parts', result_stdout_parts)
+            sql = '''UPDATE onsets
+                SET MPEG7_Edge_Histogram0 = ?, 
+                MPEG7_Edge_Histogram1 = ?,
+                MPEG7_Edge_Histogram2 = ?,
+                MPEG7_Edge_Histogram3 = ?,
+                MPEG7_Edge_Histogram4 = ?,
+                MPEG7_Edge_Histogram5 = ?,
+                MPEG7_Edge_Histogram6 = ?,
+                MPEG7_Edge_Histogram7 = ?,
+                MPEG7_Edge_Histogram8 = ?,
+                MPEG7_Edge_Histogram9 = ?,
+                
+                MPEG7_Edge_Histogram10 = ?, 
+                MPEG7_Edge_Histogram11 = ?,
+                MPEG7_Edge_Histogram12 = ?,
+                MPEG7_Edge_Histogram13 = ?,
+                MPEG7_Edge_Histogram14 = ?,
+                MPEG7_Edge_Histogram15 = ?,
+                MPEG7_Edge_Histogram16 = ?,
+                MPEG7_Edge_Histogram17 = ?,
+                MPEG7_Edge_Histogram18 = ?,
+                MPEG7_Edge_Histogram19 = ?,
+                
+                MPEG7_Edge_Histogram20 = ?,
+                MPEG7_Edge_Histogram21 = ?,
+                MPEG7_Edge_Histogram22 = ?,
+                MPEG7_Edge_Histogram23 = ?,
+                MPEG7_Edge_Histogram24 = ?,
+                MPEG7_Edge_Histogram25 = ?,
+                MPEG7_Edge_Histogram26 = ?,
+                MPEG7_Edge_Histogram27 = ?,
+                MPEG7_Edge_Histogram28 = ?,
+                MPEG7_Edge_Histogram29 = ?,
+                
+                MPEG7_Edge_Histogram30 = ?,
+                MPEG7_Edge_Histogram31 = ?,
+                MPEG7_Edge_Histogram32 = ?,
+                MPEG7_Edge_Histogram33 = ?,
+                MPEG7_Edge_Histogram34 = ?,
+                MPEG7_Edge_Histogram35 = ?,
+                MPEG7_Edge_Histogram36 = ?,
+                MPEG7_Edge_Histogram37 = ?,
+                MPEG7_Edge_Histogram38 = ?,
+                MPEG7_Edge_Histogram39 = ?,
+                
+                MPEG7_Edge_Histogram40 = ?, 
+                MPEG7_Edge_Histogram41 = ?,
+                MPEG7_Edge_Histogram42 = ?,
+                MPEG7_Edge_Histogram43 = ?,
+                MPEG7_Edge_Histogram44 = ?,
+                MPEG7_Edge_Histogram45 = ?,
+                MPEG7_Edge_Histogram46 = ?,
+                MPEG7_Edge_Histogram47 = ?,
+                MPEG7_Edge_Histogram48 = ?,
+                MPEG7_Edge_Histogram49 = ?,
+                
+                MPEG7_Edge_Histogram50 = ?, 
+                MPEG7_Edge_Histogram51 = ?,
+                MPEG7_Edge_Histogram52 = ?,
+                MPEG7_Edge_Histogram53 = ?,
+                MPEG7_Edge_Histogram54 = ?,
+                MPEG7_Edge_Histogram55 = ?,
+                MPEG7_Edge_Histogram56 = ?,
+                MPEG7_Edge_Histogram57 = ?,
+                MPEG7_Edge_Histogram58 = ?,
+                MPEG7_Edge_Histogram59 = ?,
+                
+                MPEG7_Edge_Histogram60 = ?,
+                MPEG7_Edge_Histogram61 = ?,
+                MPEG7_Edge_Histogram62 = ?,
+                MPEG7_Edge_Histogram63 = ?,
+                MPEG7_Edge_Histogram64 = ?,
+                MPEG7_Edge_Histogram65 = ?,
+                MPEG7_Edge_Histogram66 = ?,
+                MPEG7_Edge_Histogram67 = ?,
+                MPEG7_Edge_Histogram68 = ?,
+                MPEG7_Edge_Histogram69 = ?,
+                
+                MPEG7_Edge_Histogram70 = ?,
+                MPEG7_Edge_Histogram71 = ?,
+                MPEG7_Edge_Histogram72 = ?,
+                MPEG7_Edge_Histogram73 = ?,
+                MPEG7_Edge_Histogram74 = ?,
+                MPEG7_Edge_Histogram75 = ?,
+                MPEG7_Edge_Histogram76 = ?,
+                MPEG7_Edge_Histogram77 = ?,
+                MPEG7_Edge_Histogram78 = ?,
+                MPEG7_Edge_Histogram79 = ?          
+                                                           
+                WHERE ID = ?'''
             
+#             print('sql ', sql)           
+        
+            cur.execute(sql, (result_stdout_parts[1],
+                              result_stdout_parts[2], 
+                              result_stdout_parts[3], 
+                              result_stdout_parts[4], 
+                              result_stdout_parts[4], 
+                              result_stdout_parts[6], 
+                              result_stdout_parts[7], 
+                              result_stdout_parts[8], 
+                              result_stdout_parts[9],
+                              
+                              result_stdout_parts[10], 
+                              result_stdout_parts[11],                             
+                              result_stdout_parts[12], 
+                              result_stdout_parts[13], 
+                              result_stdout_parts[14], 
+                              result_stdout_parts[14], 
+                              result_stdout_parts[16], 
+                              result_stdout_parts[17], 
+                              result_stdout_parts[18], 
+                              result_stdout_parts[19],
+                              
+                              result_stdout_parts[20],                              
+                              result_stdout_parts[21],
+                              result_stdout_parts[22], 
+                              result_stdout_parts[23], 
+                              result_stdout_parts[24], 
+                              result_stdout_parts[24], 
+                              result_stdout_parts[26], 
+                              result_stdout_parts[27], 
+                              result_stdout_parts[28], 
+                              result_stdout_parts[29],
+                              
+                              result_stdout_parts[30],                              
+                              result_stdout_parts[31],
+                              result_stdout_parts[32], 
+                              result_stdout_parts[33], 
+                              result_stdout_parts[34], 
+                              result_stdout_parts[34], 
+                              result_stdout_parts[36], 
+                              result_stdout_parts[37], 
+                              result_stdout_parts[38], 
+                              result_stdout_parts[39],
+                              
+                              result_stdout_parts[40],                              
+                              result_stdout_parts[41],
+                              result_stdout_parts[42], 
+                              result_stdout_parts[43], 
+                              result_stdout_parts[44], 
+                              result_stdout_parts[44], 
+                              result_stdout_parts[46], 
+                              result_stdout_parts[47], 
+                              result_stdout_parts[48], 
+                              result_stdout_parts[49],
+                              
+                              result_stdout_parts[50],                              
+                              result_stdout_parts[51],
+                              result_stdout_parts[52], 
+                              result_stdout_parts[53], 
+                              result_stdout_parts[54], 
+                              result_stdout_parts[54], 
+                              result_stdout_parts[56], 
+                              result_stdout_parts[57], 
+                              result_stdout_parts[58], 
+                              result_stdout_parts[59],
+                              
+                              result_stdout_parts[60],                              
+                              result_stdout_parts[61],
+                              result_stdout_parts[62], 
+                              result_stdout_parts[63], 
+                              result_stdout_parts[64], 
+                              result_stdout_parts[64], 
+                              result_stdout_parts[66], 
+                              result_stdout_parts[67], 
+                              result_stdout_parts[68], 
+                              result_stdout_parts[69],
+                              
+                              result_stdout_parts[70],                              
+                              result_stdout_parts[71],
+                              result_stdout_parts[72], 
+                              result_stdout_parts[73], 
+                              result_stdout_parts[74], 
+                              result_stdout_parts[74], 
+                              result_stdout_parts[76], 
+                              result_stdout_parts[77], 
+                              result_stdout_parts[78], 
+                              result_stdout_parts[79],
+                              
+                              result_stdout_parts[80],                               
+                              
+                              ID)) 
+               
+            get_database_connection().commit()
+            
+        else:
+            print(result.stderr)
+           
 def classify_onsets_using_weka_model_helper(onset, model_folder):     
     print('onset', onset)
     recording_id = onset[0]
@@ -1050,35 +1279,7 @@ def create_onsets_in_local_db_using_recordings_folder():
             cur.execute("UPDATE recordings SET processed_for_onsets = -1 WHERE recording_id = ?", (recording_id,))  
             get_database_connection().commit()
     
-#     with os.scandir(recordings_folder_with_path) as entries:
-#         count = 0
-#         for entry in entries:   
-#             try:                      
-#                 print(entry.name)
-#                 if entry.is_file():                  
-#                     filename = entry.name
-#                 else:
-#                     continue
-#                  
-#                 count+=1
-#                 print('Processing recording ', count, ' of ', total_number_of_files, ' recordings.')
-#                 recording_id = filename.split('.')[0]
-#                 
-#                 cur.execute("SELECT recording_id FROM onsets WHERE recording_id = ?", (recording_id,)) 
-#                
-#                 result = cur.fetchall()     
-#                 if result:
-#                     print('recording_id' , recording_id, ' has been used')
-#                     continue
-#                    
-#                 count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 = create_onsets_in_local_db(filename)
-#                 total_onset_pairs_including_more_than_40 += count_of_onset_pairs_including_more_than_40
-#                 total_onset_pairs_including_not_including_more_40 += count_of_onset_pairs_including_not_including_more_40
-#                 print('total_onset_pairs_including_more_than_40:', total_onset_pairs_including_more_than_40)
-#                 print('total_onset_pairs_including_not_including_more_40:', total_onset_pairs_including_not_including_more_40, '\n')
-#             except Exception as e:
-#                 print(e, '\n')
-#                 print('Error processing file ', filename)
+
     
     
 def create_onsets_in_local_db(filename): 
@@ -1138,6 +1339,9 @@ def insert_onset_list_into_db(version, recording_id, onsets):
                 insert_onset_into_database(version, recording_id, onset, squawk_duration_seconds)
                 print("Inserting onset into database " , onset)
                 
+
+    
+
 def find_paired_squawks_in_single_recordings(y, sr):
 
     squawks = FindSquawks(y, sr)
@@ -1378,7 +1582,7 @@ def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_ti
         audio_filename = str(recording_id) + '.m4a'
         audio_in_path = base_folder + '/' + downloaded_recordings_folder + '/' +  audio_filename 
         image_out_name = 'input_image.jpg'
-        print('image_out_name', image_out_name)           
+#         print('image_out_name', image_out_name)           
        
         image_out_path = mel_spectrograms_out_folder_path + '/' + image_out_name
         
@@ -1399,7 +1603,7 @@ def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_ti
         pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
         pylab.close()
         
-        return get_image(image_out_path)
+#         return get_image(image_out_path)
         
     except Exception as e:
         print(e, '\n')

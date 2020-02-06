@@ -133,7 +133,9 @@ print('boo')
 
 # functions.update_onsets_with_datetime()
 
-functions.update_recording_information_for_single_recording('510561')
+# functions.update_recording_information_for_single_recording('510561')
+
+functions.update_onsets_with_edge_histogram_features()
     
     
     
