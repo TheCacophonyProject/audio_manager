@@ -135,8 +135,9 @@ print('boo')
 
 # functions.update_recording_information_for_single_recording('510561')
 
-functions.update_onsets_with_edge_histogram_features()
+# functions.update_onsets_with_edge_histogram_features()
     
+functions.create_arff_file_for_weka(False)
     
     
     

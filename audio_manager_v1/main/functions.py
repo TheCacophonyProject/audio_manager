@@ -1681,6 +1681,8 @@ def get_unique_locations(table_name):
     return unique_locations  
 
 
+
+    
 def create_arff_file_for_weka_image_filter_input(test_arff):
     
     run_folder_path = base_folder + '/' + run_folder
@@ -1731,6 +1733,338 @@ def create_arff_file_for_weka_image_filter_input(test_arff):
         print('class_type', class_type)
 #         f.write(filename +',' + class_type + '\r\n')deviceSuperName
         f.write(filename +',' + deviceSuperName +',' + class_type + '\r\n')
+        
+    f.close()
+    
+def create_arff_file_for_weka(test_arff):
+#  IF test_arff IS true, then just create an arff file for a single onset - to be used to give to the model for a class prediction
+    
+    run_folder_path = base_folder + '/' + run_folder
+    
+    if test_arff:       
+        f= open(run_folder_path + '/' + arff_file_for_weka_model_testing,"w+")
+    else:
+        f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+") 
+       
+#     f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+")
+    f.write('@relation ' + relation_name + '\r\n')
+#     f.write('@attribute filename string' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram0\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram1\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram2\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram3\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram4\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram5\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram6\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram7\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram8\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram9\' numeric' + '\r\n')
+    
+    f.write('@attribute \'MPEG-7 Edge Histogram10\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram11\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram12\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram13\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram14\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram15\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram16\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram17\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram18\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram19\' numeric' + '\r\n')
+    
+    f.write('@attribute \'MPEG-7 Edge Histogram20\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram21\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram22\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram23\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram24\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram25\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram26\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram27\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram28\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram29\' numeric' + '\r\n')
+    
+    f.write('@attribute \'MPEG-7 Edge Histogram30\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram31\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram32\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram33\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram34\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram35\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram36\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram37\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram38\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram39\' numeric' + '\r\n')
+    
+    f.write('@attribute \'MPEG-7 Edge Histogram40\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram41\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram42\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram43\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram44\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram45\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram46\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram47\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram48\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram49\' numeric' + '\r\n')
+    
+    f.write('@attribute \'MPEG-7 Edge Histogram50\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram51\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram52\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram53\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram54\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram55\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram56\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram57\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram58\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram59\' numeric' + '\r\n')
+    
+    f.write('@attribute \'MPEG-7 Edge Histogram60\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram61\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram62\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram63\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram64\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram65\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram66\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram67\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram68\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram69\' numeric' + '\r\n')
+    
+    f.write('@attribute \'MPEG-7 Edge Histogram70\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram71\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram72\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram73\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram74\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram75\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram76\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram77\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram78\' numeric' + '\r\n')
+    f.write('@attribute \'MPEG-7 Edge Histogram79\' numeric' + '\r\n')
+    
+
+
+    # Add in the device super names attribute
+    # Get list of unique 
+    cur = get_database_connection().cursor()    
+#     cur.execute("select distinct device_super_name from model_run_result where modelRunName = ?", (model_run_name,))    
+    cur.execute("select distinct device_super_name from recordings") # This means that any device has had recordings downloaded will be included in arff file header. Previously I was using model_run_result, which wouldn't have new names.   
+    device_super_names = cur.fetchall()
+    numberOfSuperNames = len(device_super_names)
+    print('numberOfSuperNames ', numberOfSuperNames)
+    
+    device_super_names_str = ''
+    print(device_super_names_str)
+    
+    count = 0
+    for device_super_name in device_super_names:  
+        count+=1    
+        print(device_super_name[0])  
+        device_super_names_str+= device_super_name[0]
+        if count < numberOfSuperNames: # Do not want a comma at the end of the string for arff format
+            device_super_names_str+= ', '
+   
+    print(device_super_names_str)
+    f.write('@attribute deviceSuperName {' + device_super_names_str +'}' + '\r\n')
+    
+    f.write('@attribute class {' + class_names +'}' + '\r\n')
+    f.write('@data' + '\r\n')    
+    
+    sql = '''SELECT
+        MPEG7_Edge_Histogram0,
+        MPEG7_Edge_Histogram1,
+        MPEG7_Edge_Histogram2,
+        MPEG7_Edge_Histogram3,
+        MPEG7_Edge_Histogram4,
+        MPEG7_Edge_Histogram5,
+        MPEG7_Edge_Histogram6,
+        MPEG7_Edge_Histogram7,
+        MPEG7_Edge_Histogram8,
+        MPEG7_Edge_Histogram9,
+        
+        MPEG7_Edge_Histogram10, 
+        MPEG7_Edge_Histogram11,
+        MPEG7_Edge_Histogram12,
+        MPEG7_Edge_Histogram13,
+        MPEG7_Edge_Histogram14,
+        MPEG7_Edge_Histogram15,
+        MPEG7_Edge_Histogram16,
+        MPEG7_Edge_Histogram17,
+        MPEG7_Edge_Histogram18,
+        MPEG7_Edge_Histogram19,
+        
+        MPEG7_Edge_Histogram20,
+        MPEG7_Edge_Histogram21,
+        MPEG7_Edge_Histogram22,
+        MPEG7_Edge_Histogram23,
+        MPEG7_Edge_Histogram24,
+        MPEG7_Edge_Histogram25,
+        MPEG7_Edge_Histogram26,
+        MPEG7_Edge_Histogram27,
+        MPEG7_Edge_Histogram28,
+        MPEG7_Edge_Histogram29,
+        
+        MPEG7_Edge_Histogram30,
+        MPEG7_Edge_Histogram31,
+        MPEG7_Edge_Histogram32,
+        MPEG7_Edge_Histogram33,
+        MPEG7_Edge_Histogram34,
+        MPEG7_Edge_Histogram35,
+        MPEG7_Edge_Histogram36,
+        MPEG7_Edge_Histogram37,
+        MPEG7_Edge_Histogram38,
+        MPEG7_Edge_Histogram39,
+        
+        MPEG7_Edge_Histogram40, 
+        MPEG7_Edge_Histogram41,
+        MPEG7_Edge_Histogram42,
+        MPEG7_Edge_Histogram43,
+        MPEG7_Edge_Histogram44,
+        MPEG7_Edge_Histogram45,
+        MPEG7_Edge_Histogram46,
+        MPEG7_Edge_Histogram47,
+        MPEG7_Edge_Histogram48,
+        MPEG7_Edge_Histogram49,
+        
+        MPEG7_Edge_Histogram50, 
+        MPEG7_Edge_Histogram51,
+        MPEG7_Edge_Histogram52,
+        MPEG7_Edge_Histogram53,
+        MPEG7_Edge_Histogram54,
+        MPEG7_Edge_Histogram55,
+        MPEG7_Edge_Histogram56,
+        MPEG7_Edge_Histogram57,
+        MPEG7_Edge_Histogram58,
+        MPEG7_Edge_Histogram59,
+        
+        MPEG7_Edge_Histogram60,
+        MPEG7_Edge_Histogram61,
+        MPEG7_Edge_Histogram62,
+        MPEG7_Edge_Histogram63,
+        MPEG7_Edge_Histogram64,
+        MPEG7_Edge_Histogram65,
+        MPEG7_Edge_Histogram66,
+        MPEG7_Edge_Histogram67,
+        MPEG7_Edge_Histogram68,
+        MPEG7_Edge_Histogram69,
+        
+        MPEG7_Edge_Histogram70,
+        MPEG7_Edge_Histogram71,
+        MPEG7_Edge_Histogram72,
+        MPEG7_Edge_Histogram73,
+        MPEG7_Edge_Histogram74,
+        MPEG7_Edge_Histogram75,
+        MPEG7_Edge_Histogram76,
+        MPEG7_Edge_Histogram77,
+        MPEG7_Edge_Histogram78,
+        MPEG7_Edge_Histogram79,        
+                
+        device_super_name, 
+        actual_confirmed    
+    
+        FROM onsets
+        
+        WHERE actual_confirmed IS NOT NULL AND MPEG7_Edge_Histogram0 IS NOT NULL
+        '''
+    cur.execute(sql)      
+    confirmedOnsets = cur.fetchall()
+    
+    for confirmedOnset in confirmedOnsets:
+        f.write(str(confirmedOnset[0]) +',' + 
+                str(confirmedOnset[1]) +',' + 
+                str(confirmedOnset[2]) +',' +
+                str(confirmedOnset[3]) +',' +
+                str(confirmedOnset[4]) +',' +
+                str(confirmedOnset[5]) +',' +
+                str(confirmedOnset[6]) +',' +
+                str(confirmedOnset[7]) +',' +
+                str(confirmedOnset[8]) +',' +
+                str(confirmedOnset[9]) +',' +
+                
+                str(confirmedOnset[10]) +',' + 
+                str(confirmedOnset[11]) +',' + 
+                str(confirmedOnset[12]) +',' +
+                str(confirmedOnset[13]) +',' +
+                str(confirmedOnset[14]) +',' +
+                str(confirmedOnset[15]) +',' +
+                str(confirmedOnset[16]) +',' +
+                str(confirmedOnset[17]) +',' +
+                str(confirmedOnset[18]) +',' +
+                str(confirmedOnset[19]) +',' +
+                
+                str(confirmedOnset[20]) +',' + 
+                str(confirmedOnset[21]) +',' + 
+                str(confirmedOnset[22]) +',' +
+                str(confirmedOnset[23]) +',' +
+                str(confirmedOnset[24]) +',' +
+                str(confirmedOnset[25]) +',' +
+                str(confirmedOnset[26]) +',' +
+                str(confirmedOnset[27]) +',' +
+                str(confirmedOnset[28]) +',' +
+                str(confirmedOnset[29]) +',' +
+                
+                str(confirmedOnset[30]) +',' + 
+                str(confirmedOnset[31]) +',' + 
+                str(confirmedOnset[32]) +',' +
+                str(confirmedOnset[33]) +',' +
+                str(confirmedOnset[34]) +',' +
+                str(confirmedOnset[35]) +',' +
+                str(confirmedOnset[36]) +',' +
+                str(confirmedOnset[37]) +',' +
+                str(confirmedOnset[38]) +',' +
+                str(confirmedOnset[39]) +',' +
+                
+                str(confirmedOnset[40]) +',' + 
+                str(confirmedOnset[41]) +',' + 
+                str(confirmedOnset[42]) +',' +
+                str(confirmedOnset[43]) +',' +
+                str(confirmedOnset[44]) +',' +
+                str(confirmedOnset[45]) +',' +
+                str(confirmedOnset[46]) +',' +
+                str(confirmedOnset[47]) +',' +
+                str(confirmedOnset[48]) +',' +
+                str(confirmedOnset[49]) +',' +
+                
+                str(confirmedOnset[50]) +',' + 
+                str(confirmedOnset[51]) +',' + 
+                str(confirmedOnset[52]) +',' +
+                str(confirmedOnset[53]) +',' +
+                str(confirmedOnset[54]) +',' +
+                str(confirmedOnset[55]) +',' +
+                str(confirmedOnset[56]) +',' +
+                str(confirmedOnset[57]) +',' +
+                str(confirmedOnset[58]) +',' +
+                str(confirmedOnset[59]) +',' +
+                
+                str(confirmedOnset[60]) +',' + 
+                str(confirmedOnset[61]) +',' + 
+                str(confirmedOnset[62]) +',' +
+                str(confirmedOnset[63]) +',' +
+                str(confirmedOnset[64]) +',' +
+                str(confirmedOnset[65]) +',' +
+                str(confirmedOnset[66]) +',' +
+                str(confirmedOnset[67]) +',' +
+                str(confirmedOnset[68]) +',' +
+                str(confirmedOnset[69]) +',' +
+                
+                str(confirmedOnset[70]) +',' + 
+                str(confirmedOnset[71]) +',' + 
+                str(confirmedOnset[72]) +',' +
+                str(confirmedOnset[73]) +',' +
+                str(confirmedOnset[74]) +',' +
+                str(confirmedOnset[75]) +',' +
+                str(confirmedOnset[76]) +',' +
+                str(confirmedOnset[77]) +',' +
+                str(confirmedOnset[78]) +',' +
+                str(confirmedOnset[79]) +',' +
+              
+                confirmedOnset[80] +',' +           # This is deviceSuperName
+                confirmedOnset[81] + '\r\n')        # This is confirmed sound/class type    
+     
+   
+#     for filename in os.listdir(spectrograms_folder_path):
+#         filename_parts = filename.split('$')
+#         deviceSuperName = filename_parts[0]
+#         class_type = filename_parts[1]
+#         print('image', filename)
+#         print('class_type', class_type)
+# #         f.write(filename +',' + class_type + '\r\n')deviceSuperName
+#         f.write(filename +',' + deviceSuperName +',' + class_type + '\r\n')
         
     f.close()
           
