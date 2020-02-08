@@ -813,6 +813,7 @@ def update_onsets_with_edge_histogram_features():
     
     cur = get_database_connection().cursor()
     cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds  FROM onsets WHERE MPEG7_Edge_Histogram0 IS NULL ORDER BY recording_id DESC")
+#     cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds FROM onsets WHERE MPEG7_Edge_Histogram0 IS NULL and actual_confirmed IS NOT NULL ORDER BY recording_id DESC")
    
     onsetsWithNoEdgeHistogramData = cur.fetchall()  
     number_of_onsets = len(onsetsWithNoEdgeHistogramData)
