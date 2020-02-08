@@ -93,6 +93,10 @@ public class ClassifyOnsets {
 					"FROM onsets " +
 
 					"WHERE MPEG7_Edge_Histogram0 IS NOT NULL " +
+					
+					"AND NOT EXISTS ( " +
+						// Don't reclassify onsets that have already been classified for this modelRunName
+						"SELECT ID FROM model_run_result WHERE modelRunName = ? AND model_run_result.recording_id = onsets.recording_id AND model_run_result.startTime = onsets.start_time_seconds AND model_run_result.duration = onsets.duration_seconds) " +
 
 					"ORDER BY recording_id DESC";
 
@@ -155,7 +159,10 @@ public class ClassifyOnsets {
 
 			CostSensitiveClassifier myModel = (CostSensitiveClassifier) weka.core.SerializationHelper.read(modelName);
 
-			ResultSet rs = stmt.executeQuery(sql);
+//			ResultSet rs = stmt.executeQuery(sql);
+			PreparedStatement pstmt  = conn.prepareStatement(sql);
+        	pstmt.setString(1,modelRunName); 
+        	ResultSet rs    = pstmt.executeQuery();  
 
 			// loop through the result set
 			int processedSoFar = 0;
@@ -195,22 +202,23 @@ public class ClassifyOnsets {
 
 				String sql2 = "INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime) VALUES(?,?,?,?,?,?,?,?,?,?)";
 
-				try (PreparedStatement pstmt = conn.prepareStatement(sql2)) {
-					pstmt.setString(1, modelRunName);
-					pstmt.setDouble(2, recording_id);
-					pstmt.setDouble(3, start_time_seconds);
-					pstmt.setDouble(4, duration_seconds);
-					pstmt.setString(5, predictedByModel);
-					pstmt.setDouble(6, probablility);
-					pstmt.setString(7, actual_confirmed);
-					pstmt.setString(8, device_super_name);
-					pstmt.setString(9, device_name);
-					pstmt.setString(10, recordingDateTime);
+				try (PreparedStatement pstmt2 = conn.prepareStatement(sql2)) {
+					pstmt2.setString(1, modelRunName);
+					pstmt2.setDouble(2, recording_id);
+					pstmt2.setDouble(3, start_time_seconds);
+					pstmt2.setDouble(4, duration_seconds);
+					pstmt2.setString(5, predictedByModel);
+					pstmt2.setDouble(6, probablility);
+					pstmt2.setString(7, actual_confirmed);
+					pstmt2.setString(8, device_super_name);
+					pstmt2.setString(9, device_name);
+					pstmt2.setString(10, recordingDateTime);
 
-					pstmt.executeUpdate();
+					pstmt2.executeUpdate();
 					
-					if (processedSoFar % 100 == 0) {						
+					if (processedSoFar % 1000 == 0) {						
 						System.out.println("Have processed " + processedSoFar);
+						System.out.println("\n\n");
 					}
 				} catch (SQLException e) {
 					System.out.println(e.getMessage());

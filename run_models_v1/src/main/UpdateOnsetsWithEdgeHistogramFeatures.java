@@ -5,18 +5,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;  
-import weka.core.Instance;
-import weka.core.Instances;
-import weka.core.converters.ConverterUtils.DataSource;
-import weka.filters.Filter;
-import weka.filters.unsupervised.attribute.Remove;
-import weka.filters.unsupervised.instance.imagefilter.EdgeHistogramFilter;
-import weka.classifiers.functions.Logistic;
-//import weka.classifiers.functions.MultilayerPerceptron;
-import weka.classifiers.functions.SMO;
-import weka.classifiers.functions.supportVector.RBFKernel;
-import weka.classifiers.trees.LMT;
-import weka.classifiers.meta.CostSensitiveClassifier;
+
 
 public class UpdateOnsetsWithEdgeHistogramFeatures {
 	
