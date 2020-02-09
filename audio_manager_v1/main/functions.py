@@ -2407,36 +2407,6 @@ def upload_tags_to_cacophony_server(location_filter):
             print(e, '\n')
             print('Error processing tag ', recording_id_str,  ' ', resp.text)
 
-# def update_model_run_results_with_onsets_used_to_create_model(model_run_name, arff_filename):
-#     print(model_run_name)   
-#     print("\n")   
-#     print(arff_filename)   
-#     
-#     # Extract onsets from arff file. I couldn't get re.split to work with $ and .jpg so did it in two steps :-(
-#     with open(arff_filename) as fp:
-#         line = fp.readline()        
-#         while line:
-# #             print(line,'\n')
-#             
-#             if line[0] != '@':
-#                 line_part_a = line.split('.jpg')[0]
-# #                 recording_id = line_part_a.split('$')[1]
-# #                 start_time = line_part_a.split('$')[2]
-#                 recording_id = line_part_a.split('$')[2]
-#                 start_time = line_part_a.split('$')[3]
-#                 print('recording id is ', recording_id, '\n')
-#                 print('start time is ', start_time, '\n\n')
-#                 
-#                 # now update model_run_result
-#                 cur = get_database_connection().cursor()                
-#                 cur.execute("UPDATE model_run_result SET used_to_create_model = 1 WHERE modelRunName = ? AND recording_id = ? AND startTime = ?", (model_run_name, recording_id, start_time))  
-#                 
-#                             
-#                 get_database_connection().commit()  
-#                 
-#             line = fp.readline()
-#             
-#     print("Finished updating model run result table")   
 
 def update_model_run_results_with_onsets_used_to_create_model(model_run_name, csv_filename):
     print(model_run_name)   
