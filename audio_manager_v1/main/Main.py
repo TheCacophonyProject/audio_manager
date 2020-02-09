@@ -174,19 +174,19 @@ class RecordingsPage(tk.Frame):
         device_super_name_entry = tk.Entry(self,  textvariable=device_super_name, width=30)
         device_super_name_entry.grid(column=1, columnspan=1,row=2)
                
-        get_recordings_button = ttk.Button(self, text="Load Recordings from local folder ",
-                            command=lambda: functions.load_recordings_from_local_folder(device_name.get(), device_super_name.get()))
-        get_recordings_button.grid(column=0, columnspan=1, row=3)
-        
-        load_recordings_from_local_folder_instructions = "Useful if you have the recordings on a usb drive - not for downloading from server"
-
-        msg1 = tk.Message(self, text = load_recordings_from_local_folder_instructions)
-        msg1.config(width=600)
-        msg1.grid(column=1, columnspan=2, row=3)  
-
-        get_recording_information_from_server_button = ttk.Button(self, text="Get Recording Information for recordings imported from local file system",
-                            command=lambda: functions.update_recording_information_for_all_local_database_recordings())
-        get_recording_information_from_server_button.grid(column=0, columnspan=1, row=4)
+#         get_recordings_button = ttk.Button(self, text="Load Recordings from local folder ",
+#                             command=lambda: functions.load_recordings_from_local_folder(device_name.get(), device_super_name.get()))
+#         get_recordings_button.grid(column=0, columnspan=1, row=3)
+#         
+#         load_recordings_from_local_folder_instructions = "Useful if you have the recordings on a usb drive - not for downloading from server"
+# 
+#         msg1 = tk.Message(self, text = load_recordings_from_local_folder_instructions)
+#         msg1.config(width=600)
+#         msg1.grid(column=1, columnspan=2, row=3)  
+# 
+#         get_recording_information_from_server_button = ttk.Button(self, text="Get Recording Information for recordings imported from local file system",
+#                             command=lambda: functions.update_recording_information_for_all_local_database_recordings())
+#         get_recording_information_from_server_button.grid(column=0, columnspan=1, row=4)
         
         get_new_recordings_from_server_button = ttk.Button(self, text="Get New Recordings From Server",
                             command=lambda: functions.get_recordings_from_server(device_name.get(), device_super_name.get()))
@@ -199,15 +199,15 @@ class RecordingsPage(tk.Frame):
         msg2.config(width=600)
         msg2.grid(column=1, columnspan=2, row=5)   
         
-        scan_local_folder_for_recordings_not_in_local_db_and_update_button = ttk.Button(self, text="Scan recordings folder for recordings not in local db and update",
-                            command=lambda: functions.scan_local_folder_for_recordings_not_in_local_db_and_update(device_name.get(), device_super_name.get()))
-        scan_local_folder_for_recordings_not_in_local_db_and_update_button.grid(column=0, columnspan=1, row=6)
-       
-        scan_recordings_folder_instructions = "If you do NOT know the device name or super name enter unknown in the fields. The device name will be updated automatically"
-
-        msg3 = tk.Message(self, text = scan_recordings_folder_instructions)
-        msg3.config(width=600)
-        msg3.grid(column=1, columnspan=1, row=6)               
+#         scan_local_folder_for_recordings_not_in_local_db_and_update_button = ttk.Button(self, text="Scan recordings folder for recordings not in local db and update",
+#                             command=lambda: functions.scan_local_folder_for_recordings_not_in_local_db_and_update(device_name.get(), device_super_name.get()))
+#         scan_local_folder_for_recordings_not_in_local_db_and_update_button.grid(column=0, columnspan=1, row=6)
+#        
+#         scan_recordings_folder_instructions = "If you do NOT know the device name or super name enter unknown in the fields. The device name will be updated automatically"
+# 
+#         msg3 = tk.Message(self, text = scan_recordings_folder_instructions)
+#         msg3.config(width=600)
+#         msg3.grid(column=1, columnspan=1, row=6)               
         
         back_to_home_button = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(HomePage))
@@ -219,86 +219,178 @@ class CreateWekaModelPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         
         title_label = ttk.Label(self, text="Create a Weka model - using Weka https://www.cs.waikato.ac.nz/ml/weka/downloading.html", font=LARGE_FONT)
-        title_label.grid(column=0, columnspan=1, row=0)   
+        title_label.grid(column=0, columnspan=1, row=10)  
         
-        introduction_instructions = "Before we can use Weka to create a model, we first need to 1) create spectrograms (from the previously confirmed model_run_results) and 2) create an input arff file that lists those spectrograms"
-        msg1 = tk.Message(self, text = introduction_instructions)
-        msg1.config(width=600)
-        msg1.grid(column=0, columnspan=1, row=1)  
+        instructions1_text = """
         
-        create_spectrograms_instructions = "Press the Create Spectrograms for Next Run button to create the spectrograms (from confirmed onsets) that will be used to train the next version/iteration of the model"
-        create_spectrograms_msg = tk.Message(self, text = create_spectrograms_instructions)
-        create_spectrograms_msg.config(width=600)
-        create_spectrograms_msg.grid(column=0, columnspan=1, row=2)  
+    Before we can use Weka to create a model, you first need to create an input arff file that uses 
+    the model_run_results confirmed sounds."
         
-        create_spectrograms_button = ttk.Button(self, text="Create Spectrograms for Next Run", command=lambda: functions.create_spectrogram_jpg_files_for_next_model_run_or_model_test(False))
-        create_spectrograms_button.grid(column=1, columnspan=1, row=2)
+    """    
+        instructions1_text_label = ttk.Label(self, text=instructions1_text)                                                    
+        instructions1_text_label.grid(column=0, columnspan=1, row=20)  
         
-        create_arff_instructions = "Pressing the Create Arff file for Weka input button will put the names of the previously created spectrograms into an .arff file, that Weka will then use. You can find the file called " + arff_file_for_weka_model_creation + " in the " + model_run_name + " folder."
-        create_arff_file_msg = tk.Message(self, text = create_arff_instructions)
-        create_arff_file_msg.config(width=600)
-        create_arff_file_msg.grid(column=0, columnspan=1, row=3)  
+#         introduction_instructions = "Before we can use Weka to create a model, you first need to create an input arff file that uses the model_run_results confirmed sounds."
+#         msg1 = tk.Message(self, text = introduction_instructions)
+#         msg1.config(width=600)
+#         msg1.grid(column=0, columnspan=1, row=1)  
+        
+#         create_spectrograms_instructions = "Press the Create Spectrograms for Next Run button to create the spectrograms (from confirmed onsets) that will be used to train the next version/iteration of the model"
+#         create_spectrograms_msg = tk.Message(self, text = create_spectrograms_instructions)
+#         create_spectrograms_msg.config(width=600)
+#         create_spectrograms_msg.grid(column=0, columnspan=1, row=2)  
+#         
+#         create_spectrograms_button = ttk.Button(self, text="Create Spectrograms for Next Run", command=lambda: functions.create_spectrogram_jpg_files_for_next_model_run_or_model_test(False))
+#         create_spectrograms_button.grid(column=1, columnspan=1, row=2)
+#         
+#         create_arff_instructions = "Pressing the Create Arff file for Weka input button will put the names of the previously created spectrograms into an .arff file, that Weka will then use. You can find the file called " + arff_file_for_weka_model_creation + " in the " + model_run_name + " folder."
+#         create_arff_file_msg = tk.Message(self, text = create_arff_instructions)
+#         create_arff_file_msg.config(width=600)
+#         create_arff_file_msg.grid(column=0, columnspan=1, row=3)  
         
 #         create_arff_file_for_weka_button = ttk.Button(self, text="Create Arff file for Weka input", command=lambda: functions.create_arff_file_for_weka_image_filter_input(False))
         create_arff_file_for_weka_button = ttk.Button(self, text="Create Arff file for Weka input", command=lambda: functions.create_arff_file_for_weka(False))        
-        create_arff_file_for_weka_button.grid(column=1, columnspan=1, row=3)
+        create_arff_file_for_weka_button.grid(column=1, columnspan=1, row=20)
         
-        create_folders_instructions = "BEFORE pressing the next button, update the model_run_name parameter in the parameters file with a new name AND exit/close this program and restart to refresh - check it has.  It is currently set to " + model_run_name + " which is most likely the previous model run folder that you used - you don't want to use the same folder - it will end in tears!! (Once pressed, check that the folders have been created in the file system).  This will give you a place to save your next Weka model.model file. You can now press the Create folders for next run button to create all the necessary folders for the next iteration/run. "
-        create_folders_msg = tk.Message(self, text = create_folders_instructions)
-        create_folders_msg.config(width=600)
-        create_folders_msg.grid(column=0, columnspan=1, row=4) 
+        instructions2_text = """
+        
+    BEFORE pressing the 'Create folders for next run' button, update the model_run_name parameter in the 
+    parameters file with a new name AND exit/close this program and restart to refresh - check it has.  
+    It is currently set to " + model_run_name + " which is most likely the previous model run folder that 
+    you used - you don't want to use the same folder - it will end in tears!! (Once pressed, check that 
+    the folders have been created in the file system).  This will give you a place to save your next Weka 
+    model.model file. You can now press the Create folders for next run button to create all the necessary 
+    folders for the next iteration/run.
+        
+    """    
+        instructions2_text_label = ttk.Label(self, text=instructions2_text)                                                    
+        instructions2_text_label.grid(column=0, columnspan=1, row=30)  
+        
+        
+#         create_folders_instructions = "BEFORE pressing the 'Create folders for next run' button, update the model_run_name parameter in the parameters file with a new name AND exit/close this program and restart to refresh - check it has.  It is currently set to " + model_run_name + " which is most likely the previous model run folder that you used - you don't want to use the same folder - it will end in tears!! (Once pressed, check that the folders have been created in the file system).  This will give you a place to save your next Weka model.model file. You can now press the Create folders for next run button to create all the necessary folders for the next iteration/run. "
+#         create_folders_msg = tk.Message(self, text = create_folders_instructions)
+#         create_folders_msg.config(width=600)
+#         create_folders_msg.grid(column=0, columnspan=1, row=4) 
         
         create_folders_button = ttk.Button(self, text="Create folders for next run",command=lambda: functions.create_folders_for_next_run())
-        create_folders_button.grid(column=1, columnspan=1, row=4)  
+        create_folders_button.grid(column=1, columnspan=1, row=30)  
         
-        using_weka_instructions1 = "You are now ready to use Weka. BUT, if you are going to use AutoWeka it needs to use Java 1.8 (unlike Weka or Eclipse/Audio Manager which can use openjdk 11 - so at a terminal type 'sudo update-alternatives --config java' without the quotes and choose option (5 on my computer) for jdk1.8 Once the java version has been changed, from a terminal command prompt, cd into the directory where Weka has been installed (e.g. ~/weka-3-8-4b (on my computer) and launch Weka using the command: java -Xmx16384m -jar weka.jar"
-        using_weka_msg1 = tk.Message(self, text = using_weka_instructions1)
-        using_weka_msg1.config(width=600)
-        using_weka_msg1.grid(column=0, columnspan=1, row=5)  
+#         using_weka_instructions1 = "You are now ready to use Weka. BUT, if you are going to use AutoWeka it needs to use Java 1.8 (unlike Weka or Eclipse/Audio Manager which can use openjdk 11 - so at a terminal type 'sudo update-alternatives --config java' without the quotes and choose option (5 on my computer) for jdk1.8 Once the java version has been changed, from a terminal command prompt, cd into the directory where Weka has been installed (e.g. ~/weka-3-8-4b (on my computer) and launch Weka using the command: java -Xmx16384m -jar weka.jar"
+#         using_weka_msg1 = tk.Message(self, text = using_weka_instructions1)
+#         using_weka_msg1.config(width=600)
+#         using_weka_msg1.grid(column=0, columnspan=1, row=5) 
         
-        using_weka_instructions2 = "These instructions are from the video: https://www.futurelearn.com/courses/advanced-data-mining-with-weka/0/steps/29486\ You will need to have installed the Image Filters Package into Weka."
-        using_weka_msg2 = tk.Message(self, text = using_weka_instructions2)
-        using_weka_msg2.config(width=600)
-        using_weka_msg2.grid(column=0, columnspan=1, row=6)  
+        instructions3_text = """
         
-        using_weka_instructions3 = "In Weka, Press the Explorer button and then the Open file.. button to open the previously created .arff file. Now Press the Choose button below the Filter label and navigate to weka|filters|unsupervised|instance|imagefilter|EdgeHistogramFilter \
-Then click on the Box with the name of the Filter (EdgeHistogramFilter) and paste in the path to image directory where all the spectrograms were created and press OK - it doesn't appear to have the ability to navigate to the directory.  Now press the Apply button to apply the filter."
-        using_weka_msg3 = tk.Message(self, text = using_weka_instructions3)
-        using_weka_msg3.config(width=600)
-        using_weka_msg3.grid(column=0, columnspan=1, row=7)  
+    You are now ready to use Weka. BUT, if you are going to use AutoWeka it needs to use Java 1.8 
+    (unlike Weka or Eclipse/Audio Manager which can use openjdk 11 - so at a terminal type 
+    'sudo update-alternatives --config java' without the quotes and choose option (5 on my computer) 
+    for jdk1.8 Once the java version has been changed, from a terminal command prompt, cd into the 
+    directory where Weka has been installed (e.g. ~/weka-3-8-4b (on my computer) and launch Weka 
+    using the command: java -Xmx16384m -jar weka.jar
+    
+    These instructions are from the video: https://www.futurelearn.com/courses/advanced-data-
+    mining-with-weka/0/steps/29486\ You will need to have installed the Image Filters Package 
+    into Weka."
         
-        using_weka_instructions4 = "The Weka image in the bottom right corner will do a dance while it is processing and when finished you should see a list of Attiributes (with the first being filename) and then MPEG-7 etc. Save the file with the name: device_names_added_arff_file_for_weka_model_creation_image_filtered.arff"
-        using_weka_msg4 = tk.Message(self, text = using_weka_instructions4)
-        using_weka_msg4.config(width=600)
-        using_weka_msg4.grid(column=0, columnspan=1, row=8) 
+    """    
+        instructions3_text_label = ttk.Label(self, text=instructions3_text)                                                    
+        instructions3_text_label.grid(column=0, columnspan=1, row=40)   
         
-#         using_weka_instructions5 = "In Weka, save the arff file, in the same location, with the name: arff_file_for_weka_model_creation_image_filtered.arff. Now, back in this GUI, press the Add Device Names button on the right to add the device names to the arff file."
-#         using_weka_msg5 = tk.Message(self, text = using_weka_instructions5)
-#         using_weka_msg5.config(width=600)
-#         using_weka_msg5.grid(column=0, columnspan=1, row=9) 
+#         using_weka_instructions2 = "These instructions are from the video: https://www.futurelearn.com/courses/advanced-data-mining-with-weka/0/steps/29486\ You will need to have installed the Image Filters Package into Weka."
+#         using_weka_msg2 = tk.Message(self, text = using_weka_instructions2)
+#         using_weka_msg2.config(width=600)
+#         using_weka_msg2.grid(column=0, columnspan=1, row=6)  
+        
+#         using_weka_instructions3 = "In Weka, Press the Explorer button and then the Open file.. button to open the previously created .arff file. Now Press the Choose button below the Filter label and navigate to weka|filters|unsupervised|instance|imagefilter|EdgeHistogramFilter \
+# Then click on the Box with the name of the Filter (EdgeHistogramFilter) and paste in the path to image directory where all the spectrograms were created and press OK - it doesn't appear to have the ability to navigate to the directory.  Now press the Apply button to apply the filter."
+#         using_weka_msg3 = tk.Message(self, text = using_weka_instructions3)
+#         using_weka_msg3.config(width=600)
+#         using_weka_msg3.grid(column=0, columnspan=1, row=7)  
+        
+        instructions5_text = """
+        
+    In Weka, Press the Explorer button and then the Open file.. button to open the previously created .arff file.
+        
+    """    
+        instructions5_text_label = ttk.Label(self, text=instructions5_text)                                                    
+        instructions5_text_label.grid(column=0, columnspan=1, row=50) 
 #         
-#         add_device_names_to_arff_button = ttk.Button(self, text="Add Device names to arff file",command=lambda: functions.add_device_names_to_arff())
-#         add_device_names_to_arff_button.grid(column=1, columnspan=1, row=9) 
-        
-        using_weka_instructions6 = "Open this new arff file."
-        using_weka_msg6 = tk.Message(self, text = using_weka_instructions6)
-        using_weka_msg6.config(width=600)
-        using_weka_msg6.grid(column=0, columnspan=1, row=10) 
+#         using_weka_instructions4 = "The Weka image in the bottom right corner will do a dance while it is processing and when finished you should see a list of Attiributes (with the first being filename) and then MPEG-7 etc. Save the file with the name: device_names_added_arff_file_for_weka_model_creation_image_filtered.arff"
+#         using_weka_msg4 = tk.Message(self, text = using_weka_instructions4)
+#         using_weka_msg4.config(width=600)
+#         using_weka_msg4.grid(column=0, columnspan=1, row=8) 
+#         
+# #         using_weka_instructions5 = "In Weka, save the arff file, in the same location, with the name: arff_file_for_weka_model_creation_image_filtered.arff. Now, back in this GUI, press the Add Device Names button on the right to add the device names to the arff file."
+# #         using_weka_msg5 = tk.Message(self, text = using_weka_instructions5)
+# #         using_weka_msg5.config(width=600)
+# #         using_weka_msg5.grid(column=0, columnspan=1, row=9) 
+# #         
+# #         add_device_names_to_arff_button = ttk.Button(self, text="Add Device names to arff file",command=lambda: functions.add_device_names_to_arff())
+# #         add_device_names_to_arff_button.grid(column=1, columnspan=1, row=9) 
+#         
+#         using_weka_instructions6 = "Open this new arff file."
+#         using_weka_msg6 = tk.Message(self, text = using_weka_instructions6)
+#         using_weka_msg6.config(width=600)
+#         using_weka_msg6.grid(column=0, columnspan=1, row=10) 
          
         
-        using_weka_instructions7 = "Now you need to remove the filename attribute by selecting the box and press the Remove button.  Save this as device_names_added_arff_file_for_weka_model_creation_image_filtered_filename_removed.arff  \n\nIf you want to use AutoWeka follow A instructions next otherwise follow B instructions. \n\nA) Select the Auto-Weka tab (in Weka) then right click on AUTOWEKAClassifier | Show properties and change timeLimit to something suitable say 4320 (ie 3 days), or first test with 10 minutes :-), press OK, check that (Nom) class is selected and then press start. The weka icon does its dance.  Make sure computer Power Saving is Off, and come back in 3 days!  \n\nB) If don't want to use AutoWeka try this - select the Classify tab (at the top). Press the Choose button and navigate to  Weka|classifiers|Trees|LMT (or you may have another model - and had saved the result buffer, if so in there you can copy the Scheme e.g. weka.classifiers.functions.SMO -C 1.0322930159130057 -L 0.001 -P 1.0E-12 -N 0 -M -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.RBFKernel -C 250007 -G 0.4733376743447805\" -calibrator \"weka.classifiers.functions.Logistic -R 1.0E-8 -M -1 -num-decimal-places 4\" - and paste it here.  Use Cross-validation Folds 10 and press start. The weka image does it's dance and then the results displayed"
-        using_weka_msg7 = tk.Message(self, text = using_weka_instructions7)
-        using_weka_msg7.config(width=600)
-        using_weka_msg7.grid(column=0, columnspan=1, row=11) 
+#         using_weka_instructions7 = "Now you need to remove the filename attribute by selecting the box and press the Remove button.  Save this as device_names_added_arff_file_for_weka_model_creation_image_filtered_filename_removed.arff  \n\nIf you want to use AutoWeka follow A instructions next otherwise follow B instructions. \n\nA) Select the Auto-Weka tab (in Weka) then right click on AUTOWEKAClassifier | Show properties and change timeLimit to something suitable say 4320 (ie 3 days), or first test with 10 minutes :-), press OK, check that (Nom) class is selected and then press start. The weka icon does its dance.  Make sure computer Power Saving is Off, and come back in 3 days!  \n\nB) If don't want to use AutoWeka try this - select the Classify tab (at the top). Press the Choose button and navigate to  Weka|classifiers|Trees|LMT (or you may have another model - and had saved the result buffer, if so in there you can copy the Scheme e.g. weka.classifiers.functions.SMO -C 1.0322930159130057 -L 0.001 -P 1.0E-12 -N 0 -M -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.RBFKernel -C 250007 -G 0.4733376743447805\" -calibrator \"weka.classifiers.functions.Logistic -R 1.0E-8 -M -1 -num-decimal-places 4\" - and paste it here.  Use Cross-validation Folds 10 and press start. The weka image does it's dance and then the results displayed"
+#         using_weka_msg7 = tk.Message(self, text = using_weka_instructions7)
+#         using_weka_msg7.config(width=600)
+#         using_weka_msg7.grid(column=0, columnspan=1, row=11) 
         
-        using_weka_instructions8 = "To export the model, in the Result list, right mouse click and Choose Save model and save as model.model in the weka_model directory for this run (Create the directory if you did not follow the instructions above). It is also worth saving the result buffer in a text file with this run."
-        using_weka_msg8 = tk.Message(self, text = using_weka_instructions8)
-        using_weka_msg8.config(width=600)
-        using_weka_msg8.grid(column=0, columnspan=1, row=12) 
+        instructions7_text = """
+        
+    If you want to use AutoWeka follow A instructions next otherwise follow B instructions. 
+    
+    A) Select the Auto-Weka tab (in Weka) then right click on AUTOWEKAClassifier | Show properties and change timeLimit 
+    to something suitable say 4320 (ie 3 days), or first test with 10 minutes :-), press OK, check that (Nom) class is 
+    selected and then press start. The weka icon does its dance.  Make sure computer Power Saving is Off, and come back 
+    in 3 days! 
+    
+    B) If don't want to use AutoWeka try this - it will create the same model type (CostSensitiveClassifier) that was being 
+    used when these instructions where written.  Note: the ClassifyOnsets code will need to use the same model type as you 
+    create here - change it in that code if you create a different model type.
+    
+    1) Select the Classify tab (at the top). Press the Choose button and navigate to  Weka|classifiers|meta|CostSensitiveClassifier
+    
+    2) Then left click in text box that has the text CostSensitiveClassifier..... to open another dialog.
+    
+    3) Next to word classifier, Press Choose and navigate to weka|classifiers|meta|RandomCommittee. 
+    
+    4) In your computers file system, find the file 'penalties 16x16 10 penalty.cost' and copy it to the current model_run\model folder
+    
+    5) Press on the box next to costMatrix, press Open and find the 'penalties 16x16 10 penalty.cost', and close the CostMatrixEditor 
+    window.
+    
+    6) Next to the word classifer, press the Choose button and navigate to weka|classifiers|meta|RandomForest, press OK, OK
+    
+    7) Back in the Classify tab, in Test Options, select 'Cross-validation Folds 10' and press the 'Start' button.
+    
+    The weka in the bottom right corner does it's dance.
+    
+    8) When the weka has finished dancing the results are displayed - take a look.
+    
+    9) Right click on the just finished 'Result list' listing, and save save the result buffer in weka_model foler for this run.
+    
+    10) Also export the model, to the same location so it is available for future classifications.
+        
+        
+    """    
+        instructions7_text_label = ttk.Label(self, text=instructions7_text)                                                    
+        instructions7_text_label.grid(column=0, columnspan=1, row=60) 
+        
+#         using_weka_instructions8 = "To export the model, in the Result list, right mouse click and Choose Save model and save as model.model in the weka_model directory for this run (Create the directory if you did not follow the instructions above). It is also worth saving the result buffer in a text file with this run."
+#         using_weka_msg8 = tk.Message(self, text = using_weka_instructions8)
+#         using_weka_msg8.config(width=600)
+#         using_weka_msg8.grid(column=0, columnspan=1, row=12) 
+        
+        
         
         back_to_home_button = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=15)                
+        back_to_home_button.grid(column=0, columnspan=1, row=80)                
         
 class ClassifyOnsetsUsingWekaModelPage(tk.Frame):
     
@@ -309,38 +401,60 @@ class ClassifyOnsetsUsingWekaModelPage(tk.Frame):
         title_label = ttk.Label(self, text="Classify Onsets Using Weka Model", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)    
         
-        intro_msg = tk.Message(self, text = "This page will guide you through the process of using a Weka model to classify onsets.")
-        intro_msg.config(bg='lightgreen', font=('times', 16), width=600)
-        intro_msg.grid(column=0, columnspan=1, row=1)  
+        instructions1_text = """\n\n
         
-        run_folder_instructions = "The run_folder is currently set to: " + parameters.run_folder + " You may have already created folders for this run (just before you used Weka to create the Model), but if not press the Create Folders button."
-        run_folder_msg = tk.Message(self, text = run_folder_instructions)
-        run_folder_msg.config(width=600)
-        run_folder_msg.grid(column=0, columnspan=1, row=2) 
-        
-        create_folders_button = ttk.Button(self, text="Create folders",command=lambda: functions.create_folders_for_next_run())
-        create_folders_button.grid(column=1, columnspan=1, row=2)
-        
-        model_setup1_instructions = "You should have already created a new model.model file using Weka and saved it in " + parameters.run_folder + "/" + parameters.weka_model_folder + " folder.  Also from the previous run, copy the following files into the " + weka_model_folder + " folder: " + weka_input_arff_filename + ", " + weka_run_jar_filename + " Make sure you use the new model.model file that you created in Weka, NOT from the previous run."
-        model_setup1_msg = tk.Message(self, text = model_setup1_instructions)
-        model_setup1_msg.config(width=600)
-        model_setup1_msg.grid(column=0, columnspan=1, row=3)  
-        
-        model_setup2_instructions = "If you don't have a run.jar file, it can be created from within Eclipse. Using the Java perspective, open the current code e.g. Main4.java and from the File menu, choose Export.. | Java | Runnable JAR file | Next | Launch configuration: | Main4-run_models_v1 (or the current version) | Export destination of the " + weka_model_folder + "folder | Library handling|Package required libraries into generated JAR | Finish" 
-        model_setup2_msg = tk.Message(self, text = model_setup2_instructions)
-        model_setup2_msg.config(width=600)
-        model_setup2_msg.grid(column=0, columnspan=1, row=4)  
-        
-        model_setup3_instructions = "When all the files are copied, press the Classify Onsets Button.  This will start the process of creating a temporary spectrogram of each segment of audio corresponding to an onset, and using the Weka model to clasify it, and save the results in the model_run_result with the modelRunName of " + model_run_name
-        model_setup3_msg = tk.Message(self, text = model_setup3_instructions)
-        model_setup3_msg.config(width=600)
-        model_setup3_msg.grid(column=0, columnspan=1, row=5)   
-        
-        evaluate_button = ttk.Button(self, text="Classify Onsets",command=lambda: functions.classify_onsets_using_weka_model())
-        evaluate_button.grid(column=0, columnspan=1, row=15)     
+    1) Onsets can only be classified if you have already created the Edge Histogram features - see 'Create Onsets' page.
+    
+    2) To classify onsets, you will first need to have created a Weka Model - the Create Weka Model page for instructions 
+    on how to do this.
+    
+    3) Copy the weka model.model file into the current audio_classifier_runs model folder - which is currently set to:
+    """ + parameters.run_folder + "/" + parameters.weka_model_folder + """
+     
+    4) Also copy the 'dummy' input.arff file into the same weka_model folder, from the previous weka_model folder.  
+    This file is needed for weka to determine the location of the image file to use.
+    
+    5) Now open the ClassifyOnsets.java file and change the value of modelRunName variable to the same as this model Run folder name.
+    
+    6) Still in Eclipse, check that ClassifyOnsets.java code variables deviceSuperNameLabels and classLabels are up-to-date and then run the code.
+    
+    \n\n"""
+                
+        instructions1_text_label = ttk.Label(self, text=instructions1_text)                                                    
+        instructions1_text_label.grid(column=0, columnspan=1, row=5) 
+#         
+#         intro_msg = tk.Message(self, text = "This page will guide you through the process of using a Weka model to classify onsets.")
+#         intro_msg.config(bg='lightgreen', font=('times', 16), width=600)
+#         intro_msg.grid(column=0, columnspan=1, row=1)  
+#         
+#         run_folder_instructions = "The run_folder is currently set to: " + parameters.run_folder + " You may have already created folders for this run (just before you used Weka to create the Model), but if not press the Create Folders button."
+#         run_folder_msg = tk.Message(self, text = run_folder_instructions)
+#         run_folder_msg.config(width=600)
+#         run_folder_msg.grid(column=0, columnspan=1, row=22) 
+#         
+#         create_folders_button = ttk.Button(self, text="Create folders",command=lambda: functions.create_folders_for_next_run())
+#         create_folders_button.grid(column=1, columnspan=1, row=22)
+#         
+#         model_setup1_instructions = "You should have already created a new model.model file using Weka and saved it in " + parameters.run_folder + "/" + parameters.weka_model_folder + " folder.  Also from the previous run, copy the following files into the " + weka_model_folder + " folder: " + weka_input_arff_filename + ", " + weka_run_jar_filename + " Make sure you use the new model.model file that you created in Weka, NOT from the previous run."
+#         model_setup1_msg = tk.Message(self, text = model_setup1_instructions)
+#         model_setup1_msg.config(width=600)
+#         model_setup1_msg.grid(column=0, columnspan=1, row=23)  
+#         
+#         model_setup2_instructions = "If you don't have a run.jar file, it can be created from within Eclipse. Using the Java perspective, open the current code e.g. Main4.java and from the File menu, choose Export.. | Java | Runnable JAR file | Next | Launch configuration: | Main4-run_models_v1 (or the current version) | Export destination of the " + weka_model_folder + "folder | Library handling|Package required libraries into generated JAR | Finish" 
+#         model_setup2_msg = tk.Message(self, text = model_setup2_instructions)
+#         model_setup2_msg.config(width=600)
+#         model_setup2_msg.grid(column=0, columnspan=1, row=24)  
+#         
+#         model_setup3_instructions = "When all the files are copied, press the Classify Onsets Button.  This will start the process of creating a temporary spectrogram of each segment of audio corresponding to an onset, and using the Weka model to clasify it, and save the results in the model_run_result with the modelRunName of " + model_run_name
+#         model_setup3_msg = tk.Message(self, text = model_setup3_instructions)
+#         model_setup3_msg.config(width=600)
+#         model_setup3_msg.grid(column=0, columnspan=1, row=25)   
+#         
+#         evaluate_button = ttk.Button(self, text="Classify Onsets",command=lambda: functions.classify_onsets_using_weka_model())
+#         evaluate_button.grid(column=0, columnspan=1, row=35)     
  
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))  
-        back_to_home_button.grid(column=0, columnspan=1, row=25) 
+        back_to_home_button.grid(column=0, columnspan=1, row=45) 
                             
 class CreateOnsetsPage(tk.Frame):    
     
@@ -351,17 +465,41 @@ class CreateOnsetsPage(tk.Frame):
         title_label = ttk.Label(self, text="Create Onsets", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)    
         
-        onset_instructions = "Use this page to run the create onsets function that will create locations of interest in the db"
-
-        msg = tk.Message(self, text = onset_instructions)
-        msg.config(bg='lightgreen', font=('times', 16), width=1200)
-        msg.grid(column=0, columnspan=6, row=10)   
+        
+        instructions1_text = """
+        
+    1) Once you have downloaded new recordings, you need to find locations of interest - called onsets.
+    
+    2) Press the Run button to create these onsets.    
+   
+    """
+                
+        instructions1_text_label = ttk.Label(self, text=instructions1_text)                                                    
+        instructions1_text_label.grid(column=0, columnspan=1, row=5) 
+        
+        
+#         onset_instructions = "Use this page to run the create onsets function that will create locations of interest in the db"
+# 
+#         msg = tk.Message(self, text = onset_instructions)
+#         msg.config(bg='lightgreen', font=('times', 16), width=1200)
+#         msg.grid(column=0, columnspan=6, row=10)   
         
         run_button = ttk.Button(self, text="Run", command=lambda: functions.create_onsets_in_local_db_using_recordings_folder())        
         run_button.grid(column=0, columnspan=1, row=20) 
         
-        run_button = ttk.Button(self, text="Update Onsets with Edge Histogram Features", command=lambda: functions.update_onsets_with_edge_histogram_features()())        
-        run_button.grid(column=0, columnspan=1, row=30)        
+        instructions2_text = """
+        
+    3) After the onsets have been created, you will need to create 'features' for each onset location.  Later these features will 
+    be used to train models and classify sounds.
+        a) Press the 'Update Onsets with Edge Histogram Features' button to create the features - they will be stored in the database.
+        
+    """
+    
+        instructions2_text_label = ttk.Label(self, text=instructions2_text)                                                    
+        instructions2_text_label.grid(column=0, columnspan=1, row=25) 
+        
+        update_button = ttk.Button(self, text="Update Onsets with Edge Histogram Features", command=lambda: functions.update_onsets_with_edge_histogram_features()())        
+        update_button.grid(column=0, columnspan=1, row=30)        
 
         back_to_home_button = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(HomePage))                            
         back_to_home_button.grid(column=0, columnspan=1, row=40)                  

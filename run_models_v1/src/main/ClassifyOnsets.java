@@ -10,10 +10,8 @@ import java.util.ArrayList;
 
 import weka.core.Attribute;
 import weka.core.DenseInstance;
-import weka.core.FastVector;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.Remove;
 import weka.filters.unsupervised.instance.imagefilter.EdgeHistogramFilter;
@@ -29,7 +27,9 @@ public class ClassifyOnsets {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
-		String modelRunName = "2020_02_08_1";
+		String modelRunName = "2020_02_08_1"; // Change this to same as parameters.modelRunName in python code
+		
+		
 		String modelName = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs/" + modelRunName
 				+ "/weka_model/model.model";
 
