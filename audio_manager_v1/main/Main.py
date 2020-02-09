@@ -224,7 +224,11 @@ class CreateWekaModelPage(tk.Frame):
         instructions1_text = """
         
     Before we can use Weka to create a model, you first need to create an input arff file that uses 
-    the model_run_results confirmed sounds."
+    the model_run_results confirmed sounds. 
+    
+    This will also create a csv file that can be used to keep track of which confirmed onsets where used to create the model.
+    
+    This csv will be used by the Model Accuracy Analysis page.
         
     """    
         instructions1_text_label = ttk.Label(self, text=instructions1_text)                                                    
@@ -1125,15 +1129,27 @@ class ModelAccuracyAnalysisPage(tk.Frame):
             self.run_names_combo.grid(column=1, columnspan=1,row=11) 
             self.run_names_combo.current(len(self.unique_model_run_names) - 1)   
             
-        select_arff_file_label = ttk.Label(self, text="Select the arff file that was used to create this model.")
-        select_arff_file_label.grid(column=0, columnspan=1, row=15)   
+#         select_arff_file_label = ttk.Label(self, text="Select the arff file that was used to create this model.")
+#         select_arff_file_label.grid(column=0, columnspan=1, row=15)   
+#         
+#         select_arff_file_label = ttk.Label(self, text="Important - the arff file is probably in the previous model run folder to the model run result that you are updating!")
+#         select_arff_file_label.grid(column=0, columnspan=1, row=16)      
         
-        select_arff_file_label = ttk.Label(self, text="Important - the arff file is probably in the previous model run folder to the model run result that you are updating!")
-        select_arff_file_label.grid(column=0, columnspan=1, row=16)       
+        select_csv_instructions_text = """
+        In order to assess if the model is correctly predicting onsets/sounds that were NOT used to create the model,
+        import the csv file that was created at the same time that the arff file for the model was created.
+        
+        This csv file should be called csv_file_for_keeping_track_of_onsets_used_to_create_model.csv and is probably in 
+        the previous model run folder to the model run result that you are updating!
+        
+       """        
+        
+        select_csv_instructions_text_label = ttk.Label(self, text=select_csv_instructions_text)                                                   
+        select_csv_instructions_text_label.grid(column=0, columnspan=1, row=15)  
             
-        select_arff_file_used_to_create_model_button = ttk.Button(self, text="Select arff file",command=lambda: select_arff_file_used_to_create_model())
-        select_arff_file_used_to_create_model_button.grid(column=0, columnspan=1, row=17)    
-            
+        select_csvf_file_used_to_create_model_button = ttk.Button(self, text="Select csv file",command=lambda: select_csv_file_used_to_create_model())
+        select_csvf_file_used_to_create_model_button.grid(column=0, columnspan=1, row=17)   
+                    
         update_model_run_results_with_was_used_to_create_model_button = ttk.Button(self, text="Update model run results with onsets used to create model",command=lambda: update_model_run_results_with_onsets_used_to_create_model())
         update_model_run_results_with_was_used_to_create_model_button.grid(column=0, columnspan=1, row=20) 
         
@@ -1174,9 +1190,9 @@ class ModelAccuracyAnalysisPage(tk.Frame):
                 self.unique_model_run_names = functions.get_unique_model_run_names()
                 self.run_names_combo['values'] = self.unique_model_run_names  
                 
-        def select_arff_file_used_to_create_model():
+        def select_csv_file_used_to_create_model():
 #             print(initial_locatation_for_choosing_arff_file_dialog)            
-            self.arff_filename = filedialog.askopenfilename(initialdir = initial_locatation_for_choosing_arff_file_dialog,title = "Select file",filetypes = (("arff files","*.arff"),("all files","*.*")))
+            self.arff_filename = filedialog.askopenfilename(initialdir = initial_locatation_for_choosing_arff_file_dialog,title = "Select file",filetypes = (("csv files","*.csv"),("all files","*.*")))
             
                 
         def update_model_run_results_with_onsets_used_to_create_model():               

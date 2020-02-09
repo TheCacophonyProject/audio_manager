@@ -1738,6 +1738,8 @@ def create_arff_file_for_weka_image_filter_input(test_arff):
         
     f.close()
     
+   
+    
 def create_arff_file_for_weka(test_arff):
 #  IF test_arff IS true, then just create an arff file for a single onset - to be used to give to the model for a class prediction
     
@@ -1747,6 +1749,7 @@ def create_arff_file_for_weka(test_arff):
         f= open(run_folder_path + '/' + arff_file_for_weka_model_testing,"w+")
     else:
         f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+") 
+        f_csv_file_for_keeping_track_of_onsets_used_to_create_model = open(run_folder_path + '/' + csv_file_for_keeping_track_of_onsets_used_to_create_model,"w+") 
        
 #     f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+")
     f.write('@relation ' + relation_name + '\r\n')
@@ -1957,7 +1960,10 @@ def create_arff_file_for_weka(test_arff):
         MPEG7_Edge_Histogram79,        
                 
         device_super_name, 
-        actual_confirmed    
+        actual_confirmed,
+        recording_id,
+        start_time_seconds
+            
     
         FROM onsets
         
@@ -2056,7 +2062,8 @@ def create_arff_file_for_weka(test_arff):
                 str(confirmedOnset[79]) +',' +
               
                 confirmedOnset[80] +',' +           # This is deviceSuperName
-                confirmedOnset[81] + '\r\n')        # This is confirmed sound/class type    
+                confirmedOnset[81] + '\r\n')        # This is confirmed sound/class type   
+        f_csv_file_for_keeping_track_of_onsets_used_to_create_model.write(parameters.model_run_name + "," + str(confirmedOnset[82]) + "," + str(confirmedOnset[83]) + '\r\n') 
      
    
 #     for filename in os.listdir(spectrograms_folder_path):
@@ -2069,6 +2076,7 @@ def create_arff_file_for_weka(test_arff):
 #         f.write(filename +',' + deviceSuperName +',' + class_type + '\r\n')
         
     f.close()
+    f_csv_file_for_keeping_track_of_onsets_used_to_create_model.close();
           
             
 def create_folders_for_next_run():
@@ -2399,36 +2407,63 @@ def upload_tags_to_cacophony_server(location_filter):
             print(e, '\n')
             print('Error processing tag ', recording_id_str,  ' ', resp.text)
 
-def update_model_run_results_with_onsets_used_to_create_model(model_run_name, arff_filename):
+# def update_model_run_results_with_onsets_used_to_create_model(model_run_name, arff_filename):
+#     print(model_run_name)   
+#     print("\n")   
+#     print(arff_filename)   
+#     
+#     # Extract onsets from arff file. I couldn't get re.split to work with $ and .jpg so did it in two steps :-(
+#     with open(arff_filename) as fp:
+#         line = fp.readline()        
+#         while line:
+# #             print(line,'\n')
+#             
+#             if line[0] != '@':
+#                 line_part_a = line.split('.jpg')[0]
+# #                 recording_id = line_part_a.split('$')[1]
+# #                 start_time = line_part_a.split('$')[2]
+#                 recording_id = line_part_a.split('$')[2]
+#                 start_time = line_part_a.split('$')[3]
+#                 print('recording id is ', recording_id, '\n')
+#                 print('start time is ', start_time, '\n\n')
+#                 
+#                 # now update model_run_result
+#                 cur = get_database_connection().cursor()                
+#                 cur.execute("UPDATE model_run_result SET used_to_create_model = 1 WHERE modelRunName = ? AND recording_id = ? AND startTime = ?", (model_run_name, recording_id, start_time))  
+#                 
+#                             
+#                 get_database_connection().commit()  
+#                 
+#             line = fp.readline()
+#             
+#     print("Finished updating model run result table")   
+
+def update_model_run_results_with_onsets_used_to_create_model(model_run_name, csv_filename):
     print(model_run_name)   
     print("\n")   
-    print(arff_filename)   
+    print(csv_filename)   
     
-    # Extract onsets from arff file. I couldn't get re.split to work with $ and .jpg so did it in two steps :-(
-    with open(arff_filename) as fp:
+    # Extract onsets from csv file.
+    with open(csv_filename) as fp:
         line = fp.readline()        
         while line:
-#             print(line,'\n')
+          
+            lineParts = line.split(',')
+            recording_id = lineParts[1]
+            start_time = lineParts[2]
+            print('recording id is ', recording_id, '\n')
+            print('start time is ', start_time, '\n\n')
             
-            if line[0] != '@':
-                line_part_a = line.split('.jpg')[0]
-#                 recording_id = line_part_a.split('$')[1]
-#                 start_time = line_part_a.split('$')[2]
-                recording_id = line_part_a.split('$')[2]
-                start_time = line_part_a.split('$')[3]
-                print('recording id is ', recording_id, '\n')
-                print('start time is ', start_time, '\n\n')
-                
-                # now update model_run_result
-                cur = get_database_connection().cursor()                
-                cur.execute("UPDATE model_run_result SET used_to_create_model = 1 WHERE modelRunName = ? AND recording_id = ? AND startTime = ?", (model_run_name, recording_id, start_time))  
-                
-                            
-                get_database_connection().commit()  
+            # now update model_run_result
+            cur = get_database_connection().cursor()                
+            cur.execute("UPDATE model_run_result SET used_to_create_model = 1 WHERE modelRunName = ? AND recording_id = ? AND startTime = ?", (model_run_name, recording_id, start_time))  
+            
+                        
+            get_database_connection().commit()  
                 
             line = fp.readline()
             
-    print("Finished updating model run result table")   
+    print("Finished updating model run result table") 
 
 
 
