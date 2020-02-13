@@ -188,7 +188,7 @@ class RecordingsPage(tk.Frame):
 #                             command=lambda: functions.update_recording_information_for_all_local_database_recordings())
 #         get_recording_information_from_server_button.grid(column=0, columnspan=1, row=4)
         
-        get_new_recordings_from_server_button = ttk.Button(self, text="Get New Recordings From Server",
+        get_new_recordings_from_server_button = ttk.Button(self, text="Get New Recordings For specified Device from Server",
                             command=lambda: functions.get_recordings_from_server(device_name.get(), device_super_name.get()))
         get_new_recordings_from_server_button.grid(column=0, columnspan=1, row=5)
         
@@ -198,6 +198,17 @@ class RecordingsPage(tk.Frame):
         msg2 = tk.Message(self, text = get_new_recordings_from_server_instructions)
         msg2.config(width=600)
         msg2.grid(column=1, columnspan=2, row=5)   
+        
+        get_new_recordings_from_server_button = ttk.Button(self, text="Get Recordings For all devices already in local database from Server",
+                            command=lambda: functions.get_recordings_from_server_for_all_devices())
+        get_new_recordings_from_server_button.grid(column=0, columnspan=1, row=6)
+        
+        get_new_recordings_from_server_instructions = "This will see what devices have already been used and the recordings for all of them, and will used the device_super_name already in the local database (will not use the text in the boxes above)."
+
+
+        msg2 = tk.Message(self, text = get_new_recordings_from_server_instructions)
+        msg2.config(width=600)
+        msg2.grid(column=1, columnspan=2, row=6)  
         
 #         scan_local_folder_for_recordings_not_in_local_db_and_update_button = ttk.Button(self, text="Scan recordings folder for recordings not in local db and update",
 #                             command=lambda: functions.scan_local_folder_for_recordings_not_in_local_db_and_update(device_name.get(), device_super_name.get()))

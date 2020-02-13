@@ -70,6 +70,18 @@ def get_recordings_from_server(device_name, device_super_name):
     print('About to get recordings from server')
     retrieve_available_recordings_from_server(device_name, device_super_name)
     
+def get_recordings_from_server_for_all_devices():
+    sql = '''select distinct device_name, device_super_name from recordings'''
+    cur = get_database_connection().cursor()  
+    cur.execute(sql) 
+    rows = cur.fetchall() 
+    for row in rows:
+        device_name = row[0]
+        device_super_name = row[1]
+        retrieve_available_recordings_from_server(device_name, device_super_name)
+          
+    
+    
 def get_latest_recording_id_from_local_db(device_name, device_super_name):
     # Need the last recording ID for this device, that we already have   
 
@@ -812,8 +824,8 @@ def update_onsets_with_edge_histogram_features():
         return  
     
     cur = get_database_connection().cursor()
-#     cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds  FROM onsets WHERE MPEG7_Edge_Histogram0 IS NULL ORDER BY recording_id DESC")
-    cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds  FROM onsets WHERE MPEG7_Edge_Histogram0 IS NULL AND device_super_name = 'Hammond_Park' ORDER BY recording_id DESC")
+    cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds  FROM onsets WHERE MPEG7_Edge_Histogram0 IS NULL ORDER BY recording_id DESC")
+#     cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds  FROM onsets WHERE MPEG7_Edge_Histogram0 IS NULL AND device_super_name = 'chow' ORDER BY recording_id DESC")
 
    
     onsetsWithNoEdgeHistogramData = cur.fetchall()  

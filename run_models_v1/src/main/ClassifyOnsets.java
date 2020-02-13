@@ -112,7 +112,8 @@ public class ClassifyOnsets {
 			deviceSuperNameLabels.add("Living_Springs");
 			deviceSuperNameLabels.add("Kerikeri_Peninsula_Pest_Control");
 			deviceSuperNameLabels.add("Motuihe");
-			deviceSuperNameLabels.add("Predator_Free_Miramar");
+//			deviceSuperNameLabels.add("Predator_Free_Miramar");
+			deviceSuperNameLabels.add("predatorfreemiramar");
 			deviceSuperNameLabels.add("Te_Motu_Kairangi-Miramar_Ecological_Restoration");
 			deviceSuperNameLabels.add("Elorosa");
 			deviceSuperNameLabels.add("Lochmara");
