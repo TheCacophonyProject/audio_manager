@@ -2592,7 +2592,34 @@ def update_onsets_with_datetime():
 #     get_database_connection().commit()    
              
         
-     
+def find_suitable_probability_cutoff():
+    cur = get_database_connection().cursor()
+    
+    sql = '''
+    select device_super_name, device_name, probability, used_to_create_model, recording_id, startTime, predictedByModel, actual_confirmed,  strftime('%m', recordingDateTime) as month, strftime('%Y', recordingDateTime) as year
+    from model_run_result
+    where modelRunName = '2020_02_08_1' and actual_confirmed is not null
+    order by probability DESC
+    '''
+    
+    
+    cur.execute(sql)      
+    model_run_results = cur.fetchall()
+    model_run_result = len(model_run_results)
+    count = 0
+    
+    for model_run_result in model_run_results:
+        device_super_name = model_run_result[0]
+        device_name = model_run_result[1]
+        probability = model_run_result[2]
+        used_to_create_model = model_run_result[3]
+        recording_id = model_run_result[4]
+        startTime = model_run_result[5]
+        predictedByModel = model_run_result[6]
+        actual_confirmed = model_run_result[7]
+        month = model_run_result[8]
+        year = model_run_result[9]
+        print(device_super_name, " ", device_name, " ", probability, " ", used_to_create_model, " ", recording_id, " ", startTime , " ",predictedByModel, " ", actual_confirmed , " ",month , " ", year)
       
 
 

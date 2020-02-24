@@ -137,7 +137,9 @@ print('boo')
 
 # functions.update_onsets_with_edge_histogram_features()
     
-functions.create_arff_file_for_weka(False)
+# functions.create_arff_file_for_weka(False)
+
+functions.find_suitable_probability_cutoff()
     
     
     
