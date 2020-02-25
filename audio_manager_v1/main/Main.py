@@ -1256,23 +1256,31 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
         msg7_instructions = "When you are sure that these are DEFINATELY the tags you want to create on the Cacophony Server press the 'Upload Tags To Cacophony Server' button."
         msg7 = tk.Message(self, text = msg7_instructions)
         msg7.config(width=600)
-        msg7.grid(column=0, columnspan=1, row=10)
+        msg7.grid(column=0, columnspan=1, row=50)
         
         location_filter_label = ttk.Label(self, text="Location Filter")
-        location_filter_label.grid(column=1, columnspan=1, row=10)      
+        location_filter_label.grid(column=1, columnspan=1, row=50)      
                                     
         self.location_filter = StringVar()
         self.location_filter_combo = ttk.Combobox(self, textvariable=self.location_filter, values=self.unique_locations)
         
         if len(self.unique_locations) > 0:
             self.location_filter_combo.current(0)
-            self.location_filter_combo.grid(column=1, columnspan=1,row=11) 
+            self.location_filter_combo.grid(column=1, columnspan=1,row=51) 
         
         upload_tags_button = ttk.Button(self, text="Upload Tags To Cacophony Server",command=lambda: functions.upload_tags_to_cacophony_server(self.location_filter_combo.get()))
-        upload_tags_button.grid(column=2, columnspan=1, row=11)
+        upload_tags_button.grid(column=2, columnspan=1, row=51)
+        
+        msg7_instructions = "Or you can upload all the tags in one go i.e. all tags for all locations."
+        msg7 = tk.Message(self, text = msg7_instructions)
+        msg7.config(width=600)
+        msg7.grid(column=0, columnspan=1, row=60)
+        
+        upload_All_tags_button = ttk.Button(self, text="Upload Tags For ALL locations To Cacophony Server",command=lambda: functions.upload_tags_for_all_locations_to_cacophony_server())
+        upload_All_tags_button.grid(column=1, columnspan=1, row=60)
         
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=61) 
+        back_to_home_button.grid(column=0, columnspan=1, row=70) 
                                                                                
         
 app = Main_GUI()

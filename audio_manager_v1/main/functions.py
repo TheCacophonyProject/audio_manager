@@ -2343,6 +2343,16 @@ def update_device_name_model_run_result_when_missing():
         get_database_connection().commit()   
     print('Finished updating model_run_result device_names') 
 
+def upload_tags_for_all_locations_to_cacophony_server():
+    print("About to upload ALL tags to Cacophony Server")
+    
+    sql = '''select distinct device_super_name from tags'''
+    cur = get_database_connection().cursor()  
+    cur.execute(sql) 
+    rows = cur.fetchall() 
+    for row in rows:        
+        device_super_name = row[0]
+        upload_tags_to_cacophony_server(device_super_name)
 
 def upload_tags_to_cacophony_server(location_filter):
     print("About to upload tags to Cacophony Server")
