@@ -164,7 +164,7 @@ ArrayList<ModelRunResult> modelRunResults = new ArrayList<ModelRunResult>();
 			}
 		conn.close();
 		
-		System.out.println("There are " + numberOfResults + " rows for " + device_super_name);
+		//System.out.println("There are " + numberOfResults + " rows for " + device_super_name);
 		
 		// Can now do calculations that require totals
 		
@@ -173,6 +173,7 @@ ArrayList<ModelRunResult> modelRunResults = new ArrayList<ModelRunResult>();
 		double falsePositveRateIfAlwaysPredictMorePork = runningTotalNegatives / (double)(runningTotalPositives + runningTotalNegatives);
 		
 		double probabilityCutOff = -1;
+		double coverage = -1;
 		
 		for (ModelRunResult modelRunResult : modelRunResults) { 	
 			// Coverage: Rate (out of 1)  of Actual moreporks correctly tagged as moreporks: (Running total of TP) / Total of actual moreporks)
@@ -185,13 +186,22 @@ ArrayList<ModelRunResult> modelRunResults = new ArrayList<ModelRunResult>();
 			
 			modelRunResult.setFalsePositveRateIfAlwaysPredictMorePork(falsePositveRateIfAlwaysPredictMorePork);
 			
+			//System.out.println(incorrectMoreporkPredictionRate);
+			
 			if (probabilityCutOff == -1) {
-				if (incorrectMoreporkPredictionRate < 0.05) {
+				if (incorrectMoreporkPredictionRate > 0.05) {
 					probabilityCutOff = modelRunResult.getProbability();
-					System.out.println(probabilityCutOff);
+					coverage = Math.round(coverageRate * 100.0) / 100.0;
+					probabilityCutOff = Math.round(probabilityCutOff * 100.0) / 100.0;
+					//System.out.println("There are " + numberOfResults + " confirmed morepork calls for " + device_super_name + ". The percentage of incorrect morepork predictions reaches 5% when the model probability cut-off is " + probabilityCutOff + " with a coverage of " + coverage);
+					
+					
 				}
 			}
 		}
+		
+		System.out.println("There are " + runningTotalPositives + " confirmed morepork calls for " + device_super_name + ". The percentage of incorrect morepork predictions reaches 5% when the model probability cut-off is " + probabilityCutOff + " with a coverage of " + coverage);
+		
 		
 				
 		// Create csv file 
@@ -199,12 +209,12 @@ ArrayList<ModelRunResult> modelRunResults = new ArrayList<ModelRunResult>();
 		FileWriter csvWriter = new FileWriter(resultCSVFilePath, false);
 		
 		int count = 0;
-		csvWriter.append("Probability, True Positive rate (TP/Total number of positives), Coverage rate (Fraction of actual morepork tagged as morepork), Rate (out of 1) of incorrect morepork predictions, Rate of incorrect morepork predictions if do not use model but always predict morepork - if no model then can not use model probability: (total of not actual morepork)/(total of  actual morepork + total of not actual morepork)," + numberOfResults + " rows, Probability cutoff " + probabilityCutOff);          
+		csvWriter.append("Probability, True Positive rate (TP/Total number of positives), Coverage rate (Fraction of actual morepork tagged as morepork), Rate (out of 1) of incorrect morepork predictions, Rate of incorrect morepork predictions if do not use model but always predict morepork - if no model then can not use model probability: (total of not actual morepork)/(total of  actual morepork + total of not actual morepork), There are " + numberOfResults + " confirmed morepork calls for " + device_super_name + ". The percentage of incorrect morepork predictions reaches 5% when the model probability cut-off is " + probabilityCutOff + " with a coverage of " + coverage);          
         csvWriter.append("\n");
         
         
         
-        // See the following for creating Excel chart with first colunm used as x-asis for all other columns
+        // See the following for creating Excel chart with first column used as x-axis for all other columns
         
 		for (ModelRunResult modelRunResult : modelRunResults) { 	
 			count++;

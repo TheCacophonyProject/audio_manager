@@ -17,7 +17,7 @@ model_run_name='2020_02_08_1'
 
 model_version = '000002' # update this to be the same as the name of the model stored in the model_run_result folder. Cacophony API says: version (hex coded, e.g. 0x0110 would be v1.10)
 
-probability_cutoff_for_tag_creation = 0.7
+probability_cutoff_for_tag_creation = 0.5
 
 predictedByModel_tag_to_create = 'morepork_more-pork'
 
