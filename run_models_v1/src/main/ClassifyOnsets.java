@@ -6,6 +6,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 import weka.core.Attribute;
@@ -28,6 +32,7 @@ public class ClassifyOnsets {
 		// TODO Auto-generated method stub
 
 		String modelRunName = "2020_02_08_1"; // Change this to same as parameters.modelRunName in python code
+		
 		
 		
 		String modelName = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs/" + modelRunName
@@ -124,6 +129,7 @@ public class ClassifyOnsets {
 			deviceSuperNameLabels.add("chow");
 			deviceSuperNameLabels.add("livingsprings");
 			deviceSuperNameLabels.add("Te_Motu_Kairangi-Predator_Free_Miramar");
+			//deviceSuperNameLabels.add("other");
 
 			attributes.add(new Attribute("deviceSuperName", deviceSuperNameLabels));
 
@@ -183,8 +189,19 @@ public class ClassifyOnsets {
 				for (int i = 0; i < 80; i++) {
 					vals[i] = rs.getInt(i + 1);
 				}
-
-				vals[80] = deviceSuperNameLabels.indexOf(device_super_name);
+				
+				
+				// When there is a new location that hasn't yet been seen by the model, just change the location to Hammond_Park.
+				// Will note in the database, the actual location and the location used by the model
+				String actual_device_super_name = device_super_name;
+				String device_super_name_used_by_model = device_super_name;
+								
+				if (!deviceSuperNameLabels.contains(device_super_name)) {          
+					device_super_name_used_by_model = "Hammond_Park";
+				}
+				
+				vals[80] = deviceSuperNameLabels.indexOf(device_super_name_used_by_model);
+				
 				vals[81] = classLabels.indexOf("music"); // Seems you need to give it any class name
 
 				Instance instanceToClassify = new DenseInstance(1.0, vals);
@@ -200,8 +217,15 @@ public class ClassifyOnsets {
 				System.out.println(result + "," + predictedByModel + "," + probablility);
 
 				// Now update database model_run_result
+				
+				ZonedDateTime date = ZonedDateTime.now();
+				DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+				String resultCreatedDateTime = date.format(formatter);
+				 
 
-				String sql2 = "INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime) VALUES(?,?,?,?,?,?,?,?,?,?)";
+				//String sql2 = "INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime) VALUES(?,?,?,?,?,?,?,?,?,?)";
+				String sql2 = "INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime, resultCreatedDateTime, device_super_name_used_by_model) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
+
 
 				try (PreparedStatement pstmt2 = conn.prepareStatement(sql2)) {
 					pstmt2.setString(1, modelRunName);
@@ -211,9 +235,14 @@ public class ClassifyOnsets {
 					pstmt2.setString(5, predictedByModel);
 					pstmt2.setDouble(6, probablility);
 					pstmt2.setString(7, actual_confirmed);
-					pstmt2.setString(8, device_super_name);
+//					pstmt2.setString(8, device_super_name);
+					pstmt2.setString(8, actual_device_super_name);
 					pstmt2.setString(9, device_name);
 					pstmt2.setString(10, recordingDateTime);
+					
+					pstmt2.setString(11, resultCreatedDateTime);
+					pstmt2.setString(12, device_super_name_used_by_model);
+					
 
 					pstmt2.executeUpdate();
 					
