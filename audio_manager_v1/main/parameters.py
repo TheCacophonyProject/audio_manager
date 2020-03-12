@@ -57,7 +57,7 @@ temp_folder = 'Temp'
 # arff_folder_for_next_run = 'arff_folder_for_next_run'
 
 relation_name = model_run_name
-class_names = 'morepork_more-pork,unknown,siren,dog,duck,dove,human,bird,car,rumble,white_noise,cow,buzzy_insect,plane,hammering,frog,morepork_more-pork_part,chainsaw,crackle,car_horn,water,fire_work,maybe_morepork_more-pork,music'
+class_names = 'morepork_more-pork,unknown,siren,dog,duck,dove,human,bird,car,rumble,white_noise,cow,buzzy_insect,plane,hammering,frog,morepork_more-pork_part,chainsaw,crackle,car_horn,water,fire_work,maybe_morepork_more-pork,music,hand_saw'
 
 weka_model_folder = 'weka_model'
 weka_model_filename = "model.model"

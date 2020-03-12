@@ -80,7 +80,24 @@ def get_recordings_from_server_for_all_devices():
         device_super_name = row[1]
         retrieve_available_recordings_from_server(device_name, device_super_name)
           
+def retrieve_missing_recording_information():
+    sql = ''' SELECT recording_id from recordings where recordingDateTime IS NULL '''
+    cur = get_database_connection().cursor()  
+   
+    cur.execute(sql) 
     
+    rows = cur.fetchall() 
+    numberOfRows = len(rows)
+    count = 0
+    for row in rows:
+        recording_id =  row[0]
+        print("Processing ", count, " of ", numberOfRows)
+        print("About to get recording information for ", recording_id)
+        update_recording_information_for_single_recording(recording_id)
+        count += 1
+        
+        
+        
     
 def get_latest_recording_id_from_local_db(device_name, device_super_name):
     # Need the last recording ID for this device, that we already have   
@@ -377,6 +394,7 @@ def update_recording_information_for_single_recording(recording_id):
          
     recording = recording_information['recording']    
     recordingDateTime = recording['recordingDateTime']    
+    recordingDateTimeNZ = convert_time_zones(recordingDateTime)
     relativeToDawn = recording['relativeToDawn']    
     relativeToDusk = recording['relativeToDusk']    
     duration = recording['duration'] 
@@ -406,13 +424,14 @@ def update_recording_information_for_single_recording(recording_id):
         if relativeToDawn < 0:
             nightRecording = 'true'   
                    
-    update_recording_in_database(recordingDateTime, relativeToDawn, relativeToDusk, duration, locationLat, locationLong, version, batteryLevel, phoneModel, androidApiLevel, deviceId, nightRecording, device_name, recording_id)
+#     update_recording_in_database(recordingDateTime, relativeToDawn, relativeToDusk, duration, locationLat, locationLong, version, batteryLevel, phoneModel, androidApiLevel, deviceId, nightRecording, device_name, recording_id, recordingDateTimeNZ)
+    update_recording_in_database(recordingDateTime, relativeToDawn, relativeToDusk, duration, locationLat, locationLong, version, batteryLevel, phoneModel, androidApiLevel, deviceId, nightRecording, device_name, recording_id, recordingDateTimeNZ)
     print('Finished updating recording information for recording ', recording_id)
                
-    
-def update_recording_in_database(recordingDateTime, relativeToDawn, relativeToDusk, duration, locationLat, locationLong, version, batteryLevel, phoneModel,androidApiLevel, deviceId, nightRecording, device_name, recording_id):
+  
+def update_recording_in_database(recordingDateTime, relativeToDawn, relativeToDusk, duration, locationLat, locationLong, version, batteryLevel, phoneModel,androidApiLevel, deviceId, nightRecording, device_name, recording_id, recordingDateTimeNZ):
     try:
-        conn = get_database_connection()
+#         conn = get_database_connection()
         # https://www.sqlitetutorial.net/sqlite-python/update/
         sql = ''' UPDATE recordings 
                   SET recordingDateTime = ?,
@@ -427,10 +446,11 @@ def update_recording_in_database(recordingDateTime, relativeToDawn, relativeToDu
                       androidApiLevel = ?,
                       deviceId = ?,
                       nightRecording = ?,
-                      device_name = ?
+                      device_name = ?,
+                      recordingDateTimeNZ = ?
                   WHERE recording_id = ? '''
         cur = get_database_connection().cursor()
-        cur.execute(sql, (recordingDateTime, relativeToDawn, relativeToDusk, duration, locationLat, locationLong, version, batteryLevel, phoneModel, androidApiLevel, deviceId, nightRecording, device_name, recording_id))
+        cur.execute(sql, (recordingDateTime, relativeToDawn, relativeToDusk, duration, locationLat, locationLong, version, batteryLevel, phoneModel, androidApiLevel, deviceId, nightRecording, device_name, recordingDateTimeNZ, recording_id))
         get_database_connection().commit()
     except Exception as e:
         print(e, '\n')
@@ -786,7 +806,7 @@ def classify_onsets_using_weka_model():
 # then it does the rest.  It is now OK to stop this process before it has finished as I'll probably never look at all the predictions - unless going to create tags on the server
 
     cur = get_database_connection().cursor()
-    cur.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name, device_name, recordingDateTime FROM onsets WHERE actual_confirmed IS NOT NULL ORDER BY recording_id DESC")
+    cur.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ FROM onsets WHERE actual_confirmed IS NOT NULL ORDER BY recording_id DESC")
     
     onsetsWithActualConfirmed = cur.fetchall()  
     number_of_onsets = len(onsetsWithActualConfirmed)
@@ -798,7 +818,7 @@ def classify_onsets_using_weka_model():
         classify_onsets_using_weka_model_helper(onsetWithActualConfirmed, model_folder)
     
     cur2 = get_database_connection().cursor()
-    cur2.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name, device_name, recordingDateTime FROM onsets WHERE actual_confirmed IS NULL ORDER BY recording_id DESC")
+    cur2.execute("SELECT recording_id, start_time_seconds, duration_seconds, actual_confirmed, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ FROM onsets WHERE actual_confirmed IS NULL ORDER BY recording_id DESC")
     onsetsWithNoActualConfirmed = cur2.fetchall()  
     number_of_onsets = len(onsetsWithNoActualConfirmed)
     count = 0
@@ -1052,6 +1072,7 @@ def classify_onsets_using_weka_model_helper(onset, model_folder):
     device_super_name = onset[4] 
     device_name = onset[5] 
     recordingDateTime = onset[6] 
+    recordingDateTimeNZ = onset[7]
     
     # Skip if it already exists
     cur = get_database_connection().cursor()
@@ -1085,25 +1106,25 @@ def classify_onsets_using_weka_model_helper(onset, model_folder):
         probability = result.stdout.split(",")[1]      
  
         print('It is predicted to be  ' , predicted_class_name, ' with probability of ',probability,  '\n')
-        insert_model_run_result_into_database(parameters.model_run_name, recording_id, start_time_seconds, duration_seconds, None, predicted_class_name, probability, actual_confirmed, device_super_name, device_name, recordingDateTime)
+        insert_model_run_result_into_database(parameters.model_run_name, recording_id, start_time_seconds, duration_seconds, None, predicted_class_name, probability, actual_confirmed, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ)
     
     else:
         print(result.stderr)
               
 
     
-def insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime):
+def insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ):
        
     try:
         cur = get_database_connection().cursor()
         if actual_confirmed:
-            sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime)
-                      VALUES(?,?,?,?,?,?,?,?,?,?,?) '''
-            cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime))
+            sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ)
+                      VALUES(?,?,?,?,?,?,?,?,?,?,?,?) '''
+            cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ))
         else:
-            sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name, recordingDateTime)
-                      VALUES(?,?,?,?,?,?,?,?,?,?) '''
-            cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name, recordingDateTime))
+            sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ)
+                      VALUES(?,?,?,?,?,?,?,?,?,?,?) '''
+            cur.execute(sql, (modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ))
         
         get_database_connection().commit()
     except Exception as e:
@@ -1165,17 +1186,20 @@ def insert_onset_into_database(version, recording_id, start_time_seconds, durati
     
     print('duration_seconds', duration_seconds)
     cur1 = get_database_connection().cursor()
-    cur1.execute("SELECT device_super_name, device_name, recordingDateTime FROM recordings WHERE recording_id = ?", (recording_id,)) 
+    cur1.execute("SELECT device_super_name, device_name, recordingDateTime, recordingDateTimeNZ FROM recordings WHERE recording_id = ?", (recording_id,)) 
     rows = cur1.fetchall() 
     device_super_name = rows[0][0]  
     device_name = rows[0][1]
     recordingDateTime = rows[0][2]  
+    recordingDateTimeNZ = rows[0][3] 
+    
+#     recordingDateTimeNZ = convert_time_zones(recordingDateTime)
     
     try:     
-        sql = ''' INSERT INTO onsets(version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime)
-                  VALUES(?,?,?,?,?,?,?) '''
+        sql = ''' INSERT INTO onsets(version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ)
+                  VALUES(?,?,?,?,?,?,?,?) '''
         cur2 = get_database_connection().cursor()
-        cur2.execute(sql, (version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime))
+        cur2.execute(sql, (version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ))
         get_database_connection().commit()
     except Exception as e:
         print(e, '\n')
@@ -2632,4 +2656,45 @@ def find_suitable_probability_cutoff():
         print(device_super_name, " ", device_name, " ", probability, " ", used_to_create_model, " ", recording_id, " ", startTime , " ",predictedByModel, " ", actual_confirmed , " ",month , " ", year)
       
 
-
+def convert_time_zones(day_time_from_database):
+    # recording ID is  319810 - server says time is Thu Jun 13 2019, 06:42:00
+#     day_time_from_database = '2019-06-12T18:42:00.000Z'
+    day_time_from_database_00_format = datetime.fromisoformat(day_time_from_database.replace('Z', '+00:00'))
+    print('day_time_from_database_00_format: ', day_time_from_database_00_format)
+    nz = timezone('NZ')
+    day_time_nz = day_time_from_database_00_format.astimezone(nz)
+    print('day_time_nz: ', day_time_nz)
+    return day_time_nz
+    
+def update_table_with_NZ_time():
+    table_name = 'recordings'
+    
+    cur = get_database_connection().cursor()
+    cur.execute("select ID, recordingDateTime from " + table_name + " where recordingDateTimeNZ IS NULL")      
+    records = cur.fetchall()
+    numOfRecords = len(records)
+    count = 0
+    
+    for record in records:
+        try:        
+        
+            ID = record[0]
+            recordingDateTime = record[1]
+            
+            print('Processing ID ' + str(ID) + " which is " + str(count) + ' of ' + str(numOfRecords))
+            
+            recordingDateTimeNZ = convert_time_zones(recordingDateTime)
+            
+            sql = ''' UPDATE ''' + table_name + ''' 
+                    SET recordingDateTimeNZ = ?               
+                    WHERE ID = ?'''
+            
+            cur.execute(sql, (recordingDateTimeNZ, ID))
+            count+=1
+            get_database_connection().commit() 
+            
+        except Exception as e:
+            print(str(e))
+            print("Error processing ID " + str(ID))
+        
+    

@@ -160,10 +160,10 @@ class RecordingsPage(tk.Frame):
         title_label = ttk.Label(self, text="Recordings Page", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)
         
-        device_name_label = ttk.Label(self, text="Device name e.g fpF7B9AFNn6hvfVgdrJB")
+        device_name_label = ttk.Label(self, text="Device name e.g hammond_park_v2")
         device_name_label.grid(column=0, columnspan=1, row=1)
              
-        device_name = StringVar(value='fpF7B9AFNn6hvfVgdrJB')
+        device_name = StringVar(value='hammond_park_v2')
         device_name_entry = tk.Entry(self,  textvariable=device_name, width=30)
         device_name_entry.grid(column=1, columnspan=1, row=1)
         
@@ -206,9 +206,20 @@ class RecordingsPage(tk.Frame):
         get_new_recordings_from_server_instructions = "This will see what devices have already been used and the recordings for all of them, and will used the device_super_name already in the local database (will not use the text in the boxes above)."
 
 
-        msg2 = tk.Message(self, text = get_new_recordings_from_server_instructions)
-        msg2.config(width=600)
-        msg2.grid(column=1, columnspan=2, row=6)  
+        msg3 = tk.Message(self, text = get_new_recordings_from_server_instructions)
+        msg3.config(width=600)
+        msg3.grid(column=1, columnspan=2, row=6) 
+        
+        retrive_any_missing_recordings_info_from_server_button = ttk.Button(self, text="Retrieve any missing recordings info from server",
+                            command=lambda: functions.retrieve_missing_recording_information()())
+        retrive_any_missing_recordings_info_from_server_button.grid(column=0, columnspan=1, row=10)
+        
+        retrive_any_missing_recordings_info_from_server_instructions = "You shouldn't have to use this, but if the previous process was interrupted, you may need to run this to get the missing recording information (there will be nulls in the recordingDateTime etc database field)."
+
+
+        msg3 = tk.Message(self, text = retrive_any_missing_recordings_info_from_server_instructions)
+        msg3.config(width=600)
+        msg3.grid(column=1, columnspan=2, row=10)   
         
 #         scan_local_folder_for_recordings_not_in_local_db_and_update_button = ttk.Button(self, text="Scan recordings folder for recordings not in local db and update",
 #                             command=lambda: functions.scan_local_folder_for_recordings_not_in_local_db_and_update(device_name.get(), device_super_name.get()))
@@ -222,7 +233,7 @@ class RecordingsPage(tk.Frame):
         
         back_to_home_button = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=7)               
+        back_to_home_button.grid(column=0, columnspan=1, row=20)               
 
 class CreateWekaModelPage(tk.Frame):    
     

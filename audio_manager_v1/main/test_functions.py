@@ -139,7 +139,11 @@ print('boo')
     
 # functions.create_arff_file_for_weka(False)
 
-functions.find_suitable_probability_cutoff()
+# functions.find_suitable_probability_cutoff()
+
+functions.update_table_with_NZ_time()
+
+# functions.retrieve_missing_recording_information()
     
     
     
