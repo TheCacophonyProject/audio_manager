@@ -6,6 +6,7 @@ Modified 17 12 2019a
 '''
 from tkinter.messagebox import showinfo
 
+
 #  https://www.youtube.com/watch?v=A0gaXfM1UN0&t=343s
 # https://www.youtube.com/watch?v=D8-snVfekto
 # How to Program a GUI Application (with Python Tkinter)!
@@ -28,6 +29,7 @@ from PIL import ImageTk,Image
 import main.functions as functions
 import main.parameters as parameters
 from main.parameters import *
+import datetime
 
 import threading
 LARGE_FONT= ("Verdana", 12)
@@ -50,7 +52,7 @@ class Main_GUI(tk.Tk):
        
         self.frames = {}
         
-        for F in (HomePage, RecordingsPage, TaggingPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage, CreateTagsFromOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage, ModelAccuracyAnalysisPage):
+        for F in (HomePage, RecordingsPage, TaggingPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage, CreateTagsFromOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage, ModelAccuracyAnalysisPage, CreateTestDataPage):
       
             frame = F(container, self)
             self.frames[F] = frame            
@@ -119,6 +121,10 @@ class HomePage(tk.Frame):
                             command=lambda: controller.show_frame(CreateTagsOnCacophonyServerFromModelRunPage))        
         createTagsOnCacophonyServerFromModelRunPage_button.pack()
         
+        createTestDataPage_button = ttk.Button(self, text="Create test data ",
+                            command=lambda: controller.show_frame(CreateTestDataPage))        
+        createTestDataPage_button.pack()
+        
         other_or_no_longer_used_label = tk.Label(self, text="Functions below here probably no longer needed")
         other_or_no_longer_used_label.pack(pady=10,padx=10)       
               
@@ -133,22 +139,11 @@ class HomePage(tk.Frame):
         tagging_button = ttk.Button(self, text="Tagging",
                             command=lambda: controller.show_frame(TaggingPage))        
         tagging_button.pack()
+        
+        
      
         
-class TaggingPage(tk.Frame):
-    
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Tagging Page", font=LARGE_FONT)
-        label.pack(pady=10,padx=10)
-        
-        get_tags_button = ttk.Button(self, text="Get tags from server",
-                            command=lambda: functions.get_all_tags_for_all_devices_in_local_database())
-        get_tags_button.pack()  
-        
-        button1 = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(HomePage))
-        button1.pack() 
+
         
         
 
@@ -241,12 +236,14 @@ class CreateWekaModelPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         
         title_label = ttk.Label(self, text="Create a Weka model - using Weka https://www.cs.waikato.ac.nz/ml/weka/downloading.html", font=LARGE_FONT)
-        title_label.grid(column=0, columnspan=1, row=10)  
+        title_label.grid(column=0, columnspan=10, row=10)  
         
         instructions1_text = """
         
     Before we can use Weka to create a model, you first need to create an input arff file that uses 
     the model_run_results confirmed sounds. 
+    
+    Any model you create should be evaluated against test data.  Pick start and end dates to exclude recordings made between those dates (inclusive).
     
     This will also create a csv file that can be used to keep track of which confirmed onsets where used to create the model.
     
@@ -254,85 +251,94 @@ class CreateWekaModelPage(tk.Frame):
         
     """    
         instructions1_text_label = ttk.Label(self, text=instructions1_text)                                                    
-        instructions1_text_label.grid(column=0, columnspan=1, row=20)  
+        instructions1_text_label.grid(column=0, columnspan=10, row=20)  
         
-#         introduction_instructions = "Before we can use Weka to create a model, you first need to create an input arff file that uses the model_run_results confirmed sounds."
-#         msg1 = tk.Message(self, text = introduction_instructions)
-#         msg1.config(width=600)
-#         msg1.grid(column=0, columnspan=1, row=1)  
         
-#         create_spectrograms_instructions = "Press the Create Spectrograms for Next Run button to create the spectrograms (from confirmed onsets) that will be used to train the next version/iteration of the model"
-#         create_spectrograms_msg = tk.Message(self, text = create_spectrograms_instructions)
-#         create_spectrograms_msg.config(width=600)
-#         create_spectrograms_msg.grid(column=0, columnspan=1, row=2)  
-#         
-#         create_spectrograms_button = ttk.Button(self, text="Create Spectrograms for Next Run", command=lambda: functions.create_spectrogram_jpg_files_for_next_model_run_or_model_test(False))
-#         create_spectrograms_button.grid(column=1, columnspan=1, row=2)
-#         
-#         create_arff_instructions = "Pressing the Create Arff file for Weka input button will put the names of the previously created spectrograms into an .arff file, that Weka will then use. You can find the file called " + arff_file_for_weka_model_creation + " in the " + model_run_name + " folder."
-#         create_arff_file_msg = tk.Message(self, text = create_arff_instructions)
-#         create_arff_file_msg.config(width=600)
-#         create_arff_file_msg.grid(column=0, columnspan=1, row=3)  
+        # Couldn't get a date picker to work !!!!! so had to created separate input fields for day/month/year
+        first_date_to_exclude_label = ttk.Label(self, text="First date to exclude")
+        first_date_to_exclude_label.grid(column=0, columnspan=2, row=21)           
         
-#         create_arff_file_for_weka_button = ttk.Button(self, text="Create Arff file for Weka input", command=lambda: functions.create_arff_file_for_weka_image_filter_input(False))
-        create_arff_file_for_weka_button = ttk.Button(self, text="Create Arff file for Weka input", command=lambda: functions.create_arff_file_for_weka(False))        
-        create_arff_file_for_weka_button.grid(column=1, columnspan=1, row=20)
+        first_date_to_exclude_day_label = ttk.Label(self, text="DAY")
+        first_date_to_exclude_day_label.grid(column=0, columnspan=1, row=22)
+        
+        first_date_to_exclude_day = StringVar(value='1')
+        first_date_to_exclude_day_entry = tk.Entry(self,  textvariable=first_date_to_exclude_day, width=5)
+        first_date_to_exclude_day_entry.grid(column=1, columnspan=1, row=22)
+        
+        first_date_to_exclude_month_label = ttk.Label(self, text="MONTH")
+        first_date_to_exclude_month_label.grid(column=0, columnspan=1, row=23)
+        
+        first_date_to_exclude_month = StringVar(value='3')
+        first_date_to_exclude_month_entry = tk.Entry(self,  textvariable=first_date_to_exclude_month, width=5)
+        first_date_to_exclude_month_entry.grid(column=1, columnspan=1, row=23)
+        
+        first_date_to_exclude_year_label = ttk.Label(self, text="YEAR")
+        first_date_to_exclude_year_label.grid(column=0, columnspan=1, row=24)
+        
+        first_date_to_exclude_year = StringVar(value='2020')
+        first_date_to_exclude_year_entry = tk.Entry(self,  textvariable=first_date_to_exclude_year, width=5)
+        first_date_to_exclude_year_entry.grid(column=1, columnspan=1, row=24)
+        
+        
+        last_date_to_exclude_label = ttk.Label(self, text="Last date to exclude")
+        last_date_to_exclude_label.grid(column=2, columnspan=2, row=21)
+        
+        last_date_to_exclude_day_label = ttk.Label(self, text="DAY")
+        last_date_to_exclude_day_label.grid(column=2, columnspan=1, row=22)
+        
+        last_date_to_exclude_day = StringVar(value='31')
+        last_date_to_exclude_day_entry = tk.Entry(self,  textvariable=last_date_to_exclude_day, width=5)
+        last_date_to_exclude_day_entry.grid(column=3, columnspan=1, row=22)
+        
+        last_date_to_exclude_month_label = ttk.Label(self, text="MONTH")
+        last_date_to_exclude_month_label.grid(column=2, columnspan=1, row=23)
+        
+        last_date_to_exclude_month = StringVar(value='3')
+        last_date_to_exclude_month_entry = tk.Entry(self,  textvariable=last_date_to_exclude_month, width=5)
+        last_date_to_exclude_month_entry.grid(column=3, columnspan=1, row=23)
+        
+        last_date_to_exclude_year_label = ttk.Label(self, text="YEAR")
+        last_date_to_exclude_year_label.grid(column=2, columnspan=1, row=24)
+        
+        last_date_to_exclude_year = StringVar(value='2020')
+        last_date_to_exclude_year_entry = tk.Entry(self,  textvariable=last_date_to_exclude_year, width=5)
+        last_date_to_exclude_year_entry.grid(column=3, columnspan=1, row=24)
+        
+
+#         create_arff_file_for_weka_button = ttk.Button(self, text="Create Arff file for Weka input", command=lambda: functions.create_arff_file_for_weka(False))  
+        create_arff_file_for_weka_button = ttk.Button(self, text="Create Arff file for Weka input", command=lambda: create_arff_and_csv_files())      
+        create_arff_file_for_weka_button.grid(column=6, columnspan=1, row=25)
         
         instructions2_text = """
-        
-    BEFORE pressing the 'Create folders for next run' button, update the model_run_name parameter in the 
-    parameters file with a new name AND exit/close this program and restart to refresh - check it has.  
-    It is currently set to " + model_run_name + " which is most likely the previous model run folder that 
-    you used - you don't want to use the same folder - it will end in tears!! (Once pressed, check that 
-    the folders have been created in the file system).  This will give you a place to save your next Weka 
-    model.model file. You can now press the Create folders for next run button to create all the necessary 
-    folders for the next iteration/run.
-        
-    """    
+BEFORE pressing the 'Create folders for next run' button, update the model_run_name parameter in the 
+parameters file with a new name AND exit/close this program and restart to refresh - check it has.  
+It is currently set to " + model_run_name + " which is most likely the previous model run folder that 
+you used - you don't want to use the same folder - it will end in tears!! (Once pressed, check that 
+the folders have been created in the file system).  This will give you a place to save your next Weka 
+model.model file. You can now press the Create folders for next run button to create all the necessary 
+folders for the next iteration/run."""    
         instructions2_text_label = ttk.Label(self, text=instructions2_text)                                                    
-        instructions2_text_label.grid(column=0, columnspan=1, row=30)  
-        
-        
-#         create_folders_instructions = "BEFORE pressing the 'Create folders for next run' button, update the model_run_name parameter in the parameters file with a new name AND exit/close this program and restart to refresh - check it has.  It is currently set to " + model_run_name + " which is most likely the previous model run folder that you used - you don't want to use the same folder - it will end in tears!! (Once pressed, check that the folders have been created in the file system).  This will give you a place to save your next Weka model.model file. You can now press the Create folders for next run button to create all the necessary folders for the next iteration/run. "
-#         create_folders_msg = tk.Message(self, text = create_folders_instructions)
-#         create_folders_msg.config(width=600)
-#         create_folders_msg.grid(column=0, columnspan=1, row=4) 
+        instructions2_text_label.grid(column=0, columnspan=5, row=30)  
         
         create_folders_button = ttk.Button(self, text="Create folders for next run",command=lambda: functions.create_folders_for_next_run())
-        create_folders_button.grid(column=1, columnspan=1, row=30)  
+        create_folders_button.grid(column=6, columnspan=1, row=30)  
         
-#         using_weka_instructions1 = "You are now ready to use Weka. BUT, if you are going to use AutoWeka it needs to use Java 1.8 (unlike Weka or Eclipse/Audio Manager which can use openjdk 11 - so at a terminal type 'sudo update-alternatives --config java' without the quotes and choose option (5 on my computer) for jdk1.8 Once the java version has been changed, from a terminal command prompt, cd into the directory where Weka has been installed (e.g. ~/weka-3-8-4b (on my computer) and launch Weka using the command: java -Xmx16384m -jar weka.jar"
-#         using_weka_msg1 = tk.Message(self, text = using_weka_instructions1)
-#         using_weka_msg1.config(width=600)
-#         using_weka_msg1.grid(column=0, columnspan=1, row=5) 
+
         
         instructions3_text = """
-        
-    You are now ready to use Weka. BUT, if you are going to use AutoWeka it needs to use Java 1.8 
-    (unlike Weka or Eclipse/Audio Manager which can use openjdk 11 - so at a terminal type 
-    'sudo update-alternatives --config java' without the quotes and choose option (5 on my computer) 
-    for jdk1.8 Once the java version has been changed, from a terminal command prompt, cd into the 
-    directory where Weka has been installed (e.g. ~/weka-3-8-4b (on my computer) and launch Weka 
-    using the command: java -Xmx16384m -jar weka.jar
+You are now ready to use Weka. BUT, if you are going to use AutoWeka it needs to use Java 1.8 
+(unlike Weka or Eclipse/Audio Manager which can use openjdk 11 - so at a terminal type 
+'sudo update-alternatives --config java' without the quotes and choose option (5 on my computer) 
+for jdk1.8 Once the java version has been changed, from a terminal command prompt, cd into the 
+directory where Weka has been installed (e.g. ~/weka-3-8-4b (on my computer) and launch Weka 
+using the command: java -Xmx16384m -jar weka.jar
     
-    These instructions are from the video: https://www.futurelearn.com/courses/advanced-data-
-    mining-with-weka/0/steps/29486\ You will need to have installed the Image Filters Package 
-    into Weka."
-        
-    """    
+These instructions are from the video: https://www.futurelearn.com/courses/advanced-data-
+mining-with-weka/0/steps/29486\ You will need to have installed the Image Filters Package 
+into Weka."""    
         instructions3_text_label = ttk.Label(self, text=instructions3_text)                                                    
-        instructions3_text_label.grid(column=0, columnspan=1, row=40)   
-        
-#         using_weka_instructions2 = "These instructions are from the video: https://www.futurelearn.com/courses/advanced-data-mining-with-weka/0/steps/29486\ You will need to have installed the Image Filters Package into Weka."
-#         using_weka_msg2 = tk.Message(self, text = using_weka_instructions2)
-#         using_weka_msg2.config(width=600)
-#         using_weka_msg2.grid(column=0, columnspan=1, row=6)  
-        
-#         using_weka_instructions3 = "In Weka, Press the Explorer button and then the Open file.. button to open the previously created .arff file. Now Press the Choose button below the Filter label and navigate to weka|filters|unsupervised|instance|imagefilter|EdgeHistogramFilter \
-# Then click on the Box with the name of the Filter (EdgeHistogramFilter) and paste in the path to image directory where all the spectrograms were created and press OK - it doesn't appear to have the ability to navigate to the directory.  Now press the Apply button to apply the filter."
-#         using_weka_msg3 = tk.Message(self, text = using_weka_instructions3)
-#         using_weka_msg3.config(width=600)
-#         using_weka_msg3.grid(column=0, columnspan=1, row=7)  
+        instructions3_text_label.grid(column=0, columnspan=5, row=40)  
+
         
         instructions5_text = """
         
@@ -340,31 +346,8 @@ class CreateWekaModelPage(tk.Frame):
         
     """    
         instructions5_text_label = ttk.Label(self, text=instructions5_text)                                                    
-        instructions5_text_label.grid(column=0, columnspan=1, row=50) 
-#         
-#         using_weka_instructions4 = "The Weka image in the bottom right corner will do a dance while it is processing and when finished you should see a list of Attiributes (with the first being filename) and then MPEG-7 etc. Save the file with the name: device_names_added_arff_file_for_weka_model_creation_image_filtered.arff"
-#         using_weka_msg4 = tk.Message(self, text = using_weka_instructions4)
-#         using_weka_msg4.config(width=600)
-#         using_weka_msg4.grid(column=0, columnspan=1, row=8) 
-#         
-# #         using_weka_instructions5 = "In Weka, save the arff file, in the same location, with the name: arff_file_for_weka_model_creation_image_filtered.arff. Now, back in this GUI, press the Add Device Names button on the right to add the device names to the arff file."
-# #         using_weka_msg5 = tk.Message(self, text = using_weka_instructions5)
-# #         using_weka_msg5.config(width=600)
-# #         using_weka_msg5.grid(column=0, columnspan=1, row=9) 
-# #         
-# #         add_device_names_to_arff_button = ttk.Button(self, text="Add Device names to arff file",command=lambda: functions.add_device_names_to_arff())
-# #         add_device_names_to_arff_button.grid(column=1, columnspan=1, row=9) 
-#         
-#         using_weka_instructions6 = "Open this new arff file."
-#         using_weka_msg6 = tk.Message(self, text = using_weka_instructions6)
-#         using_weka_msg6.config(width=600)
-#         using_weka_msg6.grid(column=0, columnspan=1, row=10) 
-         
-        
-#         using_weka_instructions7 = "Now you need to remove the filename attribute by selecting the box and press the Remove button.  Save this as device_names_added_arff_file_for_weka_model_creation_image_filtered_filename_removed.arff  \n\nIf you want to use AutoWeka follow A instructions next otherwise follow B instructions. \n\nA) Select the Auto-Weka tab (in Weka) then right click on AUTOWEKAClassifier | Show properties and change timeLimit to something suitable say 4320 (ie 3 days), or first test with 10 minutes :-), press OK, check that (Nom) class is selected and then press start. The weka icon does its dance.  Make sure computer Power Saving is Off, and come back in 3 days!  \n\nB) If don't want to use AutoWeka try this - select the Classify tab (at the top). Press the Choose button and navigate to  Weka|classifiers|Trees|LMT (or you may have another model - and had saved the result buffer, if so in there you can copy the Scheme e.g. weka.classifiers.functions.SMO -C 1.0322930159130057 -L 0.001 -P 1.0E-12 -N 0 -M -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.RBFKernel -C 250007 -G 0.4733376743447805\" -calibrator \"weka.classifiers.functions.Logistic -R 1.0E-8 -M -1 -num-decimal-places 4\" - and paste it here.  Use Cross-validation Folds 10 and press start. The weka image does it's dance and then the results displayed"
-#         using_weka_msg7 = tk.Message(self, text = using_weka_instructions7)
-#         using_weka_msg7.config(width=600)
-#         using_weka_msg7.grid(column=0, columnspan=1, row=11) 
+        instructions5_text_label.grid(column=0, columnspan=10, row=50) 
+
         
         instructions7_text = """
         
@@ -400,23 +383,24 @@ class CreateWekaModelPage(tk.Frame):
     
     9) Right click on the just finished 'Result list' listing, and save save the result buffer in weka_model foler for this run.
     
-    10) Also export the model, to the same location so it is available for future classifications.
-        
+    10) Also export the model, to the same location so it is available for future classifications.        
         
     """    
         instructions7_text_label = ttk.Label(self, text=instructions7_text)                                                    
-        instructions7_text_label.grid(column=0, columnspan=1, row=60) 
+        instructions7_text_label.grid(column=0, columnspan=10, row=60) 
         
-#         using_weka_instructions8 = "To export the model, in the Result list, right mouse click and Choose Save model and save as model.model in the weka_model directory for this run (Create the directory if you did not follow the instructions above). It is also worth saving the result buffer in a text file with this run."
-#         using_weka_msg8 = tk.Message(self, text = using_weka_instructions8)
-#         using_weka_msg8.config(width=600)
-#         using_weka_msg8.grid(column=0, columnspan=1, row=12) 
-        
-        
+              
         
         back_to_home_button = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=80)                
+        back_to_home_button.grid(column=0, columnspan=1, row=80)    
+        
+        def create_arff_and_csv_files(): 
+            # https://www.w3schools.com/python/python_datetime.asp
+            firstDate = datetime.datetime((int)(first_date_to_exclude_year.get()), (int)(first_date_to_exclude_month.get()), (int)(first_date_to_exclude_day.get()))
+            lastDate = datetime.datetime((int)(last_date_to_exclude_year.get()), (int)(last_date_to_exclude_month.get()), (int)(last_date_to_exclude_day.get()))
+#             print(firstDate.strftime("%c"))           
+            functions.create_arff_file_for_weka(False, firstDate,lastDate)             
         
 class ClassifyOnsetsUsingWekaModelPage(tk.Frame):
     
@@ -448,36 +432,7 @@ class ClassifyOnsetsUsingWekaModelPage(tk.Frame):
                 
         instructions1_text_label = ttk.Label(self, text=instructions1_text)                                                    
         instructions1_text_label.grid(column=0, columnspan=1, row=5) 
-#         
-#         intro_msg = tk.Message(self, text = "This page will guide you through the process of using a Weka model to classify onsets.")
-#         intro_msg.config(bg='lightgreen', font=('times', 16), width=600)
-#         intro_msg.grid(column=0, columnspan=1, row=1)  
-#         
-#         run_folder_instructions = "The run_folder is currently set to: " + parameters.run_folder + " You may have already created folders for this run (just before you used Weka to create the Model), but if not press the Create Folders button."
-#         run_folder_msg = tk.Message(self, text = run_folder_instructions)
-#         run_folder_msg.config(width=600)
-#         run_folder_msg.grid(column=0, columnspan=1, row=22) 
-#         
-#         create_folders_button = ttk.Button(self, text="Create folders",command=lambda: functions.create_folders_for_next_run())
-#         create_folders_button.grid(column=1, columnspan=1, row=22)
-#         
-#         model_setup1_instructions = "You should have already created a new model.model file using Weka and saved it in " + parameters.run_folder + "/" + parameters.weka_model_folder + " folder.  Also from the previous run, copy the following files into the " + weka_model_folder + " folder: " + weka_input_arff_filename + ", " + weka_run_jar_filename + " Make sure you use the new model.model file that you created in Weka, NOT from the previous run."
-#         model_setup1_msg = tk.Message(self, text = model_setup1_instructions)
-#         model_setup1_msg.config(width=600)
-#         model_setup1_msg.grid(column=0, columnspan=1, row=23)  
-#         
-#         model_setup2_instructions = "If you don't have a run.jar file, it can be created from within Eclipse. Using the Java perspective, open the current code e.g. Main4.java and from the File menu, choose Export.. | Java | Runnable JAR file | Next | Launch configuration: | Main4-run_models_v1 (or the current version) | Export destination of the " + weka_model_folder + "folder | Library handling|Package required libraries into generated JAR | Finish" 
-#         model_setup2_msg = tk.Message(self, text = model_setup2_instructions)
-#         model_setup2_msg.config(width=600)
-#         model_setup2_msg.grid(column=0, columnspan=1, row=24)  
-#         
-#         model_setup3_instructions = "When all the files are copied, press the Classify Onsets Button.  This will start the process of creating a temporary spectrogram of each segment of audio corresponding to an onset, and using the Weka model to clasify it, and save the results in the model_run_result with the modelRunName of " + model_run_name
-#         model_setup3_msg = tk.Message(self, text = model_setup3_instructions)
-#         model_setup3_msg.config(width=600)
-#         model_setup3_msg.grid(column=0, columnspan=1, row=25)   
-#         
-#         evaluate_button = ttk.Button(self, text="Classify Onsets",command=lambda: functions.classify_onsets_using_weka_model())
-#         evaluate_button.grid(column=0, columnspan=1, row=35)     
+  
  
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))  
         back_to_home_button.grid(column=0, columnspan=1, row=45) 
@@ -502,13 +457,8 @@ class CreateOnsetsPage(tk.Frame):
                 
         instructions1_text_label = ttk.Label(self, text=instructions1_text)                                                    
         instructions1_text_label.grid(column=0, columnspan=1, row=5) 
-        
-        
-#         onset_instructions = "Use this page to run the create onsets function that will create locations of interest in the db"
-# 
-#         msg = tk.Message(self, text = onset_instructions)
-#         msg.config(bg='lightgreen', font=('times', 16), width=1200)
-#         msg.grid(column=0, columnspan=6, row=10)   
+               
+
         
         run_button = ttk.Button(self, text="Run", command=lambda: functions.create_onsets_in_local_db_using_recordings_folder())        
         run_button.grid(column=0, columnspan=1, row=20) 
@@ -1300,7 +1250,67 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
         
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=70) 
-                                                                               
+        
+class CreateTestDataPage(tk.Frame):    
+    
+    def __init__(self, parent, controller):
+        
+        def mousePressedcallback(event):
+            print("Mouse Pressed at", event.x, event.y)
+            
+        def mouseReleasedcallback(event):
+            print("Mouse Released at", event.x, event.y)                   
+            
+        tk.Frame.__init__(self, parent)
+                   
+        self.bind("<Button-1>", mousePressedcallback)  
+        self.bind("<ButtonRelease-1>", mousePressedcallback)       
+        
+        
+        title_label = ttk.Label(self, text="Create Test Data", font=LARGE_FONT)
+        title_label.grid(column=0, columnspan=1, row=0) 
+        
+        msg1_instructions = "Use this page to create test data."
+        msg1 = tk.Message(self, text = msg1_instructions)
+        msg1.config(width=600)
+        msg1.grid(column=0, columnspan=1, row=10) 
+        
+        display_spectrogram_button = ttk.Button(self, text="Display Spectrogram", command=lambda: display_spectrogram())
+        display_spectrogram_button.grid(column=0, columnspan=1, row=20)
+        
+        self.spectrogram_label = ttk.Label(self, image=None)
+        self.spectrogram_label.grid(column=0, columnspan=1, row=29)   
+        
+        
+        
+        back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
+        back_to_home_button.grid(column=0, columnspan=1, row=100) 
+        
+        def display_spectrogram():
+            self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram('475656', '0', '60')
+            self.spectrogram_label.config(image=self.spectrogram_image)
+            
+            self.spectrogram_label.bind("<Button-1>", mousePressedcallback)  
+            self.spectrogram_label.bind("<ButtonRelease-1>", mousePressedcallback)       
+            
+
+class TaggingPage(tk.Frame):
+    
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = ttk.Label(self, text="Tagging Page", font=LARGE_FONT)
+        label.pack(pady=10,padx=10)
+        
+        get_tags_button = ttk.Button(self, text="Get tags from server",
+                            command=lambda: functions.get_all_tags_for_all_devices_in_local_database())
+        get_tags_button.pack()  
+        
+       
+        button1 = ttk.Button(self, text="Back to Home",
+                            command=lambda: controller.show_frame(HomePage))
+        button1.pack() 
+        
+                                                                                
         
 app = Main_GUI()
 app.mainloop() 

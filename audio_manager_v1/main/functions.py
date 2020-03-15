@@ -1776,8 +1776,12 @@ def create_arff_file_for_weka_image_filter_input(test_arff):
     
    
     
-def create_arff_file_for_weka(test_arff):
+def create_arff_file_for_weka(test_arff, firstDate, lastDate):
 #  IF test_arff IS true, then just create an arff file for a single onset - to be used to give to the model for a class prediction
+
+    # https://stackoverflow.com/questions/8187288/sql-select-between-dates
+    firstDateStr = firstDate.strftime("%Y-%m-%d") + ':00:00:00'
+    lastDateStr = lastDate.strftime("%Y-%m-%d") + ':23:59:59'
     
     run_folder_path = base_folder + '/' + run_folder
     
@@ -1998,15 +2002,19 @@ def create_arff_file_for_weka(test_arff):
         device_super_name, 
         actual_confirmed,
         recording_id,
-        start_time_seconds
+        start_time_seconds,
+        recordingDateTimeNZ
             
     
-        FROM onsets
-        
-        WHERE actual_confirmed IS NOT NULL AND MPEG7_Edge_Histogram0 IS NOT NULL
+        FROM onsets        
+
+        WHERE actual_confirmed IS NOT NULL AND MPEG7_Edge_Histogram0 IS NOT NULL AND strftime('%Y-%m-%d:%H-%M-%S', recordingDateTimeNZ) NOT BETWEEN ? AND ?
         '''
-    cur.execute(sql)      
+    cur.execute(sql,(firstDateStr, lastDateStr))      
     confirmedOnsets = cur.fetchall()
+    
+    for confirmedOnset in confirmedOnsets:
+        print(confirmedOnset[84])
     
     for confirmedOnset in confirmedOnsets:
         f.write(str(confirmedOnset[0]) +',' + 
@@ -2261,13 +2269,15 @@ def add_tag_to_recording(user_token, recordingId, json_data):
 
 def test_add_tag_to_recording():
     user_token = get_cacophony_user_token()
+    version = '000003'
     tag = {}
-    tag['animal'] = 'bigBirdYY'
+    tag['animal'] = 'bigBirdzz'
     tag['startTime'] = 1
     tag['duration'] = 2
     tag['automatic'] = True
     tag['confidence'] = 0.9
     tag['confirmed'] = True
+    tag['version'] = version
     json_tag = json.dumps(tag)
     resp = add_tag_to_recording(user_token, "158698", json_tag)
     print('resp is: ', resp.text)
@@ -2384,9 +2394,9 @@ def upload_tags_to_cacophony_server(location_filter):
     cur = get_database_connection().cursor()
     
     if location_filter !='not_used':
-        cur.execute("SELECT ID, recording_id, startTime, duration, what, automatic, confidence, confirmed_by_human, modelRunName FROM tags WHERE modelRunName = ? AND (copied_to_server IS NULL OR copied_to_server = 0) AND device_super_name = ?", (model_run_name, location_filter))   
+        cur.execute("SELECT ID, recording_id, startTime, duration, what, automatic, confidence, confirmed_by_human, modelRunName, version FROM tags WHERE modelRunName = ? AND (copied_to_server IS NULL OR copied_to_server = 0) AND device_super_name = ?", (model_run_name, location_filter))   
     else:            
-        cur.execute("SELECT ID, recording_id, startTime, duration, what, automatic, confidence, confirmed_by_human, modelRunName FROM tags WHERE modelRunName = ? AND (copied_to_server IS NULL OR copied_to_server = 0)", (model_run_name,))   
+        cur.execute("SELECT ID, recording_id, startTime, duration, what, automatic, confidence, confirmed_by_human, modelRunName, version FROM tags WHERE modelRunName = ? AND (copied_to_server IS NULL OR copied_to_server = 0)", (model_run_name,))   
     
     tags_to_send_to_server = cur.fetchall()
     count_of_tags_to_send_to_server = len(tags_to_send_to_server)
@@ -2422,6 +2432,7 @@ def upload_tags_to_cacophony_server(location_filter):
             tag['automatic'] = automatic_bool
             tag['confidence'] = str(confidence)
             tag['confirmed'] = confirmed_by_human_bool
+            tag['version'] = str(version)
             json_tag = json.dumps(tag)
 
             resp = add_tag_to_recording(user_token, recording_id_str, json_tag)
@@ -2697,4 +2708,24 @@ def update_table_with_NZ_time():
             print(str(e))
             print("Error processing ID " + str(ID))
         
+def test_not_between_dates(firstDateStr, lastDateStr):
+    table_name = 'onsets'
     
+    firstDateStr = firstDateStr + ':00:00:00'
+    lastDateStr = lastDateStr + ':23:59:59'
+    
+    cur = get_database_connection().cursor()
+    # https://stackoverflow.com/questions/8187288/sql-select-between-dates
+    cur.execute("select ID, recordingDateTime from " + table_name + " where strftime('%Y-%m-%d:%H-%M-%S', recordingDateTimeNZ) NOT BETWEEN '" + firstDateStr + "' AND '" + lastDateStr + "' order by recordingDateTimeNZ")      
+         
+    records = cur.fetchall()
+    numOfRecords = len(records)
+    count = 0
+    
+    for record in records:          
+        
+        ID = record[0]
+        recordingDateTime = record[1]
+        
+        print('Processing ID ' + str(ID) + " which is " + str(count) + ' of ' + str(numOfRecords) + ' ' + recordingDateTime)
+       

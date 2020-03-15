@@ -141,9 +141,11 @@ print('boo')
 
 # functions.find_suitable_probability_cutoff()
 
-functions.update_table_with_NZ_time()
+# functions.update_table_with_NZ_time()
 
 # functions.retrieve_missing_recording_information()
+
+functions.test_not_between_dates('2010-01-01','2020-03-11')
     
     
     
