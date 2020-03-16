@@ -1254,12 +1254,34 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
 class CreateTestDataPage(tk.Frame):    
     
     def __init__(self, parent, controller):
+        # https://stackoverflow.com/questions/7727804/tkinter-using-scrollbars-on-a-canvas
         
         def mousePressedcallback(event):
             print("Mouse Pressed at", event.x, event.y)
+#             print("x Scroll bar position is ", scroll_x.get())
+            x_scroll_bar_minimum = scroll_x.get()[0]
+            print("x_scroll_bar_minimum is ", x_scroll_bar_minimum)
+           
+            x_scroll_bar_maximum = scroll_x.get()[1]
+            print("x_scroll_bar_maximum is ", x_scroll_bar_maximum)
             
-        def mouseReleasedcallback(event):
-            print("Mouse Released at", event.x, event.y)                   
+            functions.spectrogram_selection(event.x, x_scroll_bar_minimum, x_scroll_bar_maximum, self.canvas_width, 62)
+            
+            x_position_percent = functions.spectrogram_clicked_at(event.x, x_scroll_bar_minimum, x_scroll_bar_maximum, self.canvas_width)
+            print("x_position_percent ", x_position_percent)
+            
+            x_position_percent_of_image_width = x_position_percent * self.canvas_width
+            print("x_position_percent_of_image_width ", x_position_percent_of_image_width)
+            
+            
+#             canvas.create_line(event.x, 0, event.x, self.canvas_height)
+            canvas.create_line(self.spectrogram_image.width()*x_position_percent, 0, self.spectrogram_image.width()*x_position_percent, self.canvas_height)
+#             canvas.create_line(x_position, 0, x_position, self.canvas_height)
+            
+# print("y Scroll bar position is ", scroll_y.get())
+            
+#         def mouseReleasedcallback(event):
+#             print("Mouse Released at", event.x, event.y)                   
             
         tk.Frame.__init__(self, parent)
                    
@@ -1273,13 +1295,35 @@ class CreateTestDataPage(tk.Frame):
         msg1_instructions = "Use this page to create test data."
         msg1 = tk.Message(self, text = msg1_instructions)
         msg1.config(width=600)
-        msg1.grid(column=0, columnspan=1, row=10) 
+        msg1.grid(column=0, columnspan=1, row=10)         
+               
+#         display_spectrogram_button = ttk.Button(self, text="Display Spectrogram", command=lambda: display_spectrogram())
+#         display_spectrogram_button.grid(column=0, columnspan=1, row=20)
+        self.canvas_width = 1000
+        self.canvas_height = 900
+        canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height)
+#         canvas.create_oval(10, 10, 20, 20, fill="red")
+       # canvas.create_oval(200, 200, 220, 220, fill="blue")
+        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data('475656')
         
-        display_spectrogram_button = ttk.Button(self, text="Display Spectrogram", command=lambda: display_spectrogram())
-        display_spectrogram_button.grid(column=0, columnspan=1, row=20)
+        print("Image width is ", self.spectrogram_image.width())
+        canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
         
-        self.spectrogram_label = ttk.Label(self, image=None)
-        self.spectrogram_label.grid(column=0, columnspan=1, row=29)   
+        canvas.grid(row=20, column=0)
+        
+        scroll_x = tk.Scrollbar(self, orient="horizontal", command=canvas.xview)
+        scroll_x.grid(row=21, column=0, sticky="ew")
+        
+        scroll_y = tk.Scrollbar(self, orient="vertical", command=canvas.yview)
+        scroll_y.grid(row=20, column=1, sticky="ns")
+
+        canvas.configure(yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
+        canvas.configure(scrollregion=canvas.bbox("all"))
+        
+        canvas.bind("<Button-1>", mousePressedcallback)  
+        canvas.bind("<ButtonRelease-1>", mousePressedcallback) 
+         
+    
         
         
         
@@ -1287,11 +1331,23 @@ class CreateTestDataPage(tk.Frame):
         back_to_home_button.grid(column=0, columnspan=1, row=100) 
         
         def display_spectrogram():
-            self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram('475656', '0', '60')
-            self.spectrogram_label.config(image=self.spectrogram_image)
+            self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data('475656')
+          
             
-            self.spectrogram_label.bind("<Button-1>", mousePressedcallback)  
-            self.spectrogram_label.bind("<ButtonRelease-1>", mousePressedcallback)       
+#             self.spectrogram_label.config(image=self.spectrogram_image)
+            
+#             self.spectrogram_canvas.create_line(0, 0, 200, 100)
+#             self.spectrogram_canvas.create_line(0, 100, 200, 0, fill="red", dash=(4, 4))
+#             
+#             self.spectrogram_canvas.create_rectangle(50, 25, 150, 75, fill="blue")
+            
+#             self.spectrogram_canvas.create_image(image=self.spectrogram_image)
+            self.spectrogram_canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
+            
+            
+            
+#             self.spectrogram_label.bind("<Button-1>", mousePressedcallback)  
+#             self.spectrogram_label.bind("<ButtonRelease-1>", mousePressedcallback)       
             
 
 class TaggingPage(tk.Frame):

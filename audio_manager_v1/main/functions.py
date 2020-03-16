@@ -1609,6 +1609,46 @@ def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, 
         print(e, '\n')
         print('Error processing onset ', onset)
         
+def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_id):
+
+    temp_display_images_folder_path = base_folder + '/' + run_folder + '/' + temp_display_images_folder 
+    if not os.path.exists(temp_display_images_folder_path):
+        os.makedirs(temp_display_images_folder_path)         
+
+    try:
+        
+        audio_filename = str(recording_id) + '.m4a'
+        audio_in_path = base_folder + '/' + downloaded_recordings_folder + '/' +  audio_filename 
+        image_out_name = 'temp_spectrogram.jpg'
+        print('image_out_name', image_out_name)           
+       
+        image_out_path = temp_display_images_folder_path + '/' + image_out_name
+        
+        y, sr = librosa.load(audio_in_path, sr=None)      
+               
+#         start_time_seconds_float = float(start_time_seconds)            
+#         
+#         start_position_array = int(sr * start_time_seconds_float)              
+#                    
+#         end_position_array = start_position_array + int((sr * duration_seconds))                  
+#                     
+#         y_part = y[start_position_array:end_position_array]  
+#         mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
+        mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, fmax=8000)
+        S_dB = librosa.power_to_db(mel_spectrogram, ref=np.max)
+        
+        pylab.axis('off') # no axis
+        pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+        librosa.display.specshow(S_dB,sr=sr,fmax=8000) #https://matplotlib.org/examples/color/colormaps_reference.html
+        pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+        pylab.close()
+        
+        return get_image_for_for_creating_test_data(image_out_path)
+        
+    except Exception as e:
+        print(e, '\n')
+        print('Error processing onset ', onset)
+        
 def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds):
 
     mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + weka_model_folder + '/' + single_spectrogram_for_classification_folder 
@@ -1689,6 +1729,15 @@ def get_image(image_name_path):
     image = Image.open(image_name_path)
     [imageSizeWidth, imageSizeHeight] = image.size
     image = image.resize((int(imageSizeWidth/2),int(imageSizeHeight/2)), Image.ANTIALIAS)
+    spectrogram_image = ImageTk.PhotoImage(image)
+    return spectrogram_image
+
+def get_image_for_for_creating_test_data(image_name_path): 
+        
+    image = Image.open(image_name_path)
+    [imageSizeWidth, imageSizeHeight] = image.size
+    image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*2)), Image.ANTIALIAS)
+    print("Image size is ", image.size)
     spectrogram_image = ImageTk.PhotoImage(image)
     return spectrogram_image
 
@@ -2729,3 +2778,17 @@ def test_not_between_dates(firstDateStr, lastDateStr):
         
         print('Processing ID ' + str(ID) + " which is " + str(count) + ' of ' + str(numOfRecords) + ' ' + recordingDateTime)
        
+def spectrogram_selection(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width, recording_length):
+    recording_pos_seconds = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum) * recording_length
+#     print("x clicked at ", recording_pos_seconds, ' seconds')
+    
+def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width):
+    x_position_percent = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum)
+#     print("x_position_percent ", x_position_percent)
+    return x_position_percent
+    
+    
+    
+    
+    
+    
