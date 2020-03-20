@@ -2335,26 +2335,27 @@ def create_local_tags_from_model_run_result():
     # This will create tags on the local db for using the latest model_run_result
     # Only model_run_results with a probablility >= probability_cutoff_for_tag_creation will used
     cur = get_database_connection().cursor()
-    cur.execute("SELECT modelRunName, recording_id, startTime, duration, predictedByModel, probability, actual_confirmed, device_super_name, device_name FROM model_run_result WHERE probability >= ? AND modelRunName = ? AND predictedByModel = ?", (probability_cutoff_for_tag_creation, model_run_name, predictedByModel_tag_to_create)) 
+#     cur.execute("SELECT modelRunName, recording_id, startTime, duration, predictedByModel, probability, actual_confirmed, device_super_name, device_name FROM model_run_result WHERE probability >= ? AND modelRunName = ? AND predictedByModel = ?", (probability_cutoff_for_tag_creation, model_run_name, predictedByModel_tag_to_create)) 
     
-#     sql = '''
-#         SELECT model_run_result.modelRunName, model_run_result.recording_id, model_run_result.startTime, model_run_result.duration, model_run_result.predictedByModel, model_run_result.probability, model_run_result.actual_confirmed, model_run_result.device_super_name, model_run_result.device_name 
-#         FROM model_run_result 
-#         WHERE probability >= ? AND modelRunName = ? AND predictedByModel = ? AND NOT EXISTS (SELECT *
-#                                                                                             FROM tags
-#                                                                                             WHERE tags.recording_Id = model_run_result.recording_id AND tags.startTime = model_run_result.startTime AND tags.what = model_run_result.predictedByModel AND tags.modelRunName = model_run_result.modelRunName AND tags.version = ?)
-#         '''
-    
+    sql = '''
+        SELECT model_run_result.modelRunName, model_run_result.recording_id, model_run_result.startTime, model_run_result.duration, model_run_result.predictedByModel, model_run_result.probability, model_run_result.actual_confirmed, model_run_result.device_super_name, model_run_result.device_name 
+        FROM model_run_result 
+        WHERE probability >= ? AND modelRunName = ? AND predictedByModel = ? AND NOT EXISTS (SELECT *
+                                                                                            FROM tags
+                                                                                            WHERE tags.recording_Id = model_run_result.recording_id AND tags.startTime = model_run_result.startTime AND tags.what = model_run_result.predictedByModel AND tags.modelRunName = model_run_result.modelRunName AND tags.version = ?)
+        '''
+     
 #     cur.execute(sql, (probability_cutoff_for_tag_creation, model_run_name, predictedByModel_tag_to_create))
-#     cur.execute(sql, (probability_cutoff_for_tag_creation, model_run_name, predictedByModel_tag_to_create, version))  
+    cur.execute(sql, (probability_cutoff_for_tag_creation, model_run_name, predictedByModel_tag_to_create, model_version))  
    
     model_run_results = cur.fetchall()
     count_results = len(model_run_results)
-    count = 0
+    count_of_potential_tags = 0
+    count_of_tags_created = 0
     for model_run_result in model_run_results:
         try:
-            print("Processing ", count , " of ", count_results)
-            count+=1
+            print("Processing ", count_of_potential_tags , " of ", count_results)
+            count_of_potential_tags+=1
             modelRunName = model_run_result[0]
             recording_id = model_run_result[1]
             startTime = model_run_result[2]
@@ -2365,17 +2366,17 @@ def create_local_tags_from_model_run_result():
             device_super_name = model_run_result[7]
             device_name = model_run_result[8]
             
-            cur2 = get_database_connection().cursor()
-            sql2 = '''
-                SELECT ID FROM tags
-                WHERE recording_Id = ? AND startTime = ? AND what = ? AND modelRunName = ? AND version = ?
-                '''
-            cur2.execute(sql2, (recording_id, startTime, predictedByModel, modelRunName, model_version))
-            
-            tags_count = cur2.fetchall()
-            if len(tags_count) > 0:
-                print("There is already a tag for ", recording_id, " ", startTime, " ", predictedByModel, " ", model_version, " ", modelRunName )
-                continue
+#             cur2 = get_database_connection().cursor()
+#             sql2 = '''
+#                 SELECT ID FROM tags
+#                 WHERE recording_Id = ? AND startTime = ? AND what = ? AND modelRunName = ? AND version = ?
+#                 '''
+#             cur2.execute(sql2, (recording_id, startTime, predictedByModel, modelRunName, model_version))
+#             
+#             tags_count = cur2.fetchall()
+#             if len(tags_count) > 0:
+#                 print("There is already a tag for ", recording_id, " ", startTime, " ", predictedByModel, " ", model_version, " ", modelRunName )
+#                 continue
               
             automatic = 'True'
             created_locally = 1 # 1 is true as using integer in db
@@ -2388,12 +2389,13 @@ def create_local_tags_from_model_run_result():
             # If actual_confirmed is NOT NULL, then only create a tag if actual_confirmed == predictedByModel
             if actual_confirmed:
                 if actual_confirmed != predictedByModel:
-                    print(actual_confirmed, ' ', predictedByModel)
-                    print('actual_confirmed != predictedByModel')
+#                     print(actual_confirmed, ' ', predictedByModel)
+                    print("The model predicted ", predictedByModel, " but the actual_confirmed is ", actual_confirmed, " so a tag will NOT be created")
+#                     print('actual_confirmed != predictedByModel')
                     continue # Don't create tag if actual_confirmed is not the same as predicted (I'm not tempted to upload actual_confirmed, as this would make model look better than it is)
                 else:
-                    count +=1
-                    print('Inserting tag ', count, ' for: ', recording_id, ' ', predictedByModel)
+                    count_of_tags_created +=1
+                    print('Inserting tag ', count_of_tags_created, ' for: ', recording_id, ' ', predictedByModel)
                     confirmed_by_human = 1
                  
             
@@ -2408,7 +2410,8 @@ def create_local_tags_from_model_run_result():
             print(e, '\n')
             print('Error processing modelRunName ', modelRunName)
         
-    print('Finished creating ', count, ' tags in local database')
+    print('Finished processing ', count_of_potential_tags, ' potential tags in local database')
+    print(count_of_tags_created, ' tags were inserted into the local database.  You can now upload them to the Cacophony server.')
 
 def update_device_name_onsets_when_missing():
     cur = get_database_connection().cursor()
