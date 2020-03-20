@@ -2336,10 +2336,25 @@ def create_local_tags_from_model_run_result():
     # Only model_run_results with a probablility >= probability_cutoff_for_tag_creation will used
     cur = get_database_connection().cursor()
     cur.execute("SELECT modelRunName, recording_id, startTime, duration, predictedByModel, probability, actual_confirmed, device_super_name, device_name FROM model_run_result WHERE probability >= ? AND modelRunName = ? AND predictedByModel = ?", (probability_cutoff_for_tag_creation, model_run_name, predictedByModel_tag_to_create)) 
+    
+#     sql = '''
+#         SELECT model_run_result.modelRunName, model_run_result.recording_id, model_run_result.startTime, model_run_result.duration, model_run_result.predictedByModel, model_run_result.probability, model_run_result.actual_confirmed, model_run_result.device_super_name, model_run_result.device_name 
+#         FROM model_run_result 
+#         WHERE probability >= ? AND modelRunName = ? AND predictedByModel = ? AND NOT EXISTS (SELECT *
+#                                                                                             FROM tags
+#                                                                                             WHERE tags.recording_Id = model_run_result.recording_id AND tags.startTime = model_run_result.startTime AND tags.what = model_run_result.predictedByModel AND tags.modelRunName = model_run_result.modelRunName AND tags.version = ?)
+#         '''
+    
+#     cur.execute(sql, (probability_cutoff_for_tag_creation, model_run_name, predictedByModel_tag_to_create))
+#     cur.execute(sql, (probability_cutoff_for_tag_creation, model_run_name, predictedByModel_tag_to_create, version))  
+   
     model_run_results = cur.fetchall()
+    count_results = len(model_run_results)
     count = 0
     for model_run_result in model_run_results:
         try:
+            print("Processing ", count , " of ", count_results)
+            count+=1
             modelRunName = model_run_result[0]
             recording_id = model_run_result[1]
             startTime = model_run_result[2]
@@ -2350,6 +2365,18 @@ def create_local_tags_from_model_run_result():
             device_super_name = model_run_result[7]
             device_name = model_run_result[8]
             
+            cur2 = get_database_connection().cursor()
+            sql2 = '''
+                SELECT ID FROM tags
+                WHERE recording_Id = ? AND startTime = ? AND what = ? AND modelRunName = ? AND version = ?
+                '''
+            cur2.execute(sql2, (recording_id, startTime, predictedByModel, modelRunName, model_version))
+            
+            tags_count = cur2.fetchall()
+            if len(tags_count) > 0:
+                print("There is already a tag for ", recording_id, " ", startTime, " ", predictedByModel, " ", model_version, " ", modelRunName )
+                continue
+              
             automatic = 'True'
             created_locally = 1 # 1 is true as using integer in db
             
