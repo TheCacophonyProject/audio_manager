@@ -53,7 +53,7 @@ class Main_GUI(tk.Tk):
         self.frames = {}
         
 #         for F in (HomePage, RecordingsPage, TaggingPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage, CreateTagsFromOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage, ModelAccuracyAnalysisPage, CreateTestDataPage):
-        for F in (HomePage, RecordingsPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage, ModelAccuracyAnalysisPage, CreateTestDataPage):
+        for F in (HomePage, RecordingsPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage, ModelAccuracyAnalysisPage, CreateTestDataPage, CreateTestPage):
           
             frame = F(container, self)
             self.frames[F] = frame            
@@ -125,6 +125,10 @@ class HomePage(tk.Frame):
         createTestDataPage_button = ttk.Button(self, text="Create test data ",
                             command=lambda: controller.show_frame(CreateTestDataPage))        
         createTestDataPage_button.pack()
+        
+        createTestPage_button = ttk.Button(self, text="Create test page ",
+                            command=lambda: controller.show_frame(CreateTestPage))        
+        createTestPage_button.pack()
         
 #         other_or_no_longer_used_label = tk.Label(self, text="Functions below here probably no longer needed")
 #         other_or_no_longer_used_label.pack(pady=10,padx=10)       
@@ -1252,48 +1256,85 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=70) 
         
+       
+        
 class CreateTestDataPage(tk.Frame):    
+    
+#     def delete_last_line(self):
+# 
+#         print("delete line and boxes")
+#         
+#         print("box1 ", self.box1)
+#         
+#         print("a_line ", self.a_line)
+#         print("box2 ", self.box2)        
+#         
+#         self.canvas.delete(self.box1)        
+#         self.canvas.delete(self.a_line)
+#         self.canvas.delete(self.box2)
+# #         self.canvas.delete(self.image)
+#         
+#         self.box2 = None
+#         self.canvas.update_idletasks()
+        
+    def display_spectrogram(self):
+        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data('475656')           
+        self.spectrogram_canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
+        
+    def leftMousePressedcallback(self, event):
+       
+#         print("Mouse Pressed at", event.x, event.y)
+#             print("x Scroll bar position is ", scroll_x.get())
+        self.x_scroll_bar_minimum = self.scroll_x.get()[0]
+#         print("x_scroll_bar_minimum is ", self.x_scroll_bar_minimum)
+       
+        self.x_scroll_bar_maximum = self.scroll_x.get()[1]
+#         print("x_scroll_bar_maximum is ", self.x_scroll_bar_maximum)
+        
+        functions.spectrogram_selection(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
+        
+        x_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
+#         print("x_position_percent ", x_position_percent)
+        
+        x_position_percent_of_image_width = x_position_percent * self.canvas_width
+#         print("x_position_percent_of_image_width ", x_position_percent_of_image_width)        
+
+        self.a_line = self.canvas.create_line(self.spectrogram_image.width()*x_position_percent, 0, self.spectrogram_image.width()*x_position_percent, self.canvas_height)
+        
+#         self.box2 = self.canvas.create_rectangle(200, 200, 250, 250, fill="red")
+        
+    def leftMouseReleasedcallback(self, event):
+        # Might use this to draw box?
+        print("Left mouse button released at ", event.x, event.y)
+        
+    def rightMousePressedcallback(self, event):
+        
+#         print("Right mouse button pressed at ", event.x, event.y)
+#         item = self.canvas.gettags(CURRENT)
+#         print("item ", item)
+        
+        all_items = self.canvas.find_all() # https://effbot.org/tkinterbook/canvas.htm
+        
+#         for item in all_items:
+#             print("item ", item)
+        
+        if len(all_items) > 1:
+            self.canvas.delete(all_items[len(all_items)-1])
     
     def __init__(self, parent, controller):
         # https://stackoverflow.com/questions/7727804/tkinter-using-scrollbars-on-a-canvas
         # https://stackoverflow.com/questions/43731784/tkinter-canvas-scrollbar-with-grid
         # https://riptutorial.com/tkinter/example/27784/scrolling-a-canvas-widget-horizontally-and-vertically
         
-        
-        
-        def mousePressedcallback(event):
-            print("Mouse Pressed at", event.x, event.y)
-#             print("x Scroll bar position is ", scroll_x.get())
-            x_scroll_bar_minimum = scroll_x.get()[0]
-            print("x_scroll_bar_minimum is ", x_scroll_bar_minimum)
-           
-            x_scroll_bar_maximum = scroll_x.get()[1]
-            print("x_scroll_bar_maximum is ", x_scroll_bar_maximum)
-            
-            functions.spectrogram_selection(event.x, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width, 62)
-            
-            x_position_percent = functions.spectrogram_clicked_at(event.x, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width)
-            print("x_position_percent ", x_position_percent)
-            
-            x_position_percent_of_image_width = x_position_percent * canvas_width
-            print("x_position_percent_of_image_width ", x_position_percent_of_image_width)
-            
-            
-#             canvas.create_line(event.x, 0, event.x, self.canvas_height)
-            self.a_line = self.canvas.create_line(self.spectrogram_image.width()*x_position_percent, 0, self.spectrogram_image.width()*x_position_percent, canvas_height)
-            
-           
-#             canvas.create_line(x_position, 0, x_position, self.canvas_height)
-            
-# print("y Scroll bar position is ", scroll_y.get())
-            
+     
 #         def mouseReleasedcallback(event):
 #             print("Mouse Released at", event.x, event.y)                   
             
         tk.Frame.__init__(self, parent)
                     
-        self.bind("<Button-1>", mousePressedcallback)  
-        self.bind("<ButtonRelease-1>", mousePressedcallback)       
+#         self.bind("<Button-1>", self.leftMouseReleasedcallback)  
+#         self.bind("<Button-2>", self.rightMousePressedcallback)  
+#         self.bind("<ButtonRelease-1>", self.leftMouseReleasedcallback)       
         
         
         title_label = ttk.Label(self, text="Create Test Data", font=LARGE_FONT)
@@ -1306,98 +1347,81 @@ class CreateTestDataPage(tk.Frame):
                
 #         display_spectrogram_button = ttk.Button(self, text="Display Spectrogram", command=lambda: display_spectrogram())
 #         display_spectrogram_button.grid(column=0, columnspan=1, row=20)
-        canvas_width = 1000
-        canvas_height = 900
-        self.canvas = tk.Canvas(self, width=canvas_width, height=canvas_height)
+        self.canvas_width = 1000
+        self.canvas_height = 900
+        self.canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height)
+        
+        
 #         canvas.create_oval(10, 10, 20, 20, fill="red")
 #         canvas.create_oval(200, 200, 220, 220, fill="blue")
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data('475656')
         
         print("Image width is ", self.spectrogram_image.width())
-        self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
+        self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
         
         self.canvas.grid(row=20, column=0)
         
-        scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
-        scroll_x.grid(row=21, column=0, sticky="ew")
+        self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
+        self.scroll_x.grid(row=21, column=0, sticky="ew")
         
-        scroll_y = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
-        scroll_y.grid(row=20, column=1, sticky="ns")
+        self.scroll_y = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.scroll_y.grid(row=20, column=1, sticky="ns")
 
-        self.canvas.configure(yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
+        self.canvas.configure(yscrollcommand=self.scroll_y.set, xscrollcommand=self.scroll_x.set)
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+                
+#         self.canvas.bind("<Button-1>", self.mousePressedcallback)  
+#         self.canvas.bind("<ButtonRelease-1>", self.mousePressedcallback) 
+
         
+        self.canvas.bind("<Button-1>", self.leftMousePressedcallback)        
+        self.canvas.bind("<ButtonRelease-1>", self.leftMouseReleasedcallback) 
         
-        self.c2 = self.canvas.create_rectangle(10, 10, 100, 100, fill="green")
+        self.canvas.bind("<Button-3>", self.rightMousePressedcallback)         
         
-        self.canvas.bind("<Button-1>", mousePressedcallback)  
-        self.canvas.bind("<ButtonRelease-1>", mousePressedcallback) 
+#         self.box1 = self.canvas.create_rectangle(10, 10, 60, 60, fill="blue")
          
-        
-    
-    
-        delete_last_line_button = ttk.Button(self, text="Delete last line", command=lambda: delete_last_line())
-        delete_last_line_button.grid(column=0, columnspan=1, row=90) 
+#         delete_last_line_button = ttk.Button(self, text="Delete last line", command=lambda: self.delete_last_line())
+#         delete_last_line_button.grid(column=0, columnspan=1, row=90) 
         
         
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=100) 
+               
+            
+class CreateTestPage(tk.Frame):  
+    
+    def add(self): 
+        if self.x == None:
+            self.x = 1
+        else:
+            self.x += 1   
+    
+    def printx(self):
+        print("x is ", self.x) 
         
+    def do_stuff(self):     
         
+        self.add()
+        self.printx()
+         
+        self.add()
+        self.printx()   
         
-        def delete_last_line():
-                   
-            print("delete_last_line()")
-            print(self.a_line)
-            print(self.c2)
+    def __init__(self, parent, controller):  
+        tk.Frame.__init__(self, parent)
+        self.x = None
             
-            self.canvas.delete(self.a_line)
-            self.canvas.delete('all')
-#             self.canvas.delete(self.a_line)
-#             self.after(10, self.canvas.delete(self.a_line))
-            self.after(10, self.canvas.delete, self.a_line)
-            self.after(10, self.canvas.delete, self.c2)
-            
-#             self.canvas.delete(self.a_line)
-            self.canvas.update_idletasks()
         
-        def display_spectrogram():
-            self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data('475656')
-          
-            
-#             self.spectrogram_label.config(image=self.spectrogram_image)
-            
-#             self.spectrogram_canvas.create_line(0, 0, 200, 100)
-#             self.spectrogram_canvas.create_line(0, 100, 200, 0, fill="red", dash=(4, 4))
-#             
-#             self.spectrogram_canvas.create_rectangle(50, 25, 150, 75, fill="blue")
-            
-#             self.spectrogram_canvas.create_image(image=self.spectrogram_image)
-            self.spectrogram_canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
-            
-            
-            
-#             self.spectrogram_label.bind("<Button-1>", mousePressedcallback)  
-#             self.spectrogram_label.bind("<ButtonRelease-1>", mousePressedcallback)       
-            
-
-# class TaggingPage(tk.Frame):
-#     
-#     def __init__(self, parent, controller):
-#         tk.Frame.__init__(self, parent)
-#         label = ttk.Label(self, text="Tagging Page", font=LARGE_FONT)
-#         label.pack(pady=10,padx=10)
-#         
-#         get_tags_button = ttk.Button(self, text="Get tags from server",
-#                             command=lambda: functions.get_all_tags_for_all_devices_in_local_database())
-#         get_tags_button.pack()  
-#         
-#        
-#         button1 = ttk.Button(self, text="Back to Home",
-#                             command=lambda: controller.show_frame(HomePage))
-#         button1.pack() 
+        add_button = ttk.Button(self, text="Back to Home", command=lambda: self.do_stuff())
+        add_button.grid(column=0, columnspan=1, row=10) 
         
+        back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
+        back_to_home_button.grid(column=0, columnspan=1, row=70) 
                                                                                 
+    
+        
+    
         
 app = Main_GUI()
 app.mainloop() 
