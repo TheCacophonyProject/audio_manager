@@ -2817,6 +2817,10 @@ def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maxim
 #     print("x_position_percent ", x_position_percent)
     return x_position_percent
     
+def save_spectrogram_selection(selection_to_save):
+    print("selection_to_save ", selection_to_save)
+    
+    
     
     
     

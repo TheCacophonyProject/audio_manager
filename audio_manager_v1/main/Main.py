@@ -1305,23 +1305,40 @@ class CreateTestDataPage(tk.Frame):
         # print("Mouse is at position ", event.x, event.y)
         self.temp_rectangle = self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent )
         
+        
     def leftMouseReleasedcallback(self, event):
         # Might use this to draw box?
         print("Left mouse button released at ", event.x, event.y)
         
+        # Create another rectangle and delete the temp_rectange.  Had to do this to stop on_move_mouse deleting the previous finished rectangle
+        if self.temp_rectangle is not None:
+            # http://www.kosbie.net/cmu/fall-10/15-110/koz/misc-demos/src/semi-transparent-stipple-demo.py
+            self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent, fill='green', stipple="gray12" )
+            self.canvas.delete(self.temp_rectangle)
+        
     def rightMousePressedcallback(self, event):
         
-#         print("Right mouse button pressed at ", event.x, event.y)
-#         item = self.canvas.gettags(CURRENT)
-#         print("item ", item)
+        selected_item = self.canvas.gettags(CURRENT)        
         
+        if selected_item is not None:
+            item_type = self.canvas.type(selected_item) # https://stackoverflow.com/questions/38982313/python-tkinter-identify-object-on-click
+            if item_type == "rectangle":
+                self.canvas.delete(selected_item)
+        
+#         all_items = self.canvas.find_all() # https://effbot.org/tkinterbook/canvas.htm
+#         
+#         
+#         if len(all_items) > 1:
+#             self.canvas.delete(all_items[len(all_items)-1])
+
+    def save_selections(self):
+        print("Going to save selections")
         all_items = self.canvas.find_all() # https://effbot.org/tkinterbook/canvas.htm
-        
-#         for item in all_items:
-#             print("item ", item)
-        
-        if len(all_items) > 1:
-            self.canvas.delete(all_items[len(all_items)-1])
+        for item in all_items:
+            item_type = self.canvas.type(item) # https://stackoverflow.com/questions/38982313/python-tkinter-identify-object-on-click
+            if item_type == "rectangle":
+                functions.save_spectrogram_selection(item)
+            
     
     def __init__(self, parent, controller):
         # https://stackoverflow.com/questions/7727804/tkinter-using-scrollbars-on-a-canvas
@@ -1387,9 +1404,11 @@ class CreateTestDataPage(tk.Frame):
 #         delete_last_line_button = ttk.Button(self, text="Delete last line", command=lambda: self.delete_last_line())
 #         delete_last_line_button.grid(column=0, columnspan=1, row=90) 
         
+        save_selections_button = ttk.Button(self, text="Save Selections", command=lambda: self.save_selections()) # https://effbot.org/tkinterbook/canvas.htm))
+        save_selections_button.grid(column=0, columnspan=1, row=100) 
         
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=100) 
+        back_to_home_button.grid(column=0, columnspan=1, row=110) 
                
             
 class CreateTestPage(tk.Frame):  
