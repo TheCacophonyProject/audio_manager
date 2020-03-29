@@ -2810,7 +2810,7 @@ def test_not_between_dates(firstDateStr, lastDateStr):
        
 def spectrogram_selection(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width, recording_length):
     recording_pos_seconds = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum) * recording_length
-#     print("x clicked at ", recording_pos_seconds, ' seconds')
+    print("x clicked at ", recording_pos_seconds, ' seconds')
     
 def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width):
     x_position_percent = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum)

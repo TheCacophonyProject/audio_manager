@@ -1260,48 +1260,50 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
         
 class CreateTestDataPage(tk.Frame):    
     
-#     def delete_last_line(self):
-# 
-#         print("delete line and boxes")
-#         
-#         print("box1 ", self.box1)
-#         
-#         print("a_line ", self.a_line)
-#         print("box2 ", self.box2)        
-#         
-#         self.canvas.delete(self.box1)        
-#         self.canvas.delete(self.a_line)
-#         self.canvas.delete(self.box2)
-# #         self.canvas.delete(self.image)
-#         
-#         self.box2 = None
-#         self.canvas.update_idletasks()
+
         
     def display_spectrogram(self):
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data('475656')           
         self.spectrogram_canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
         
     def leftMousePressedcallback(self, event):
-       
-#         print("Mouse Pressed at", event.x, event.y)
-#             print("x Scroll bar position is ", scroll_x.get())
-        self.x_scroll_bar_minimum = self.scroll_x.get()[0]
-#         print("x_scroll_bar_minimum is ", self.x_scroll_bar_minimum)
-       
+
+        # Find the positions of the scroll bars
+        self.x_scroll_bar_minimum = self.scroll_x.get()[0]   
+#         print("self.x_scroll_bar_minimum ", self.x_scroll_bar_minimum)
         self.x_scroll_bar_maximum = self.scroll_x.get()[1]
-#         print("x_scroll_bar_maximum is ", self.x_scroll_bar_maximum)
+#         print("self.x_scroll_bar_maximum ", self.x_scroll_bar_maximum)
+        
+        self.y_scroll_bar_minimum = self.scroll_y.get()[0] 
+#         print("self.y_scroll_bar_minimum ", self.y_scroll_bar_minimum)      
+        self.y_scroll_bar_maximum = self.scroll_y.get()[1]        
+#         print("self.y_scroll_bar_maximum ", self.y_scroll_bar_maximum)
+
         
         functions.spectrogram_selection(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
         
         x_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
+        y_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)        
 #         print("x_position_percent ", x_position_percent)
+#         print("y_position_percent ", y_position_percent)
         
-        x_position_percent_of_image_width = x_position_percent * self.canvas_width
-#         print("x_position_percent_of_image_width ", x_position_percent_of_image_width)        
+        self.x_rectangle_start_position_percent = x_position_percent
+        self.y_rectangle_start_position_percent = y_position_percent        
+        
 
-        self.a_line = self.canvas.create_line(self.spectrogram_image.width()*x_position_percent, 0, self.spectrogram_image.width()*x_position_percent, self.canvas_height)
+#         self.a_vertical_line = self.canvas.create_line(self.spectrogram_image.width()*x_position_percent, 0, self.spectrogram_image.width()*x_position_percent, self.spectrogram_image.height())
+#         self.a_horizonal_line = self.canvas.create_line(0,self.spectrogram_image.height()*y_position_percent, self.spectrogram_image.width(), self.spectrogram_image.height()*y_position_percent )
         
-#         self.box2 = self.canvas.create_rectangle(200, 200, 250, 250, fill="red")
+
+
+    def on_move_press(self, event):
+        if self.temp_rectangle is not None:
+            self.canvas.delete(self.temp_rectangle)
+        
+        self.x_rectangle_finish_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
+        self.y_rectangle_finish_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)        
+        # print("Mouse is at position ", event.x, event.y)
+        self.temp_rectangle = self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent )
         
     def leftMouseReleasedcallback(self, event):
         # Might use this to draw box?
@@ -1335,7 +1337,7 @@ class CreateTestDataPage(tk.Frame):
 #         self.bind("<Button-1>", self.leftMouseReleasedcallback)  
 #         self.bind("<Button-2>", self.rightMousePressedcallback)  
 #         self.bind("<ButtonRelease-1>", self.leftMouseReleasedcallback)       
-        
+        self.temp_rectangle = None
         
         title_label = ttk.Label(self, text="Create Test Data", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0) 
@@ -1376,6 +1378,7 @@ class CreateTestDataPage(tk.Frame):
         
         self.canvas.bind("<Button-1>", self.leftMousePressedcallback)        
         self.canvas.bind("<ButtonRelease-1>", self.leftMouseReleasedcallback) 
+        self.canvas.bind("<B1-Motion>", self.on_move_press)
         
         self.canvas.bind("<Button-3>", self.rightMousePressedcallback)         
         
