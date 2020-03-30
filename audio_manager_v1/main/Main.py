@@ -1270,30 +1270,23 @@ class CreateTestDataPage(tk.Frame):
 
         # Find the positions of the scroll bars
         self.x_scroll_bar_minimum = self.scroll_x.get()[0]   
-#         print("self.x_scroll_bar_minimum ", self.x_scroll_bar_minimum)
         self.x_scroll_bar_maximum = self.scroll_x.get()[1]
-#         print("self.x_scroll_bar_maximum ", self.x_scroll_bar_maximum)
         
-        self.y_scroll_bar_minimum = self.scroll_y.get()[0] 
-#         print("self.y_scroll_bar_minimum ", self.y_scroll_bar_minimum)      
+        self.y_scroll_bar_minimum = self.scroll_y.get()[0]      
         self.y_scroll_bar_maximum = self.scroll_y.get()[1]        
-#         print("self.y_scroll_bar_maximum ", self.y_scroll_bar_maximum)
+
 
         
-        functions.spectrogram_selection(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
+#         functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
         
         x_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
         y_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)        
-#         print("x_position_percent ", x_position_percent)
-#         print("y_position_percent ", y_position_percent)
-        
+ 
         self.x_rectangle_start_position_percent = x_position_percent
-        self.y_rectangle_start_position_percent = y_position_percent        
+        self.x_rectangle_start_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
         
-
-#         self.a_vertical_line = self.canvas.create_line(self.spectrogram_image.width()*x_position_percent, 0, self.spectrogram_image.width()*x_position_percent, self.spectrogram_image.height())
-#         self.a_horizonal_line = self.canvas.create_line(0,self.spectrogram_image.height()*y_position_percent, self.spectrogram_image.width(), self.spectrogram_image.height()*y_position_percent )
-        
+        self.y_rectangle_start_position_percent = y_position_percent
+        self.y_rectangle_start_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)        
 
 
     def on_move_press(self, event):
@@ -1307,14 +1300,21 @@ class CreateTestDataPage(tk.Frame):
         
         
     def leftMouseReleasedcallback(self, event):
-        # Might use this to draw box?
-        print("Left mouse button released at ", event.x, event.y)
-        
+              
         # Create another rectangle and delete the temp_rectange.  Had to do this to stop on_move_mouse deleting the previous finished rectangle
         if self.temp_rectangle is not None:
             # http://www.kosbie.net/cmu/fall-10/15-110/koz/misc-demos/src/semi-transparent-stipple-demo.py
             self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent, fill='green', stipple="gray12" )
             self.canvas.delete(self.temp_rectangle)
+            self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
+            self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
+            
+            # Now save this selection in the database
+            print("self.x_rectangle_start_position_seconds ", self.x_rectangle_start_position_seconds)
+            print("self.x_rectangle_finish_position_seconds ", self.x_rectangle_finish_position_seconds)
+            
+            print("self.y_rectangle_start_position_hertz ", self.y_rectangle_start_position_hertz)
+            print("self.y_rectangle_finish_position_hertz ", self.y_rectangle_finish_position_hertz)
         
     def rightMousePressedcallback(self, event):
         
@@ -1325,11 +1325,7 @@ class CreateTestDataPage(tk.Frame):
             if item_type == "rectangle":
                 self.canvas.delete(selected_item)
         
-#         all_items = self.canvas.find_all() # https://effbot.org/tkinterbook/canvas.htm
-#         
-#         
-#         if len(all_items) > 1:
-#             self.canvas.delete(all_items[len(all_items)-1])
+
 
     def save_selections(self):
         print("Going to save selections")
@@ -1344,16 +1340,11 @@ class CreateTestDataPage(tk.Frame):
         # https://stackoverflow.com/questions/7727804/tkinter-using-scrollbars-on-a-canvas
         # https://stackoverflow.com/questions/43731784/tkinter-canvas-scrollbar-with-grid
         # https://riptutorial.com/tkinter/example/27784/scrolling-a-canvas-widget-horizontally-and-vertically
-        
-     
-#         def mouseReleasedcallback(event):
-#             print("Mouse Released at", event.x, event.y)                   
+                  
             
         tk.Frame.__init__(self, parent)
                     
-#         self.bind("<Button-1>", self.leftMouseReleasedcallback)  
-#         self.bind("<Button-2>", self.rightMousePressedcallback)  
-#         self.bind("<ButtonRelease-1>", self.leftMouseReleasedcallback)       
+     
         self.temp_rectangle = None
         
         title_label = ttk.Label(self, text="Create Test Data", font=LARGE_FONT)
@@ -1364,15 +1355,12 @@ class CreateTestDataPage(tk.Frame):
         msg1.config(width=600)
         msg1.grid(column=0, columnspan=1, row=10)         
                
-#         display_spectrogram_button = ttk.Button(self, text="Display Spectrogram", command=lambda: display_spectrogram())
-#         display_spectrogram_button.grid(column=0, columnspan=1, row=20)
+
         self.canvas_width = 1000
         self.canvas_height = 900
         self.canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height)
         
-        
-#         canvas.create_oval(10, 10, 20, 20, fill="red")
-#         canvas.create_oval(200, 200, 220, 220, fill="blue")
+
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data('475656')
         
         print("Image width is ", self.spectrogram_image.width())
@@ -1388,21 +1376,13 @@ class CreateTestDataPage(tk.Frame):
 
         self.canvas.configure(yscrollcommand=self.scroll_y.set, xscrollcommand=self.scroll_x.set)
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-                
-#         self.canvas.bind("<Button-1>", self.mousePressedcallback)  
-#         self.canvas.bind("<ButtonRelease-1>", self.mousePressedcallback) 
-
-        
+              
         self.canvas.bind("<Button-1>", self.leftMousePressedcallback)        
         self.canvas.bind("<ButtonRelease-1>", self.leftMouseReleasedcallback) 
         self.canvas.bind("<B1-Motion>", self.on_move_press)
         
         self.canvas.bind("<Button-3>", self.rightMousePressedcallback)         
         
-#         self.box1 = self.canvas.create_rectangle(10, 10, 60, 60, fill="blue")
-         
-#         delete_last_line_button = ttk.Button(self, text="Delete last line", command=lambda: self.delete_last_line())
-#         delete_last_line_button.grid(column=0, columnspan=1, row=90) 
         
         save_selections_button = ttk.Button(self, text="Save Selections", command=lambda: self.save_selections()) # https://effbot.org/tkinterbook/canvas.htm))
         save_selections_button.grid(column=0, columnspan=1, row=100) 

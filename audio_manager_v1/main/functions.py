@@ -1625,21 +1625,24 @@ def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_i
         image_out_path = temp_display_images_folder_path + '/' + image_out_name
         
         y, sr = librosa.load(audio_in_path, sr=None)      
-               
-#         start_time_seconds_float = float(start_time_seconds)            
-#         
-#         start_position_array = int(sr * start_time_seconds_float)              
-#                    
-#         end_position_array = start_position_array + int((sr * duration_seconds))                  
-#                     
-#         y_part = y[start_position_array:end_position_array]  
-#         mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
-        mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, fmax=8000)
-        S_dB = librosa.power_to_db(mel_spectrogram, ref=np.max)
+        
+        hop_length = 512
+        n_fft = 2048
+        D = np.abs(librosa.stft(y, n_fft=n_fft,  
+                        hop_length=hop_length))
+        DB = librosa.amplitude_to_db(D, ref=np.max)
+             
+
+#         mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, fmax=8000)
+#         S_dB = librosa.power_to_db(mel_spectrogram, ref=np.max)
         
         pylab.axis('off') # no axis
         pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
-        librosa.display.specshow(S_dB,sr=sr,fmax=8000) #https://matplotlib.org/examples/color/colormaps_reference.html
+#         librosa.display.specshow(S_dB,sr=sr,fmax=8000) #https://matplotlib.org/examples/color/colormaps_reference.html
+#         librosa.display.specshow(DB, sr=sr, hop_length=hop_length, 
+#                          x_axis='time',fmax=2000);
+        librosa.display.specshow(DB,y_axis='linear')
+
         pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
         pylab.close()
         
@@ -2808,9 +2811,15 @@ def test_not_between_dates(firstDateStr, lastDateStr):
         
         print('Processing ID ' + str(ID) + " which is " + str(count) + ' of ' + str(numOfRecords) + ' ' + recordingDateTime)
        
-def spectrogram_selection(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width, recording_length):
+def get_recording_position_in_seconds(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width, recording_length):
     recording_pos_seconds = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum) * recording_length
     print("x clicked at ", recording_pos_seconds, ' seconds')
+    return recording_pos_seconds;
+
+def get_recording_position_in_hertz(y_mouse_pos, y_scroll_bar_minimum, y_scroll_bar_maximum, canvas_height, recording_maximum_freq):
+    recording_pos_hertz = recording_maximum_freq - ((((y_mouse_pos/canvas_height) * (y_scroll_bar_maximum - y_scroll_bar_minimum)) + y_scroll_bar_minimum) * recording_maximum_freq)
+    
+    return recording_pos_hertz;
     
 def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width):
     x_position_percent = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum)
