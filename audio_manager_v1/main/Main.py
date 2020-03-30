@@ -29,7 +29,10 @@ from PIL import ImageTk,Image
 import main.functions as functions
 import main.parameters as parameters
 from main.parameters import *
-import datetime
+# import datetime
+
+from datetime import datetime
+import calendar
 
 import threading
 LARGE_FONT= ("Verdana", 12)
@@ -1262,9 +1265,13 @@ class CreateTestDataPage(tk.Frame):
     
 
         
-    def display_spectrogram(self):
-        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data('475656')           
-        self.spectrogram_canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
+#     def display_spectrogram(self):
+#         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data('475656')           
+#         self.spectrogram_canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
+#         
+#         d = datetime.utcnow()
+#         self.time_image_created = calendar.timegm(d.utctimetuple()) # Going to use to keep track of 'rectangles' saved in db
+#         print ("self.time_image_created ", self.time_image_created)
         
     def leftMousePressedcallback(self, event):
 
@@ -1303,8 +1310,12 @@ class CreateTestDataPage(tk.Frame):
               
         # Create another rectangle and delete the temp_rectange.  Had to do this to stop on_move_mouse deleting the previous finished rectangle
         if self.temp_rectangle is not None:
+          
             # http://www.kosbie.net/cmu/fall-10/15-110/koz/misc-demos/src/semi-transparent-stipple-demo.py
-            self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent, fill='green', stipple="gray12" )
+            aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent, fill='green', stipple="gray12" )
+            
+            
+            print("aRectangle_id ", aRectangle_id)
             self.canvas.delete(self.temp_rectangle)
             self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
             self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
@@ -1315,14 +1326,37 @@ class CreateTestDataPage(tk.Frame):
             
             print("self.y_rectangle_start_position_hertz ", self.y_rectangle_start_position_hertz)
             print("self.y_rectangle_finish_position_hertz ", self.y_rectangle_finish_position_hertz)
+            
+            if self.y_rectangle_start_position_hertz > self.y_rectangle_finish_position_hertz:
+                upper_freq_hertz = self.y_rectangle_start_position_hertz
+                lower_freq_hertz = self.y_rectangle_finish_position_hertz
+            else:
+                upper_freq_hertz = self.y_rectangle_finish_position_hertz
+                lower_freq_hertz = self.y_rectangle_start_position_hertz
+                
+            if self.x_rectangle_start_position_seconds <  self.x_rectangle_finish_position_seconds:
+                start_position_seconds = self.x_rectangle_start_position_seconds
+                finish_position_seconds = self.x_rectangle_finish_position_seconds
+            else:
+                finish_position_seconds = self.x_rectangle_start_position_seconds
+                start_position_seconds = self.x_rectangle_finish_position_seconds       
+                   
+            
+            functions.insert_test_data_into_database(161943, start_position_seconds, finish_position_seconds, upper_freq_hertz, lower_freq_hertz, "morepork_more-pork", aRectangle_id, self.time_image_created )
         
     def rightMousePressedcallback(self, event):
         
-        selected_item = self.canvas.gettags(CURRENT)        
+        selected_item = self.canvas.gettags(CURRENT)
+        selected_item_id = event.widget.find_withtag('current')[0]
         
         if selected_item is not None:
             item_type = self.canvas.type(selected_item) # https://stackoverflow.com/questions/38982313/python-tkinter-identify-object-on-click
             if item_type == "rectangle":
+                # Deleted it from the database
+                print("selected_item id is ", selected_item_id, " and the image time is ", self.time_image_created)
+                functions.delete_test_data_row(selected_item_id, self.time_image_created)
+                                
+                # Now delete it from the canvas
                 self.canvas.delete(selected_item)
         
 
@@ -1343,6 +1377,8 @@ class CreateTestDataPage(tk.Frame):
                   
             
         tk.Frame.__init__(self, parent)
+        
+       
                     
      
         self.temp_rectangle = None
@@ -1365,6 +1401,9 @@ class CreateTestDataPage(tk.Frame):
         
         print("Image width is ", self.spectrogram_image.width())
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
+        d = datetime.utcnow()
+        self.time_image_created = calendar.timegm(d.utctimetuple()) # Going to use to keep track of 'rectangles' saved in db
+        print ("self.time_image_created ", self.time_image_created)
         
         self.canvas.grid(row=20, column=0)
         

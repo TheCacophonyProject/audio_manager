@@ -2829,9 +2829,34 @@ def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maxim
 def save_spectrogram_selection(selection_to_save):
     print("selection_to_save ", selection_to_save)
     
+def insert_test_data_into_database(recording_id, start_time_seconds, finish_time_seconds, upper_freq_hertz, lower_freq_hertz, what, aRectangle_id, time_image_created ):
     
     
+    cur1 = get_database_connection().cursor()
+    cur1.execute("SELECT device_super_name, device_name, recordingDateTime, recordingDateTimeNZ FROM recordings WHERE recording_id = ?", (recording_id,)) 
+    rows = cur1.fetchall() 
+    device_super_name = rows[0][0]  
+    device_name = rows[0][1]
+    recordingDateTime = rows[0][2]  
+    recordingDateTimeNZ = rows[0][3] 
     
+#     recordingDateTimeNZ = convert_time_zones(recordingDateTime)
+    
+    try:     
+        sql = ''' INSERT INTO test_data(recording_id, start_time_seconds, finish_time_seconds, upper_freq_hertz, lower_freq_hertz, what, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, aRectangle_id, time_image_created)
+                  VALUES(?,?,?,?,?,?,?,?,?,?,?,?) '''
+        cur2 = get_database_connection().cursor()
+        cur2.execute(sql, (recording_id, start_time_seconds, finish_time_seconds, upper_freq_hertz, lower_freq_hertz, what, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, aRectangle_id, time_image_created))
+        get_database_connection().commit()
+    except Exception as e:
+        print(e, '\n')
+        print('\t\tUnable to insert test_data ' + str(recording_id), '\n')      
+    
+def delete_test_data_row(aRectangle_id, time_image_created): 
+    cur = get_database_connection().cursor()
+    sql = 'DELETE FROM test_data WHERE aRectangle_id=? and time_image_created=?'
+    cur.execute(sql, (aRectangle_id, time_image_created))
+    get_database_connection().commit()
     
     
     
