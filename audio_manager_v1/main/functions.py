@@ -2814,12 +2814,12 @@ def test_not_between_dates(firstDateStr, lastDateStr):
 def get_recording_position_in_seconds(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width, recording_length):
     recording_pos_seconds = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum) * recording_length
     print("x clicked at ", recording_pos_seconds, ' seconds')
-    return recording_pos_seconds;
+    return round(recording_pos_seconds,1)
 
 def get_recording_position_in_hertz(y_mouse_pos, y_scroll_bar_minimum, y_scroll_bar_maximum, canvas_height, recording_maximum_freq):
     recording_pos_hertz = recording_maximum_freq - ((((y_mouse_pos/canvas_height) * (y_scroll_bar_maximum - y_scroll_bar_minimum)) + y_scroll_bar_minimum) * recording_maximum_freq)
     
-    return recording_pos_hertz;
+    return int(recording_pos_hertz)
     
 def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width):
     x_position_percent = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum)
@@ -2829,7 +2829,7 @@ def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maxim
 def save_spectrogram_selection(selection_to_save):
     print("selection_to_save ", selection_to_save)
     
-def insert_test_data_into_database(recording_id, start_time_seconds, finish_time_seconds, upper_freq_hertz, lower_freq_hertz, what, aRectangle_id, time_image_created ):
+def insert_test_data_into_database(recording_id, start_time_seconds, finish_time_seconds, lower_freq_hertz, upper_freq_hertz, what ):
     
     
     cur1 = get_database_connection().cursor()
@@ -2840,22 +2840,22 @@ def insert_test_data_into_database(recording_id, start_time_seconds, finish_time
     recordingDateTime = rows[0][2]  
     recordingDateTimeNZ = rows[0][3] 
     
-#     recordingDateTimeNZ = convert_time_zones(recordingDateTime)
-    
     try:     
-        sql = ''' INSERT INTO test_data(recording_id, start_time_seconds, finish_time_seconds, upper_freq_hertz, lower_freq_hertz, what, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, aRectangle_id, time_image_created)
-                  VALUES(?,?,?,?,?,?,?,?,?,?,?,?) '''
+        sql = ''' INSERT INTO test_data(recording_id, start_time_seconds, finish_time_seconds, lower_freq_hertz, upper_freq_hertz, what, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ)
+                  VALUES(?,?,?,?,?,?,?,?,?,?) '''
         cur2 = get_database_connection().cursor()
-        cur2.execute(sql, (recording_id, start_time_seconds, finish_time_seconds, upper_freq_hertz, lower_freq_hertz, what, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, aRectangle_id, time_image_created))
+        cur2.execute(sql, (recording_id, start_time_seconds, finish_time_seconds, lower_freq_hertz, upper_freq_hertz, what, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ ))
         get_database_connection().commit()
     except Exception as e:
         print(e, '\n')
         print('\t\tUnable to insert test_data ' + str(recording_id), '\n')      
     
-def delete_test_data_row(aRectangle_id, time_image_created): 
-    cur = get_database_connection().cursor()
-    sql = 'DELETE FROM test_data WHERE aRectangle_id=? and time_image_created=?'
-    cur.execute(sql, (aRectangle_id, time_image_created))
+ 
+def delete_test_data_row(recording_id, start_time_seconds, finish_time_seconds, lower_freq_hertz, upper_freq_hertz, what): 
+    
+    cur3 = get_database_connection().cursor()
+    sql = 'DELETE FROM test_data WHERE recording_id=? and start_time_seconds=? and finish_time_seconds=? and lower_freq_hertz=? and upper_freq_hertz=? and what=?'
+    cur3.execute(sql, (recording_id, start_time_seconds, finish_time_seconds, lower_freq_hertz, upper_freq_hertz, what))
     get_database_connection().commit()
     
     

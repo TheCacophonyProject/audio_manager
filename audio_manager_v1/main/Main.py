@@ -56,7 +56,7 @@ class Main_GUI(tk.Tk):
         self.frames = {}
         
 #         for F in (HomePage, RecordingsPage, TaggingPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage, CreateTagsFromOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage, ModelAccuracyAnalysisPage, CreateTestDataPage):
-        for F in (HomePage, RecordingsPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage, ModelAccuracyAnalysisPage, CreateTestDataPage, CreateTestPage):
+        for F in (HomePage, RecordingsPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage, ModelAccuracyAnalysisPage, CreateTestDataPage):
           
             frame = F(container, self)
             self.frames[F] = frame            
@@ -129,31 +129,11 @@ class HomePage(tk.Frame):
                             command=lambda: controller.show_frame(CreateTestDataPage))        
         createTestDataPage_button.pack()
         
-        createTestPage_button = ttk.Button(self, text="Create test page ",
-                            command=lambda: controller.show_frame(CreateTestPage))        
-        createTestPage_button.pack()
-        
-#         other_or_no_longer_used_label = tk.Label(self, text="Functions below here probably no longer needed")
-#         other_or_no_longer_used_label.pack(pady=10,padx=10)       
-              
-#         createTagsFromOnsetsPage_button = ttk.Button(self, text="Create Tags from Onsets",
-#                             command=lambda: controller.show_frame(CreateTagsFromOnsetsPage))         
-#         createTagsFromOnsetsPage_button.pack()
-       
-#         createSpectrogramsPage_button = ttk.Button(self, text="Create Spectrograms",
-#                             command=lambda: controller.show_frame(CreateSpectrogramsPage))        
-#         createSpectrogramsPage_button.pack()
-        
-#         tagging_button = ttk.Button(self, text="Tagging",
-#                             command=lambda: controller.show_frame(TaggingPage))        
-#         tagging_button.pack()
-        
-        
-     
+#         createTestPage_button = ttk.Button(self, text="Create test page ",
+#                             command=lambda: controller.show_frame(CreateTestPage))        
+#         createTestPage_button.pack()
         
 
-        
-        
 
 class RecordingsPage(tk.Frame):
     
@@ -1262,16 +1242,7 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
        
         
 class CreateTestDataPage(tk.Frame):    
-    
 
-        
-#     def display_spectrogram(self):
-#         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data('475656')           
-#         self.spectrogram_canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
-#         
-#         d = datetime.utcnow()
-#         self.time_image_created = calendar.timegm(d.utctimetuple()) # Going to use to keep track of 'rectangles' saved in db
-#         print ("self.time_image_created ", self.time_image_created)
         
     def leftMousePressedcallback(self, event):
 
@@ -1280,11 +1251,7 @@ class CreateTestDataPage(tk.Frame):
         self.x_scroll_bar_maximum = self.scroll_x.get()[1]
         
         self.y_scroll_bar_minimum = self.scroll_y.get()[0]      
-        self.y_scroll_bar_maximum = self.scroll_y.get()[1]        
-
-
-        
-#         functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
+        self.y_scroll_bar_maximum = self.scroll_y.get()[1]       
         
         x_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
         y_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)        
@@ -1339,35 +1306,48 @@ class CreateTestDataPage(tk.Frame):
                 finish_position_seconds = self.x_rectangle_finish_position_seconds
             else:
                 finish_position_seconds = self.x_rectangle_start_position_seconds
-                start_position_seconds = self.x_rectangle_finish_position_seconds       
-                   
+                start_position_seconds = self.x_rectangle_finish_position_seconds                  
+
+            self.canvas.itemconfig(aRectangle_id, tags=(str(161943), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , "morepork_more-pork"))
+              
             
-            functions.insert_test_data_into_database(161943, start_position_seconds, finish_position_seconds, upper_freq_hertz, lower_freq_hertz, "morepork_more-pork", aRectangle_id, self.time_image_created )
+            functions.insert_test_data_into_database(161943, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, "morepork_more-pork")
         
     def rightMousePressedcallback(self, event):
         
-        selected_item = self.canvas.gettags(CURRENT)
+      
         selected_item_id = event.widget.find_withtag('current')[0]
         
-        if selected_item is not None:
-            item_type = self.canvas.type(selected_item) # https://stackoverflow.com/questions/38982313/python-tkinter-identify-object-on-click
-            if item_type == "rectangle":
-                # Deleted it from the database
-                print("selected_item id is ", selected_item_id, " and the image time is ", self.time_image_created)
-                functions.delete_test_data_row(selected_item_id, self.time_image_created)
-                                
-                # Now delete it from the canvas
-                self.canvas.delete(selected_item)
-        
+
+        item_type = self.canvas.type(CURRENT) # https://stackoverflow.com/questions/38982313/python-tkinter-identify-object-on-click
+        if item_type != "image":
+            # Deleted it from the database
+                       
+            tags_from_item = self.canvas.gettags(selected_item_id)
+            print("tags_from_item ", tags_from_item)
+            for tag in tags_from_item:                      
+                print("tag ", tag)
+                
+            recording_id = tags_from_item[0]
+            start_time_seconds = tags_from_item[1]
+            finish_time_seconds = tags_from_item[2]
+            lower_freq_hertz = tags_from_item[3]
+            upper_freq_hertz = tags_from_item[4]
+            what = tags_from_item[5]                      
+
+            functions.delete_test_data_row(recording_id, start_time_seconds, finish_time_seconds, lower_freq_hertz, upper_freq_hertz, what)
+                            
+            # Now delete it from the canvas
+            self.canvas.delete(selected_item_id)       
 
 
-    def save_selections(self):
-        print("Going to save selections")
-        all_items = self.canvas.find_all() # https://effbot.org/tkinterbook/canvas.htm
-        for item in all_items:
-            item_type = self.canvas.type(item) # https://stackoverflow.com/questions/38982313/python-tkinter-identify-object-on-click
-            if item_type == "rectangle":
-                functions.save_spectrogram_selection(item)
+#     def save_selections(self):
+#         print("Going to save selections")
+#         all_items = self.canvas.find_all() # https://effbot.org/tkinterbook/canvas.htm
+#         for item in all_items:
+#             item_type = self.canvas.type(item) # https://stackoverflow.com/questions/38982313/python-tkinter-identify-object-on-click
+#             if item_type == "rectangle":
+#                 functions.save_spectrogram_selection(item)
             
     
     def __init__(self, parent, controller):
@@ -1376,11 +1356,8 @@ class CreateTestDataPage(tk.Frame):
         # https://riptutorial.com/tkinter/example/27784/scrolling-a-canvas-widget-horizontally-and-vertically
                   
             
-        tk.Frame.__init__(self, parent)
-        
-       
-                    
-     
+        tk.Frame.__init__(self, parent)        
+            
         self.temp_rectangle = None
         
         title_label = ttk.Label(self, text="Create Test Data", font=LARGE_FONT)
@@ -1389,22 +1366,20 @@ class CreateTestDataPage(tk.Frame):
         msg1_instructions = "Use this page to create test data."
         msg1 = tk.Message(self, text = msg1_instructions)
         msg1.config(width=600)
-        msg1.grid(column=0, columnspan=1, row=10)         
-               
+        msg1.grid(column=0, columnspan=1, row=10)                        
 
         self.canvas_width = 1000
         self.canvas_height = 900
-        self.canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height)
-        
+        self.canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height)        
 
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data('475656')
         
         print("Image width is ", self.spectrogram_image.width())
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
-        d = datetime.utcnow()
-        self.time_image_created = calendar.timegm(d.utctimetuple()) # Going to use to keep track of 'rectangles' saved in db
-        print ("self.time_image_created ", self.time_image_created)
-        
+#         d = datetime.utcnow()
+#         self.time_image_created = calendar.timegm(d.utctimetuple()) # Going to use to keep track of 'rectangles' saved in db
+#         print ("self.time_image_created ", self.time_image_created)
+#         
         self.canvas.grid(row=20, column=0)
         
         self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
@@ -1420,8 +1395,7 @@ class CreateTestDataPage(tk.Frame):
         self.canvas.bind("<ButtonRelease-1>", self.leftMouseReleasedcallback) 
         self.canvas.bind("<B1-Motion>", self.on_move_press)
         
-        self.canvas.bind("<Button-3>", self.rightMousePressedcallback)         
-        
+        self.canvas.bind("<Button-3>", self.rightMousePressedcallback) 
         
         save_selections_button = ttk.Button(self, text="Save Selections", command=lambda: self.save_selections()) # https://effbot.org/tkinterbook/canvas.htm))
         save_selections_button.grid(column=0, columnspan=1, row=100) 
@@ -1430,38 +1404,37 @@ class CreateTestDataPage(tk.Frame):
         back_to_home_button.grid(column=0, columnspan=1, row=110) 
                
             
-class CreateTestPage(tk.Frame):  
-    
-    def add(self): 
-        if self.x == None:
-            self.x = 1
-        else:
-            self.x += 1   
-    
-    def printx(self):
-        print("x is ", self.x) 
-        
-    def do_stuff(self):     
-        
-        self.add()
-        self.printx()
-         
-        self.add()
-        self.printx()   
-        
-    def __init__(self, parent, controller):  
-        tk.Frame.__init__(self, parent)
-        self.x = None
-            
-        
-        add_button = ttk.Button(self, text="Back to Home", command=lambda: self.do_stuff())
-        add_button.grid(column=0, columnspan=1, row=10) 
-        
-        back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=70) 
+# class CreateTestPage(tk.Frame):  
+#     
+#     def add(self): 
+#         if self.x == None:
+#             self.x = 1
+#         else:
+#             self.x += 1   
+#     
+#     def printx(self):
+#         print("x is ", self.x) 
+#         
+#     def do_stuff(self):     
+#         
+#         self.add()
+#         self.printx()
+#          
+#         self.add()
+#         self.printx()   
+#         
+#     def __init__(self, parent, controller):  
+#         tk.Frame.__init__(self, parent)
+#         self.x = None
+#             
+#         
+#         add_button = ttk.Button(self, text="Back to Home", command=lambda: self.do_stuff())
+#         add_button.grid(column=0, columnspan=1, row=10) 
+#         
+#         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
+#         back_to_home_button.grid(column=0, columnspan=1, row=70) 
                                                                                 
-    
-        
+            
     
         
 app = Main_GUI()
