@@ -1308,10 +1308,10 @@ class CreateTestDataPage(tk.Frame):
                 finish_position_seconds = self.x_rectangle_start_position_seconds
                 start_position_seconds = self.x_rectangle_finish_position_seconds                  
 
-            self.canvas.itemconfig(aRectangle_id, tags=(str(161943), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , "morepork_more-pork"))
+            self.canvas.itemconfig(aRectangle_id, tags=(str(475656), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , "morepork_more-pork"))
               
             
-            functions.insert_test_data_into_database(161943, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, "morepork_more-pork")
+            functions.insert_test_data_into_database(475656, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, "morepork_more-pork")
         
     def rightMousePressedcallback(self, event):
         
@@ -1339,15 +1339,23 @@ class CreateTestDataPage(tk.Frame):
                             
             # Now delete it from the canvas
             self.canvas.delete(selected_item_id)       
+        
+    def retrieve_test_data_from_database_and_add_rectangles_to_image(self,recording_id):
+        test_data_rectangles = functions.retrieve_test_data_from_database(recording_id)
+        
+        for test_data_rectangle in test_data_rectangles:
+            recording_id = test_data_rectangle[0]
+            start_time_seconds = test_data_rectangle[1]
+            finish_time_seconds = test_data_rectangle[2]
+            lower_freq_hertz = test_data_rectangle[3]
+            upper_freq_hertz = test_data_rectangle[4]
+            what = test_data_rectangle[5]
+         
+#             aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*start_time_seconds/62, self.spectrogram_image.height()*upper_freq_hertz/8000,self.spectrogram_image.width()*finish_time_seconds/62, self.spectrogram_image.height()*upper_freq_hertz/8000, fill='green', stipple="gray12" )
+            aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*start_time_seconds/62,self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000),self.spectrogram_image.width()*finish_time_seconds/62,self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000),fill='green', stipple="gray12")
+            self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_time_seconds), str(finish_time_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , what))
+            
 
-
-#     def save_selections(self):
-#         print("Going to save selections")
-#         all_items = self.canvas.find_all() # https://effbot.org/tkinterbook/canvas.htm
-#         for item in all_items:
-#             item_type = self.canvas.type(item) # https://stackoverflow.com/questions/38982313/python-tkinter-identify-object-on-click
-#             if item_type == "rectangle":
-#                 functions.save_spectrogram_selection(item)
             
     
     def __init__(self, parent, controller):
@@ -1379,7 +1387,8 @@ class CreateTestDataPage(tk.Frame):
 #         d = datetime.utcnow()
 #         self.time_image_created = calendar.timegm(d.utctimetuple()) # Going to use to keep track of 'rectangles' saved in db
 #         print ("self.time_image_created ", self.time_image_created)
-#         
+
+               
         self.canvas.grid(row=20, column=0)
         
         self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
@@ -1400,39 +1409,16 @@ class CreateTestDataPage(tk.Frame):
         save_selections_button = ttk.Button(self, text="Save Selections", command=lambda: self.save_selections()) # https://effbot.org/tkinterbook/canvas.htm))
         save_selections_button.grid(column=0, columnspan=1, row=100) 
         
+        retrieve_test_data_from_database_button = ttk.Button(self, text="Show test data", command=lambda: self.retrieve_test_data_from_database_and_add_rectangles_to_image('475656'))
+        retrieve_test_data_from_database_button.grid(column=0, columnspan=1, row=110)
+        
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=110) 
+        back_to_home_button.grid(column=0, columnspan=1, row=120) 
+        
+#         self.retrieve_test_data_from_database_and_add_rectangles_to_image('475656')
                
             
-# class CreateTestPage(tk.Frame):  
-#     
-#     def add(self): 
-#         if self.x == None:
-#             self.x = 1
-#         else:
-#             self.x += 1   
-#     
-#     def printx(self):
-#         print("x is ", self.x) 
-#         
-#     def do_stuff(self):     
-#         
-#         self.add()
-#         self.printx()
-#          
-#         self.add()
-#         self.printx()   
-#         
-#     def __init__(self, parent, controller):  
-#         tk.Frame.__init__(self, parent)
-#         self.x = None
-#             
-#         
-#         add_button = ttk.Button(self, text="Back to Home", command=lambda: self.do_stuff())
-#         add_button.grid(column=0, columnspan=1, row=10) 
-#         
-#         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-#         back_to_home_button.grid(column=0, columnspan=1, row=70) 
+
                                                                                 
             
     

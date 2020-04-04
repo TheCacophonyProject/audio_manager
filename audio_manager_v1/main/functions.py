@@ -2858,5 +2858,17 @@ def delete_test_data_row(recording_id, start_time_seconds, finish_time_seconds, 
     cur3.execute(sql, (recording_id, start_time_seconds, finish_time_seconds, lower_freq_hertz, upper_freq_hertz, what))
     get_database_connection().commit()
     
+def retrieve_test_data_from_database(recording_id):
     
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds, lower_freq_hertz, upper_freq_hertz, what from test_data WHERE recording_id = ?", (recording_id,)) 
+    test_data_rows = cur.fetchall() 
+    return test_data_rows
+    
+        
+        
+        
+        
+    
+       
     
