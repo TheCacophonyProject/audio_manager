@@ -2865,9 +2865,29 @@ def retrieve_test_data_from_database(recording_id):
     test_data_rows = cur.fetchall() 
     return test_data_rows
     
+def retrieve_recordings_for_creating_test_data():
+    table_name = 'recordings'
+    
+    firstDate = recordings_for_creating_test_data_start_date + ':00:00:00'
+    lastDate = recordings_for_creating_test_data_end_date + ':23:59:59'
+    
+    cur = get_database_connection().cursor()
+    # https://stackoverflow.com/questions/8187288/sql-select-between-dates
+    cur.execute("select recording_id, recordingDateTimeNZ from " + table_name + " where strftime('%Y-%m-%d:%H-%M-%S', recordingDateTimeNZ)  BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recording_id ASC")      
+         
+    records = cur.fetchall()
+#     numOfRecords = len(records)
+#     count = 0
+#     
+#     for record in records:          
+#         
+#         ID = record[0]
+#         recordingDateTime = record[1]
+#         
+#         print('Processing ID ' + str(ID) + " which is " + str(count) + ' of ' + str(numOfRecords) + ' ' + recordingDateTime)
+            
         
-        
-        
+    return records
         
     
        

@@ -21,6 +21,9 @@ probability_cutoff_for_tag_creation = 0.5
 
 predictedByModel_tag_to_create = 'morepork_more-pork'
 
+recordings_for_creating_test_data_start_date = '2010-03-01'
+recordings_for_creating_test_data_end_date = '2020-03-31'
+
 #### Cacophony Server Configuration
 server_endpoint = 'https://api.cacophony.org.nz' # Production
 # server_endpoint = 'https://api-test.cacophony.org.nz'  # Test
