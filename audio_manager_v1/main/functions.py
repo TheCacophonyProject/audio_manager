@@ -29,6 +29,7 @@ from librosa import display, onset
 from PIL import ImageTk,Image 
 
 from datetime import datetime
+import time
 from pytz import timezone
 from pytz import all_timezones
 
@@ -2868,24 +2869,35 @@ def retrieve_test_data_from_database(recording_id):
 def retrieve_recordings_for_creating_test_data():
     table_name = 'recordings'
     
-    firstDate = recordings_for_creating_test_data_start_date + ':00:00:00'
-    lastDate = recordings_for_creating_test_data_end_date + ':23:59:59'
+#     firstDate = recordings_for_creating_test_data_start_date + ':00:00:00'
+#     lastDate = recordings_for_creating_test_data_end_date + ':23:59:59'
+    
+#     firstDate = recordings_for_creating_test_data_start_date + ':00:00:00+13:00'
+#     lastDate = recordings_for_creating_test_data_end_date + ':23:59:59+13:00'
+    
+    firstDate = recordings_for_creating_test_data_start_date 
+    lastDate = recordings_for_creating_test_data_end_date 
     
     cur = get_database_connection().cursor()
-    # https://stackoverflow.com/questions/8187288/sql-select-between-dates
-    cur.execute("select recording_id, recordingDateTimeNZ from " + table_name + " where strftime('%Y-%m-%d:%H-%M-%S', recordingDateTimeNZ)  BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recording_id ASC")      
-         
+    # https://stackoverflow.com/questions/8187288/sql-select-between-dates    
+#     https://www.sqlitetutorial.net/sqlite-date-functions/sqlite-datetime-function/
+
+#     cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name from " + table_name + " where device_name = 'B0007' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")   
+    cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name from " + table_name + " where recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")      
+              
     records = cur.fetchall()
-#     numOfRecords = len(records)
-#     count = 0
-#     
-#     for record in records:          
-#         
-#         ID = record[0]
-#         recordingDateTime = record[1]
-#         
-#         print('Processing ID ' + str(ID) + " which is " + str(count) + ' of ' + str(numOfRecords) + ' ' + recordingDateTime)
-            
+    numOfRecords = len(records)
+    count = 0
+     
+    for record in records:  
+        count+=1        
+         
+        recording_id = record[0]
+        recordingDateTimeNZ = record[1]
+        device_name = record[2]
+         
+        print('Processing ID ' + str(recording_id) + ' device_name ' + device_name + " which is " + str(count) + ' of ' + str(numOfRecords) + ' ' + recordingDateTimeNZ)
+                 
         
     return records
         
