@@ -2881,22 +2881,24 @@ def retrieve_recordings_for_creating_test_data():
     cur = get_database_connection().cursor()
     # https://stackoverflow.com/questions/8187288/sql-select-between-dates    
 #     https://www.sqlitetutorial.net/sqlite-date-functions/sqlite-datetime-function/
+    # Note, I use the original datetime column in Z timezone, not the extra NZ datatime column that I had created in the database so I could easliy see NZ time of a recording.
+    # I couldn't get querying on the NZ timezone colunm to work.
 
 #     cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name from " + table_name + " where device_name = 'B0007' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")   
     cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name from " + table_name + " where recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")      
               
     records = cur.fetchall()
-    numOfRecords = len(records)
-    count = 0
+#     numOfRecords = len(records)
+#     count = 0
      
-    for record in records:  
-        count+=1        
-         
-        recording_id = record[0]
-        recordingDateTimeNZ = record[1]
-        device_name = record[2]
-         
-        print('Processing ID ' + str(recording_id) + ' device_name ' + device_name + " which is " + str(count) + ' of ' + str(numOfRecords) + ' ' + recordingDateTimeNZ)
+#     for record in records:  
+#         count+=1        
+#          
+#         recording_id = record[0]
+#         recordingDateTimeNZ = record[1]
+#         device_name = record[2]
+#          
+#         print('Processing ID ' + str(recording_id) + ' device_name ' + device_name + " which is " + str(count) + ' of ' + str(numOfRecords) + ' ' + recordingDateTimeNZ)
                  
         
     return records

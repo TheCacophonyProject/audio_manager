@@ -1242,8 +1242,6 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
        
         
 class CreateTestDataPage(tk.Frame):    
-    
-    
 
         
     def leftMousePressedcallback(self, event):
@@ -1316,11 +1314,9 @@ class CreateTestDataPage(tk.Frame):
             
             functions.insert_test_data_into_database(recording_id, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, "morepork_more-pork")
         
-    def rightMousePressedcallback(self, event):
-        
+    def rightMousePressedcallback(self, event):        
       
-        selected_item_id = event.widget.find_withtag('current')[0]
-        
+        selected_item_id = event.widget.find_withtag('current')[0]        
 
         item_type = self.canvas.type(CURRENT) # https://stackoverflow.com/questions/38982313/python-tkinter-identify-object-on-click
         if item_type != "image":
@@ -1361,52 +1357,54 @@ class CreateTestDataPage(tk.Frame):
     def retrieve_recordings_for_creating_test_data(self):
         self.recordings = functions.retrieve_recordings_for_creating_test_data()
         
-#     def display_spectrogram(self):
-#         recording_id = self.recordings[self.current_recordings_index][0]
-#         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id))
-# #         print("Image width is ", self.spectrogram_image.width())
-#         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
-# #         d = datetime.utcnow()
-# #         self.time_image_created = calendar.timegm(d.utctimetuple()) # Going to use to keep track of 'rectangles' saved in db
-# #         print ("self.time_image_created ", self.time_image_created)
-# 
-#        
-#         self.canvas.grid(row=20, rowspan = 50, columnspan=4, column=0)
-#         
-#         self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
-#         self.scroll_x.grid(row=71, columnspan=4, column=0, sticky="ew")
-#         
-#         self.scroll_y = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
-#         self.scroll_y.grid(row=20,rowspan = 50, column=4, sticky="ns")
-#         
-# 
-#         self.canvas.configure(yscrollcommand=self.scroll_y.set, xscrollcommand=self.scroll_x.set)
-#         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-#               
-#         self.canvas.bind("<Button-1>", self.leftMousePressedcallback)        
-#         self.canvas.bind("<ButtonRelease-1>", self.leftMouseReleasedcallback) 
-#         self.canvas.bind("<B1-Motion>", self.on_move_press)
-#         
-#         self.canvas.bind("<Button-3>", self.rightMousePressedcallback) 
-#         
-#         self.retrieve_test_data_from_database_and_add_rectangles_to_image(self.recordings[self.current_recordings_index][0])
-#         
-#         self.recording_id_and_result_place_value = tk.StringVar()
-#        
-#         self.recording_id_and_result_place_value.set("adsf") 
-# #         self.recording_id_and_result_place_value.set("Recording Id: " + str(recording_id)) # + " Result: " + str(self.current_recordings_index))         
-     
-#     def previous_recording(self):
-#         if self.current_recordings_index > 0:
-#             self.current_recordings_index = self.current_recordings_index -1
-#             self.display_spectrogram() 
-#         
-#                
-#     def next_recording(self):
-#         if self.current_recordings_index < (len(self.recordings) - 2): 
-#             self.current_recordings_index = self.current_recordings_index + 1
-#             self.display_spectrogram()    
-               
+    def display_spectrogram(self):
+        recording_id = self.recordings[self.current_recordings_index][0]
+        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id))
+
+        self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)     
+       
+        self.canvas.grid(row=20, rowspan = 50, columnspan=4, column=0)
+        
+        self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
+        self.scroll_x.grid(row=71, columnspan=4, column=0, sticky="ew")
+        
+        self.scroll_y = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.scroll_y.grid(row=20,rowspan = 50, column=4, sticky="ns")
+
+        self.canvas.configure(yscrollcommand=self.scroll_y.set, xscrollcommand=self.scroll_x.set)
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+              
+        self.canvas.bind("<Button-1>", self.leftMousePressedcallback)        
+        self.canvas.bind("<ButtonRelease-1>", self.leftMouseReleasedcallback) 
+        self.canvas.bind("<B1-Motion>", self.on_move_press)
+        
+        self.canvas.bind("<Button-3>", self.rightMousePressedcallback) 
+        
+        self.retrieve_test_data_from_database_and_add_rectangles_to_image(recording_id)           
+
+        self.recording_id_and_result_place_value.set("Recording Id: " + str(recording_id)) 
+
+    def first_recording(self):
+            self.current_recordings_index = 0
+            self.display_spectrogram()   
+            
+    def previous_recording(self):
+        if self.current_recordings_index > 0:
+            self.current_recordings_index = self.current_recordings_index -1
+            self.change_spectrogram()        
+           
+    def next_recording(self):
+        if self.current_recordings_index < (len(self.recordings) - 2): 
+            self.current_recordings_index = self.current_recordings_index + 1
+            self.change_spectrogram() 
+        
+    def change_spectrogram(self):
+        recording_id = self.recordings[self.current_recordings_index][0]
+        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id))   
+        self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)                    
+        self.retrieve_test_data_from_database_and_add_rectangles_to_image(recording_id)           
+
+        self.recording_id_and_result_place_value.set("Recording Id: " + str(recording_id)) # + " Result: " + str(self.current_recordings_index))               
     
     def __init__(self, parent, controller):
         # https://stackoverflow.com/questions/7727804/tkinter-using-scrollbars-on-a-canvas
@@ -1414,7 +1412,7 @@ class CreateTestDataPage(tk.Frame):
         # https://riptutorial.com/tkinter/example/27784/scrolling-a-canvas-widget-horizontally-and-vertically
                   
             
-        tk.Frame.__init__(self, parent)        
+        tk.Frame.__init__(self, parent)    
             
         self.temp_rectangle = None
         self.current_recordings_index = 0
@@ -1429,97 +1427,28 @@ class CreateTestDataPage(tk.Frame):
 
         self.canvas_width = 1000
         self.canvas_height = 900
-        self.canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height)        
+        self.canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height)   
 
-#         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data('475656')
         self.retrieve_recordings_for_creating_test_data()
-#         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(self.recordings[0][0]))
-#         self.display_spectrogram(str(self.recordings[0][0]))
-#         self.display_spectrogram()
-        
-#         print("Image width is ", self.spectrogram_image.width())
-#         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
-                
-#         self.canvas.grid(row=20, column=0)
-#         
-#         self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
-#         self.scroll_x.grid(row=21, column=0, sticky="ew")
-#         
-#         self.scroll_y = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
-#         self.scroll_y.grid(row=20, column=1, sticky="ns")
-# 
-#         self.canvas.configure(yscrollcommand=self.scroll_y.set, xscrollcommand=self.scroll_x.set)
-#         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-#               
-#         self.canvas.bind("<Button-1>", self.leftMousePressedcallback)        
-#         self.canvas.bind("<ButtonRelease-1>", self.leftMouseReleasedcallback) 
-#         self.canvas.bind("<B1-Motion>", self.on_move_press)
-#         
-#         self.canvas.bind("<Button-3>", self.rightMousePressedcallback) 
 
         self.recording_id_and_result_place_value = tk.StringVar()
         recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value) 
         recording_id_label.grid(column=5, columnspan=1, row=20) 
         self.recording_id_and_result_place_value.set("Recording Id") 
         
-        previous_recording_button = ttk.Button(self, text="Previous Recording", command=lambda: previous_recording()) # https://effbot.org/tkinterbook/canvas.htm))
-        previous_recording_button.grid(column=0, columnspan=1, row=100) 
+        self.first_recording()
         
-        next_recording_button = ttk.Button(self, text="Next Recording", command=lambda: next_recording()) # https://effbot.org/tkinterbook/canvas.htm))
-        next_recording_button.grid(column=1, columnspan=2, row=100) 
+        first_recording_button = ttk.Button(self, text="First Recording", command=lambda: self.first_recording()) # https://effbot.org/tkinterbook/canvas.htm))
+        first_recording_button.grid(column=0, columnspan=1, row=100) 
         
-                 
-                
+        previous_recording_button = ttk.Button(self, text="Previous Recording", command=lambda: self.previous_recording()) # https://effbot.org/tkinterbook/canvas.htm))
+        previous_recording_button.grid(column=1, columnspan=1, row=100) 
+        
+        next_recording_button = ttk.Button(self, text="Next Recording", command=lambda: self.next_recording()) # https://effbot.org/tkinterbook/canvas.htm))
+        next_recording_button.grid(column=2, columnspan=2, row=100)        
+                                 
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=120) 
-        
-#         self.retrieve_test_data_from_database_and_add_rectangles_to_image('475656')
-               
-       
-        def previous_recording():
-            if self.current_recordings_index > 0:
-                self.current_recordings_index = self.current_recordings_index -1
-                display_spectrogram() 
-        
-               
-        def next_recording():
-            if self.current_recordings_index < (len(self.recordings) - 2): 
-                self.current_recordings_index = self.current_recordings_index + 1
-                display_spectrogram()                                                                           
-            
-        def display_spectrogram():
-            recording_id = self.recordings[self.current_recordings_index][0]
-            self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id))
-    #         print("Image width is ", self.spectrogram_image.width())
-            self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)
-    #         d = datetime.utcnow()
-    #         self.time_image_created = calendar.timegm(d.utctimetuple()) # Going to use to keep track of 'rectangles' saved in db
-    #         print ("self.time_image_created ", self.time_image_created)
-    
-           
-            self.canvas.grid(row=20, rowspan = 50, columnspan=4, column=0)
-            
-            self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
-            self.scroll_x.grid(row=71, columnspan=4, column=0, sticky="ew")
-            
-            self.scroll_y = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
-            self.scroll_y.grid(row=20,rowspan = 50, column=4, sticky="ns")
-            
-    
-            self.canvas.configure(yscrollcommand=self.scroll_y.set, xscrollcommand=self.scroll_x.set)
-            self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-                  
-            self.canvas.bind("<Button-1>", self.leftMousePressedcallback)        
-            self.canvas.bind("<ButtonRelease-1>", self.leftMouseReleasedcallback) 
-            self.canvas.bind("<B1-Motion>", self.on_move_press)
-            
-            self.canvas.bind("<Button-3>", self.rightMousePressedcallback) 
-            
-            self.retrieve_test_data_from_database_and_add_rectangles_to_image(recording_id)
-            
-           
-#             self.recording_id_and_result_place_value.set("adsf") 
-            self.recording_id_and_result_place_value.set("Recording Id: " + str(recording_id)) # + " Result: " + str(self.current_recordings_index))        
 
         
 app = Main_GUI()
