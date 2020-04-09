@@ -1151,6 +1151,10 @@ def play_clip(recording_id, start_time, duration, applyBandPassFilter):
     sf.write(audio_out_path, y_amplified_to_play, sr)
 
     os.system("aplay " + audio_out_path + " &")
+    
+def stop_clip():
+#     https://www.reddit.com/r/learnpython/comments/9rxxj0/python_how_do_i_stop_a_audio_file_from_playing/
+    os.system("killall aplay")
  
     
 def create_arff_file_headder(output_folder, arff_filename, comments, relation, attribute_labels, attribute_features): 

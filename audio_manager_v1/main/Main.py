@@ -1272,28 +1272,18 @@ class CreateTestDataPage(tk.Frame):
         # print("Mouse is at position ", event.x, event.y)
         self.temp_rectangle = self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent )
         
-        
     def leftMouseReleasedcallback(self, event):
               
         # Create another rectangle and delete the temp_rectange.  Had to do this to stop on_move_mouse deleting the previous finished rectangle
         if self.temp_rectangle is not None:
+#             if not self.actual_confirmed.get():
+#                 messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
+#                 return
+                
             recording_id = self.recordings[self.current_recordings_index][0] 
-          
-            # http://www.kosbie.net/cmu/fall-10/15-110/koz/misc-demos/src/semi-transparent-stipple-demo.py
-            aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent, fill='green', stipple="gray12" )
             
-            
-            print("aRectangle_id ", aRectangle_id)
-            self.canvas.delete(self.temp_rectangle)
             self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
             self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
-            
-            # Now save this selection in the database
-            print("self.x_rectangle_start_position_seconds ", self.x_rectangle_start_position_seconds)
-            print("self.x_rectangle_finish_position_seconds ", self.x_rectangle_finish_position_seconds)
-            
-            print("self.y_rectangle_start_position_hertz ", self.y_rectangle_start_position_hertz)
-            print("self.y_rectangle_finish_position_hertz ", self.y_rectangle_finish_position_hertz)
             
             if self.y_rectangle_start_position_hertz > self.y_rectangle_finish_position_hertz:
                 upper_freq_hertz = self.y_rectangle_start_position_hertz
@@ -1307,12 +1297,104 @@ class CreateTestDataPage(tk.Frame):
                 finish_position_seconds = self.x_rectangle_finish_position_seconds
             else:
                 finish_position_seconds = self.x_rectangle_start_position_seconds
-                start_position_seconds = self.x_rectangle_finish_position_seconds                  
+                start_position_seconds = self.x_rectangle_finish_position_seconds    
+                
+            if abs(finish_position_seconds - start_position_seconds) < 0.1:
+                functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,62, False)
+                return
+          
+            # http://www.kosbie.net/cmu/fall-10/15-110/koz/misc-demos/src/semi-transparent-stipple-demo.py
+            aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent, fill='green', stipple="gray12" )
+            
+            
+            print("aRectangle_id ", aRectangle_id)
+            self.canvas.delete(self.temp_rectangle)
+#             self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
+#             self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
+            
+            # Now save this selection in the database
+            print("self.x_rectangle_start_position_seconds ", self.x_rectangle_start_position_seconds)
+            print("self.x_rectangle_finish_position_seconds ", self.x_rectangle_finish_position_seconds)
+            
+            print("self.y_rectangle_start_position_hertz ", self.y_rectangle_start_position_hertz)
+            print("self.y_rectangle_finish_position_hertz ", self.y_rectangle_finish_position_hertz)
+            
+            print('self.actual_confirmed.get() ', self.actual_confirmed.get())
+            
+           
+                
+            if not self.actual_confirmed.get():
+                # Check to see if user was just selecting position to start playing from                
+                messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
+                return             
+                
+            print("What to be used is ", self.actual_confirmed.get())     
 
-            self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , "morepork_more-pork"))
+#             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , "morepork_more-pork"))
+            self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , self.actual_confirmed.get()))
               
             
-            functions.insert_test_data_into_database(recording_id, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, "morepork_more-pork")
+#             functions.insert_test_data_into_database(recording_id, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, "morepork_more-pork")
+            functions.insert_test_data_into_database(recording_id, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, self.actual_confirmed.get())   
+#     def leftMouseReleasedcallback(self, event):
+#               
+#         # Create another rectangle and delete the temp_rectange.  Had to do this to stop on_move_mouse deleting the previous finished rectangle
+#         if self.temp_rectangle is not None:
+# #             if not self.actual_confirmed.get():
+# #                 messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
+# #                 return
+#                 
+#             recording_id = self.recordings[self.current_recordings_index][0] 
+#           
+#             # http://www.kosbie.net/cmu/fall-10/15-110/koz/misc-demos/src/semi-transparent-stipple-demo.py
+#             aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent, fill='green', stipple="gray12" )
+#             
+#             
+#             print("aRectangle_id ", aRectangle_id)
+#             self.canvas.delete(self.temp_rectangle)
+#             self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
+#             self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
+#             
+#             # Now save this selection in the database
+#             print("self.x_rectangle_start_position_seconds ", self.x_rectangle_start_position_seconds)
+#             print("self.x_rectangle_finish_position_seconds ", self.x_rectangle_finish_position_seconds)
+#             
+#             print("self.y_rectangle_start_position_hertz ", self.y_rectangle_start_position_hertz)
+#             print("self.y_rectangle_finish_position_hertz ", self.y_rectangle_finish_position_hertz)
+#             
+#             print('self.actual_confirmed.get() ', self.actual_confirmed.get())
+#             
+#             if self.y_rectangle_start_position_hertz > self.y_rectangle_finish_position_hertz:
+#                 upper_freq_hertz = self.y_rectangle_start_position_hertz
+#                 lower_freq_hertz = self.y_rectangle_finish_position_hertz
+#             else:
+#                 upper_freq_hertz = self.y_rectangle_finish_position_hertz
+#                 lower_freq_hertz = self.y_rectangle_start_position_hertz
+#                 
+#             if self.x_rectangle_start_position_seconds <  self.x_rectangle_finish_position_seconds:
+#                 start_position_seconds = self.x_rectangle_start_position_seconds
+#                 finish_position_seconds = self.x_rectangle_finish_position_seconds
+#             else:
+#                 finish_position_seconds = self.x_rectangle_start_position_seconds
+#                 start_position_seconds = self.x_rectangle_finish_position_seconds    
+#                 
+#             if abs(finish_position_seconds - start_position_seconds) < 0.1:
+#                 functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,62, False)
+#                 return
+#                 
+#             if not self.actual_confirmed.get():
+#                 # Check to see if user was just selecting position to start playing from                
+#                 messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
+#                 return             
+#                 
+#             print("What to be used is ", self.actual_confirmed.get())     
+# 
+# #             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , "morepork_more-pork"))
+#             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , self.actual_confirmed.get()))
+#               
+#             
+# #             functions.insert_test_data_into_database(recording_id, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, "morepork_more-pork")
+#             functions.insert_test_data_into_database(recording_id, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, self.actual_confirmed.get())
         
     def rightMousePressedcallback(self, event):        
       
@@ -1404,7 +1486,11 @@ class CreateTestDataPage(tk.Frame):
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)                    
         self.retrieve_test_data_from_database_and_add_rectangles_to_image(recording_id)           
 
-        self.recording_id_and_result_place_value.set("Recording Id: " + str(recording_id)) # + " Result: " + str(self.current_recordings_index))               
+        self.recording_id_and_result_place_value.set("Recording Id: " + str(recording_id)) # + " Result: " + str(self.current_recordings_index))   
+        
+    def confirm_actual(self):  
+        print("Radio button pressed")    
+        print('self.actual_confirmed.get() ', self.actual_confirmed.get())      
     
     def __init__(self, parent, controller):
         # https://stackoverflow.com/questions/7727804/tkinter-using-scrollbars-on-a-canvas
@@ -1436,16 +1522,85 @@ class CreateTestDataPage(tk.Frame):
         recording_id_label.grid(column=5, columnspan=1, row=20) 
         self.recording_id_and_result_place_value.set("Recording Id") 
         
+        # Add the radio buttons for selecting what the noise is
+        
+        actual_label_confirmed = ttk.Label(self, text="SET Actual Confirmed", font=LARGE_FONT)
+        actual_label_confirmed.grid(column=5, columnspan=1, row=21)
+              
+        self.actual_confirmed = tk.StringVar()
+
+        actual_confirmed_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork more-pork', variable=self.actual_confirmed, value='morepork_more-pork',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_morepork_classic.grid(column=5, columnspan=1, row=22)               
+        
+        actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_confirmed, value='unknown',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_unknown.grid(column=5, columnspan=1, row=23)
+        actual_confirmed_radio_button_dove = ttk.Radiobutton(self,text='Dove', variable=self.actual_confirmed, value='dove',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_dove.grid(column=5, columnspan=1, row=24)   
+        actual_confirmed_radio_button_duck = ttk.Radiobutton(self,text='Duck', variable=self.actual_confirmed, value='duck',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_duck.grid(column=5, columnspan=1, row=25) 
+        actual_confirmed_radio_button_dog = ttk.Radiobutton(self,text='Dog', variable=self.actual_confirmed, value='dog',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_dog.grid(column=5, columnspan=1, row=26) 
+        actual_confirmed_radio_button_human = ttk.Radiobutton(self,text='Human', variable=self.actual_confirmed, value='human',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_human.grid(column=5, columnspan=1, row=27)   
+        actual_confirmed_radio_button_siren = ttk.Radiobutton(self,text='Siren', variable=self.actual_confirmed, value='siren',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_siren.grid(column=5, columnspan=1, row=28)
+        actual_confirmed_radio_button_bird = ttk.Radiobutton(self,text='Bird', variable=self.actual_confirmed, value='bird',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_bird.grid(column=5, columnspan=1, row=29) 
+        actual_confirmed_radio_button_car = ttk.Radiobutton(self,text='Car', variable=self.actual_confirmed, value='car',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_car.grid(column=5, columnspan=1, row=30)
+        actual_confirmed_radio_button_rumble = ttk.Radiobutton(self,text='Rumble', variable=self.actual_confirmed, value='rumble',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_rumble.grid(column=5, columnspan=1, row=31)
+        actual_confirmed_radio_button_water = ttk.Radiobutton(self,text='Water', variable=self.actual_confirmed, value='water',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_water.grid(column=5, columnspan=1, row=32)
+        actual_confirmed_radio_button_hand_saw = ttk.Radiobutton(self,text='Hand saw', variable=self.actual_confirmed, value='hand_saw',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_hand_saw.grid(column=5, columnspan=1, row=33)
+        
+        
+        actual_confirmed_radio_button_white_noise = ttk.Radiobutton(self,text='White noise', variable=self.actual_confirmed, value='white_noise',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_white_noise.grid(column=5, columnspan=1, row=34)
+        actual_confirmed_radio_button_plane = ttk.Radiobutton(self,text='Plane', variable=self.actual_confirmed, value='plane',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_plane.grid(column=5, columnspan=1, row=35)
+        actual_confirmed_radio_button_cow = ttk.Radiobutton(self,text='Cow', variable=self.actual_confirmed, value='cow',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_cow.grid(column=5, columnspan=1, row=36) 
+        actual_confirmed_radio_button_buzzy_insect = ttk.Radiobutton(self,text='Buzzy insect', variable=self.actual_confirmed, value='buzzy_insect',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_buzzy_insect.grid(column=5, columnspan=1, row=37) 
+        actual_confirmed_radio_morepork_more_pork_part = ttk.Radiobutton(self,text='Morepork more-pork Part', variable=self.actual_confirmed, value='morepork_more-pork_part',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_morepork_more_pork_part.grid(column=5, columnspan=1, row=38) 
+        actual_confirmed_radio_button_hammering = ttk.Radiobutton(self,text='Hammering', variable=self.actual_confirmed, value='hammering',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_hammering.grid(column=5, columnspan=5, row=39)  
+        actual_confirmed_radio_button_frog = ttk.Radiobutton(self,text='Frog', variable=self.actual_confirmed, value='frog',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_frog.grid(column=5, columnspan=5, row=248)
+        actual_confirmed_radio_button_chainsaw = ttk.Radiobutton(self,text='Chainsaw', variable=self.actual_confirmed, value='chainsaw',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_chainsaw.grid(column=5, columnspan=5, row=40) 
+        actual_confirmed_radio_button_crackle = ttk.Radiobutton(self,text='Crackle', variable=self.actual_confirmed, value='crackle',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_crackle.grid(column=5, columnspan=5, row=41)  
+        actual_confirmed_radio_button_car_horn = ttk.Radiobutton(self,text='Car horn', variable=self.actual_confirmed, value='car_horn',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_car_horn.grid(column=5, columnspan=5, row=42)
+        actual_confirmed_radio_button_fire_work = ttk.Radiobutton(self,text='Fire work', variable=self.actual_confirmed, value='fire_work',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_fire_work.grid(column=5, columnspan=5, row=43)
+        actual_confirmed_radio_button_maybe_morepork_more_pork = ttk.Radiobutton(self,text='Maybe Morepork more-pork', variable=self.actual_confirmed, value='maybe_morepork_more-pork',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_maybe_morepork_more_pork.grid(column=5, columnspan=1, row=44)
+        actual_confirmed_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.actual_confirmed, value='music',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_music.grid(column=5, columnspan=1, row=45)   
+                        
         self.first_recording()
         
         first_recording_button = ttk.Button(self, text="First Recording", command=lambda: self.first_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         first_recording_button.grid(column=0, columnspan=1, row=100) 
-        
+                       
         previous_recording_button = ttk.Button(self, text="Previous Recording", command=lambda: self.previous_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         previous_recording_button.grid(column=1, columnspan=1, row=100) 
         
+        play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: functions.play_clip(str(self.recordings[self.current_recordings_index][0]), 0,62, False))
+        play_button.grid(column=2, columnspan=1, row=100)
+        
+        play_button = ttk.Button(self, text="Stop Playing", command=lambda: functions.stop_clip())
+        play_button.grid(column=3, columnspan=1, row=100)
+        
+        
+        
         next_recording_button = ttk.Button(self, text="Next Recording", command=lambda: self.next_recording()) # https://effbot.org/tkinterbook/canvas.htm))
-        next_recording_button.grid(column=2, columnspan=2, row=100)        
+        next_recording_button.grid(column=4, columnspan=2, row=100)        
                                  
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=120) 
