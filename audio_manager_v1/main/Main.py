@@ -5,6 +5,10 @@ Modified 17 12 2019a
 @author: tim
 '''
 from tkinter.messagebox import showinfo
+from threading import Thread
+from pylint.test import test_self
+
+import time
 
 
 #  https://www.youtube.com/watch?v=A0gaXfM1UN0&t=343s
@@ -1239,10 +1243,11 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=70) 
         
-       
+
         
 class CreateTestDataPage(tk.Frame):    
 
+    
         
     def leftMousePressedcallback(self, event):
         
@@ -1300,7 +1305,9 @@ class CreateTestDataPage(tk.Frame):
             start_position_seconds = self.x_rectangle_finish_position_seconds    
         
         if abs(finish_position_seconds - start_position_seconds) < 0.1:
-            functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,62, False)
+#             functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,62, False)
+#             play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,62, False)
+            self.play_clip()
             return
               
         # Create another rectangle and delete the temp_rectange.  Had to do this to stop on_move_mouse deleting the previous finished rectangle
@@ -1381,7 +1388,7 @@ class CreateTestDataPage(tk.Frame):
         
     def display_spectrogram(self):
         recording_id = self.recordings[self.current_recordings_index][0]
-        duration = self.recordings[self.current_recordings_index][3]
+#         duration = self.recordings[self.current_recordings_index][3]
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id))
 
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)     
@@ -1431,7 +1438,25 @@ class CreateTestDataPage(tk.Frame):
         
     def confirm_actual(self):  
         print("Radio button pressed")    
-        print('self.actual_confirmed.get() ', self.actual_confirmed.get())      
+        print('self.actual_confirmed.get() ', self.actual_confirmed.get())    
+        
+    
+        
+    def play_clip(self):
+        # First draw play line
+        aLine_id = self.canvas.create_line(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, 0,self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height(), fill='red')
+       
+        # Now play the clip
+        duration = self.recordings[self.current_recordings_index][3]
+        functions.play_clip(str(self.recordings[self.current_recordings_index][0]), 0,duration, False)
+        
+         # https://www.youtube.com/watch?v=f8sKAot-15w
+        while True:
+            self.canvas.move(aLine_id,5,0)
+            self.update()
+            time.sleep(0.1)
+        
+        
     
     def __init__(self, parent, controller):
         # https://stackoverflow.com/questions/7727804/tkinter-using-scrollbars-on-a-canvas
@@ -1532,8 +1557,9 @@ class CreateTestDataPage(tk.Frame):
         previous_recording_button = ttk.Button(self, text="Previous Recording", command=lambda: self.previous_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         previous_recording_button.grid(column=1, columnspan=1, row=100) 
         
-        duration = self.recordings[self.current_recordings_index][3]
-        play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: functions.play_clip(str(self.recordings[self.current_recordings_index][0]), 0,duration, False))
+        
+#         play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: functions.play_clip(str(self.recordings[self.current_recordings_index][0]), 0,duration, False))
+        play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: self.play_clip())
         play_button.grid(column=2, columnspan=1, row=100)
         
         play_button = ttk.Button(self, text="Stop Playing", command=lambda: functions.stop_clip())
