@@ -1273,35 +1273,33 @@ class CreateTestDataPage(tk.Frame):
         self.temp_rectangle = self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent )
         
     def leftMouseReleasedcallback(self, event):
+        
+        self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
+        
+        self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
+            
+        if self.y_rectangle_start_position_hertz > self.y_rectangle_finish_position_hertz:
+            upper_freq_hertz = self.y_rectangle_start_position_hertz
+            lower_freq_hertz = self.y_rectangle_finish_position_hertz
+        else:
+            upper_freq_hertz = self.y_rectangle_finish_position_hertz
+            lower_freq_hertz = self.y_rectangle_start_position_hertz
+            
+        if self.x_rectangle_start_position_seconds <  self.x_rectangle_finish_position_seconds:
+            start_position_seconds = self.x_rectangle_start_position_seconds
+            finish_position_seconds = self.x_rectangle_finish_position_seconds
+        else:
+            finish_position_seconds = self.x_rectangle_start_position_seconds
+            start_position_seconds = self.x_rectangle_finish_position_seconds    
+        
+        if abs(finish_position_seconds - start_position_seconds) < 0.1:
+            functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,62, False)
+            return
               
         # Create another rectangle and delete the temp_rectange.  Had to do this to stop on_move_mouse deleting the previous finished rectangle
         if self.temp_rectangle is not None:
-#             if not self.actual_confirmed.get():
-#                 messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
-#                 return
-                
+
             recording_id = self.recordings[self.current_recordings_index][0] 
-            
-            self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
-            self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
-            
-            if self.y_rectangle_start_position_hertz > self.y_rectangle_finish_position_hertz:
-                upper_freq_hertz = self.y_rectangle_start_position_hertz
-                lower_freq_hertz = self.y_rectangle_finish_position_hertz
-            else:
-                upper_freq_hertz = self.y_rectangle_finish_position_hertz
-                lower_freq_hertz = self.y_rectangle_start_position_hertz
-                
-            if self.x_rectangle_start_position_seconds <  self.x_rectangle_finish_position_seconds:
-                start_position_seconds = self.x_rectangle_start_position_seconds
-                finish_position_seconds = self.x_rectangle_finish_position_seconds
-            else:
-                finish_position_seconds = self.x_rectangle_start_position_seconds
-                start_position_seconds = self.x_rectangle_finish_position_seconds    
-                
-            if abs(finish_position_seconds - start_position_seconds) < 0.1:
-                functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,62, False)
-                return
           
             # http://www.kosbie.net/cmu/fall-10/15-110/koz/misc-demos/src/semi-transparent-stipple-demo.py
             aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent, fill='green', stipple="gray12" )
@@ -1309,93 +1307,28 @@ class CreateTestDataPage(tk.Frame):
             
             print("aRectangle_id ", aRectangle_id)
             self.canvas.delete(self.temp_rectangle)
-#             self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
-#             self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
-            
+
             # Now save this selection in the database
             print("self.x_rectangle_start_position_seconds ", self.x_rectangle_start_position_seconds)
             print("self.x_rectangle_finish_position_seconds ", self.x_rectangle_finish_position_seconds)
             
             print("self.y_rectangle_start_position_hertz ", self.y_rectangle_start_position_hertz)
-            print("self.y_rectangle_finish_position_hertz ", self.y_rectangle_finish_position_hertz)
-            
+            print("self.y_rectangle_finish_position_hertz ", self.y_rectangle_finish_position_hertz)            
             print('self.actual_confirmed.get() ', self.actual_confirmed.get())
-            
-           
+                      
                 
             if not self.actual_confirmed.get():
                 # Check to see if user was just selecting position to start playing from                
                 messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
                 return             
                 
-            print("What to be used is ", self.actual_confirmed.get())     
+            print("What to be used is ", self.actual_confirmed.get())   
 
-#             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , "morepork_more-pork"))
             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , self.actual_confirmed.get()))
               
-            
-#             functions.insert_test_data_into_database(recording_id, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, "morepork_more-pork")
+                      
             functions.insert_test_data_into_database(recording_id, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, self.actual_confirmed.get())   
-#     def leftMouseReleasedcallback(self, event):
-#               
-#         # Create another rectangle and delete the temp_rectange.  Had to do this to stop on_move_mouse deleting the previous finished rectangle
-#         if self.temp_rectangle is not None:
-# #             if not self.actual_confirmed.get():
-# #                 messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
-# #                 return
-#                 
-#             recording_id = self.recordings[self.current_recordings_index][0] 
-#           
-#             # http://www.kosbie.net/cmu/fall-10/15-110/koz/misc-demos/src/semi-transparent-stipple-demo.py
-#             aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent, fill='green', stipple="gray12" )
-#             
-#             
-#             print("aRectangle_id ", aRectangle_id)
-#             self.canvas.delete(self.temp_rectangle)
-#             self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
-#             self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
-#             
-#             # Now save this selection in the database
-#             print("self.x_rectangle_start_position_seconds ", self.x_rectangle_start_position_seconds)
-#             print("self.x_rectangle_finish_position_seconds ", self.x_rectangle_finish_position_seconds)
-#             
-#             print("self.y_rectangle_start_position_hertz ", self.y_rectangle_start_position_hertz)
-#             print("self.y_rectangle_finish_position_hertz ", self.y_rectangle_finish_position_hertz)
-#             
-#             print('self.actual_confirmed.get() ', self.actual_confirmed.get())
-#             
-#             if self.y_rectangle_start_position_hertz > self.y_rectangle_finish_position_hertz:
-#                 upper_freq_hertz = self.y_rectangle_start_position_hertz
-#                 lower_freq_hertz = self.y_rectangle_finish_position_hertz
-#             else:
-#                 upper_freq_hertz = self.y_rectangle_finish_position_hertz
-#                 lower_freq_hertz = self.y_rectangle_start_position_hertz
-#                 
-#             if self.x_rectangle_start_position_seconds <  self.x_rectangle_finish_position_seconds:
-#                 start_position_seconds = self.x_rectangle_start_position_seconds
-#                 finish_position_seconds = self.x_rectangle_finish_position_seconds
-#             else:
-#                 finish_position_seconds = self.x_rectangle_start_position_seconds
-#                 start_position_seconds = self.x_rectangle_finish_position_seconds    
-#                 
-#             if abs(finish_position_seconds - start_position_seconds) < 0.1:
-#                 functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,62, False)
-#                 return
-#                 
-#             if not self.actual_confirmed.get():
-#                 # Check to see if user was just selecting position to start playing from                
-#                 messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
-#                 return             
-#                 
-#             print("What to be used is ", self.actual_confirmed.get())     
-# 
-# #             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , "morepork_more-pork"))
-#             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , self.actual_confirmed.get()))
-#               
-#             
-# #             functions.insert_test_data_into_database(recording_id, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, "morepork_more-pork")
-#             functions.insert_test_data_into_database(recording_id, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, self.actual_confirmed.get())
-        
+
     def rightMousePressedcallback(self, event):        
       
         selected_item_id = event.widget.find_withtag('current')[0]        
