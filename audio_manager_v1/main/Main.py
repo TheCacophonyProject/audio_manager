@@ -1245,6 +1245,7 @@ class CreateTestDataPage(tk.Frame):
 
         
     def leftMousePressedcallback(self, event):
+        
 
         # Find the positions of the scroll bars
         self.x_scroll_bar_minimum = self.scroll_x.get()[0]   
@@ -1257,7 +1258,8 @@ class CreateTestDataPage(tk.Frame):
         y_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)        
  
         self.x_rectangle_start_position_percent = x_position_percent
-        self.x_rectangle_start_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
+        duration = self.recordings[self.current_recordings_index][3]
+        self.x_rectangle_start_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, duration)
         
         self.y_rectangle_start_position_percent = y_position_percent
         self.y_rectangle_start_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)        
@@ -1270,11 +1272,16 @@ class CreateTestDataPage(tk.Frame):
         self.x_rectangle_finish_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
         self.y_rectangle_finish_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)        
         # print("Mouse is at position ", event.x, event.y)
+        
+        if not self.actual_confirmed.get():
+            # The 'what' radio button hasn't been selected               
+#             messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
+            return 
         self.temp_rectangle = self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent )
         
     def leftMouseReleasedcallback(self, event):
-        
-        self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, 62)
+        duration = self.recordings[self.current_recordings_index][3]
+        self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, duration)
         
         self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
             
@@ -1317,10 +1324,10 @@ class CreateTestDataPage(tk.Frame):
             print('self.actual_confirmed.get() ', self.actual_confirmed.get())
                       
                 
-            if not self.actual_confirmed.get():
-                # Check to see if user was just selecting position to start playing from                
-                messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
-                return             
+#             if not self.actual_confirmed.get():
+#                 # Check to see if user was just selecting position to start playing from                
+#                 messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
+#                 return             
                 
             print("What to be used is ", self.actual_confirmed.get())   
 
@@ -1374,6 +1381,7 @@ class CreateTestDataPage(tk.Frame):
         
     def display_spectrogram(self):
         recording_id = self.recordings[self.current_recordings_index][0]
+        duration = self.recordings[self.current_recordings_index][3]
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id))
 
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)     
@@ -1524,7 +1532,8 @@ class CreateTestDataPage(tk.Frame):
         previous_recording_button = ttk.Button(self, text="Previous Recording", command=lambda: self.previous_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         previous_recording_button.grid(column=1, columnspan=1, row=100) 
         
-        play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: functions.play_clip(str(self.recordings[self.current_recordings_index][0]), 0,62, False))
+        duration = self.recordings[self.current_recordings_index][3]
+        play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: functions.play_clip(str(self.recordings[self.current_recordings_index][0]), 0,duration, False))
         play_button.grid(column=2, columnspan=1, row=100)
         
         play_button = ttk.Button(self, text="Stop Playing", command=lambda: functions.stop_clip())
