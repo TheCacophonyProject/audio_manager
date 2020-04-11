@@ -1247,18 +1247,7 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
         
 class CreateTestDataPage(tk.Frame):    
     
-    def convert_pos_in_percent_to_position_in_seconds(self, pos_in_percent, duration):
-        return duration * pos_in_percent
-    
-    def convert_pos_in_seconds_to_position_in_percent(self, pos_in_seconds, duration):
-        return pos_in_seconds / duration
-    
-    def convert_pos_in_seconds_to_canvas_position(self, pos_in_seconds, duration):
-        pos_in_percent = self.convert_pos_in_seconds_to_position_in_percent(pos_in_seconds, duration)
-        return self.spectrogram_image.width() * pos_in_percent
-        
 
-    
         
     def leftMousePressedcallback(self, event):
         
@@ -1290,10 +1279,21 @@ class CreateTestDataPage(tk.Frame):
         # print("Mouse is at position ", event.x, event.y)
         
         if not self.actual_confirmed.get():
-            # The 'what' radio button hasn't been selected               
-#             messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
-            return 
-        self.temp_rectangle = self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent )
+            # The 'what' radio button hasn't been selected 
+            return         
+
+        rectangle_bbox_x1 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_start_position_percent)
+        rectangle_bbox_y1 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.height(), self.y_rectangle_start_position_percent)
+        
+        rectangle_bbox_x2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
+        rectangle_bbox_y2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.height(), self.y_rectangle_finish_position_percent)
+        
+        
+#         rectangle_y_finish_position = functions.convert_x_postion_percent_to_x_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
+#         self.temp_rectangle = self.canvas.create_rectangle(rectangle_x_start_position, self.spectrogram_image.height()*self.y_rectangle_start_position_percent, rectangle_y_finish_position, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent )
+        self.temp_rectangle = self.canvas.create_rectangle(rectangle_bbox_x1, rectangle_bbox_y1, rectangle_bbox_x2, rectangle_bbox_y2 )
+        
+        
         
     def leftMouseReleasedcallback(self, event):
         duration = self.recordings[self.current_recordings_index][3]
@@ -1316,8 +1316,6 @@ class CreateTestDataPage(tk.Frame):
             start_position_seconds = self.x_rectangle_finish_position_seconds    
         
         if abs(finish_position_seconds - start_position_seconds) < 0.1:
-#             functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,62, False)
-#             play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,62, False)
             self.play_clip(start_position_seconds)
             return
         
@@ -1326,35 +1324,29 @@ class CreateTestDataPage(tk.Frame):
             messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
             return 
               
-        # Create another rectangle and delete the temp_rectange.  Had to do this to stop on_move_mouse deleting the previous finished rectangle
+        # Create another rectangle and delete the temp_rectangle.  Had to do this to stop on_move_mouse deleting the previous finished rectangle
         if self.temp_rectangle is not None:
             
             print("self.actual_confirmed.get() ", self.actual_confirmed.get())
 
             recording_id = self.recordings[self.current_recordings_index][0] 
           
+#             x_rectangle_spectrogram_image_start_position = functions.convert_x_postion_percent_to_x_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_start_position_percent)
+#             x_rectangle_spectrogram_image_finish_position = functions.convert_x_postion_percent_to_x_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
+            rectangle_bbox_x1 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_start_position_percent)
+            rectangle_bbox_y1 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.height(), self.y_rectangle_start_position_percent)
+            
+            rectangle_bbox_x2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
+            rectangle_bbox_y2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.height(), self.y_rectangle_finish_position_percent)
+            
+#             x_rectangle_spectrogram_image_finish_position = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
+            
+            
             # http://www.kosbie.net/cmu/fall-10/15-110/koz/misc-demos/src/semi-transparent-stipple-demo.py
-            aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,self.spectrogram_image.width()*self.x_rectangle_finish_position_percent, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent, fill='green', stipple="gray12" )
-            
-            
-            print("aRectangle_id ", aRectangle_id)
-            self.canvas.delete(self.temp_rectangle)
-
-            # Now save this selection in the database
-            print("self.x_rectangle_start_position_seconds ", self.x_rectangle_start_position_seconds)
-            print("self.x_rectangle_finish_position_seconds ", self.x_rectangle_finish_position_seconds)
-            
-            print("self.y_rectangle_start_position_hertz ", self.y_rectangle_start_position_hertz)
-            print("self.y_rectangle_finish_position_hertz ", self.y_rectangle_finish_position_hertz)            
-            print('self.actual_confirmed.get() ', self.actual_confirmed.get())
-                      
-                
-#             if not self.actual_confirmed.get():
-#                 # Check to see if user was just selecting position to start playing from                
-#                 messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
-#                 return             
-                
-            print("What to be used is ", self.actual_confirmed.get())   
+#             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,x_rectangle_spectrogram_image_finish_position, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent, fill='green', stipple="gray12" )
+            aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1, rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2, fill='green', stipple="gray12" )
+        
+            self.canvas.delete(self.temp_rectangle)           
 
             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , self.actual_confirmed.get()))
               
@@ -1370,9 +1362,9 @@ class CreateTestDataPage(tk.Frame):
             # Deleted it from the database
                        
             tags_from_item = self.canvas.gettags(selected_item_id)
-            print("tags_from_item ", tags_from_item)
-            for tag in tags_from_item:                      
-                print("tag ", tag)
+#             print("tags_from_item ", tags_from_item)
+#             for tag in tags_from_item:                      
+#                 print("tag ", tag)
                 
             recording_id = tags_from_item[0]
             start_time_seconds = tags_from_item[1]
@@ -1386,7 +1378,10 @@ class CreateTestDataPage(tk.Frame):
             # Now delete it from the canvas
             self.canvas.delete(selected_item_id)       
         
-    def retrieve_test_data_from_database_and_add_rectangles_to_image(self,recording_id):
+#     def retrieve_test_data_from_database_and_add_rectangles_to_image(self,recording_id):
+    def retrieve_test_data_from_database_and_add_rectangles_to_image(self):
+        recording_id = self.recordings[self.current_recordings_index][0]
+        duration = self.recordings[self.current_recordings_index][3]
         test_data_rectangles = functions.retrieve_test_data_from_database(recording_id)
         
         for test_data_rectangle in test_data_rectangles:
@@ -1397,8 +1392,23 @@ class CreateTestDataPage(tk.Frame):
             upper_freq_hertz = test_data_rectangle[4]
             what = test_data_rectangle[5]
          
-#             aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*start_time_seconds/62, self.spectrogram_image.height()*upper_freq_hertz/8000,self.spectrogram_image.width()*finish_time_seconds/62, self.spectrogram_image.height()*upper_freq_hertz/8000, fill='green', stipple="gray12" )
-            aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*start_time_seconds/62,self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000),self.spectrogram_image.width()*finish_time_seconds/62,self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000),fill='green', stipple="gray12")
+
+#             aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*start_time_seconds/62,self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000),self.spectrogram_image.width()*finish_time_seconds/62,self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000),fill='green', stipple="gray12")
+           
+#             rectangle_bbox_x1 = self.spectrogram_image.width()*start_time_seconds/duration
+            rectangle_bbox_x1 = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), start_time_seconds, duration)
+#             rectangle_bbox_y1 = self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000)
+            rectangle_bbox_y1 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), lower_freq_hertz, 0, 8000)
+            
+            
+#             rectangle_bbox_x2 = self.spectrogram_image.width()*finish_time_seconds/duration
+            rectangle_bbox_x2 = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), finish_time_seconds, duration)
+#             rectangle_bbox_y2 = self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000)
+            rectangle_bbox_y2 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), upper_freq_hertz, 0, 8000)
+#             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000),rectangle_bbox_x2,self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000),fill='green', stipple="gray12")
+            aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2,fill='green', stipple="gray12")
+           
+           
             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_time_seconds), str(finish_time_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , what))
             
     def retrieve_recordings_for_creating_test_data(self):
@@ -1428,7 +1438,8 @@ class CreateTestDataPage(tk.Frame):
         
         self.canvas.bind("<Button-3>", self.rightMousePressedcallback) 
         
-        self.retrieve_test_data_from_database_and_add_rectangles_to_image(recording_id)           
+#         self.retrieve_test_data_from_database_and_add_rectangles_to_image(recording_id)
+        self.retrieve_test_data_from_database_and_add_rectangles_to_image()           
 
         self.recording_id_and_result_place_value.set("Recording Id: " + str(recording_id)) 
 
@@ -1450,7 +1461,8 @@ class CreateTestDataPage(tk.Frame):
         recording_id = self.recordings[self.current_recordings_index][0]
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id))   
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)                    
-        self.retrieve_test_data_from_database_and_add_rectangles_to_image(recording_id)           
+#         self.retrieve_test_data_from_database_and_add_rectangles_to_image(recording_id)  
+        self.retrieve_test_data_from_database_and_add_rectangles_to_image()           
 
         self.recording_id_and_result_place_value.set("Recording Id: " + str(recording_id)) # + " Result: " + str(self.current_recordings_index))   
         
@@ -1469,7 +1481,8 @@ class CreateTestDataPage(tk.Frame):
         self.canvas.delete("audio_position_line") # otherwise can have multiple lines on the spectrogram
         
         duration = self.recordings[self.current_recordings_index][3]
-        x_canvas_pos = self.convert_pos_in_seconds_to_canvas_position(start_position_seconds, duration)  
+#         x_canvas_pos = self.convert_pos_in_seconds_to_canvas_position(start_position_seconds, duration)  
+        x_canvas_pos = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), start_position_seconds, duration)  
           
         
 #         self.aLine_id = self.canvas.create_line(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, 0,self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height(), fill='red')
@@ -1481,13 +1494,13 @@ class CreateTestDataPage(tk.Frame):
         
         # https://www.youtube.com/watch?v=f8sKAot-15w
         # Need to calculate the speed to move the line, how many pixels per second
-        speed = self.spectrogram_image.width()/duration/10 #  # Will update every 0.1 seconds
+        speed = self.spectrogram_image.width()/duration/20 #  # Will update every 0.1 seconds
 
         self.playing = True 
         while self.playing:
             self.canvas.move(self.aLine_id,speed,0)
             self.update()
-            time.sleep(0.1)
+            time.sleep(0.05)
         
     def stop_clip(self):
         self.playing = False 

@@ -1631,10 +1631,18 @@ def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_i
         
         y, sr = librosa.load(audio_in_path, sr=None)      
         
-        hop_length = 512
+       
+#         n_fft = 2048
+#         n_fft = 512
+#         win_length = (int)(n_fft / 2)
+#         hop_length = (int)(win_length / 8)
+#         D = np.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop_length, win_length = win_length))
+
+#         n_fft = 512
+#         n_fft = 256
         n_fft = 2048
-        D = np.abs(librosa.stft(y, n_fft=n_fft,  
-                        hop_length=hop_length))
+        
+        D = np.abs(librosa.stft(y, n_fft=n_fft))
         DB = librosa.amplitude_to_db(D, ref=np.max)
              
 
@@ -1744,7 +1752,8 @@ def get_image_for_for_creating_test_data(image_name_path):
         
     image = Image.open(image_name_path)
     [imageSizeWidth, imageSizeHeight] = image.size
-    image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*2)), Image.ANTIALIAS)
+#     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*2)), Image.ANTIALIAS)
+    image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*4)), Image.ANTIALIAS)
     print("Image size is ", image.size)
     spectrogram_image = ImageTk.PhotoImage(image)
     return spectrogram_image
@@ -2738,7 +2747,7 @@ def find_suitable_probability_cutoff():
     cur.execute(sql)      
     model_run_results = cur.fetchall()
     model_run_result = len(model_run_results)
-    count = 0
+#     count = 0
     
     for model_run_result in model_run_results:
         device_super_name = model_run_result[0]
@@ -2830,6 +2839,21 @@ def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maxim
     x_position_percent = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum)
 #     print("x_position_percent ", x_position_percent)
     return x_position_percent
+def convert_pos_in_percent_to_position_in_seconds(pos_in_percent, duration):
+    return duration * pos_in_percent
+    
+def convert_pos_in_seconds_to_position_in_percent(pos_in_seconds, duration):
+    return pos_in_seconds / duration
+    
+def convert_pos_in_seconds_to_canvas_position(spectrogram_image_width, pos_in_seconds, duration):
+    pos_in_percent = convert_pos_in_seconds_to_position_in_percent(pos_in_seconds, duration)
+    return spectrogram_image_width * pos_in_percent
+
+def convert_frequency_to_vertical_position_on_spectrogram(spectrogram_image_height, frequency, spectrogram_start_frequency, spectrogram_finish_frequency):
+    return spectrogram_image_height - (spectrogram_image_height*frequency/(spectrogram_finish_frequency - spectrogram_start_frequency))
+        
+def convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(spectrogram_image_width_or_height, x_or_y_postion_percent):
+    return spectrogram_image_width_or_height * x_or_y_postion_percent
     
 def save_spectrogram_selection(selection_to_save):
     print("selection_to_save ", selection_to_save)
@@ -2873,37 +2897,16 @@ def retrieve_test_data_from_database(recording_id):
 def retrieve_recordings_for_creating_test_data():
     table_name = 'recordings'
     
-#     firstDate = recordings_for_creating_test_data_start_date + ':00:00:00'
-#     lastDate = recordings_for_creating_test_data_end_date + ':23:59:59'
-    
-#     firstDate = recordings_for_creating_test_data_start_date + ':00:00:00+13:00'
-#     lastDate = recordings_for_creating_test_data_end_date + ':23:59:59+13:00'
-    
+
     firstDate = recordings_for_creating_test_data_start_date 
     lastDate = recordings_for_creating_test_data_end_date 
     
     cur = get_database_connection().cursor()
     # https://stackoverflow.com/questions/8187288/sql-select-between-dates    
-#     https://www.sqlitetutorial.net/sqlite-date-functions/sqlite-datetime-function/
-    # Note, I use the original datetime column in Z timezone, not the extra NZ datatime column that I had created in the database so I could easliy see NZ time of a recording.
-    # I couldn't get querying on the NZ timezone colunm to work.
-
-#     cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name from " + table_name + " where device_name = 'B0007' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")   
     cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")      
               
     records = cur.fetchall()
-#     numOfRecords = len(records)
-#     count = 0
-     
-#     for record in records:  
-#         count+=1        
-#          
-#         recording_id = record[0]
-#         recordingDateTimeNZ = record[1]
-#         device_name = record[2]
-#          
-#         print('Processing ID ' + str(recording_id) + ' device_name ' + device_name + " which is " + str(count) + ' of ' + str(numOfRecords) + ' ' + recordingDateTimeNZ)
-                 
+          
         
     return records
         
