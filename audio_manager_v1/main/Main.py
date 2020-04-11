@@ -1246,6 +1246,17 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
 
         
 class CreateTestDataPage(tk.Frame):    
+    
+    def convert_pos_in_percent_to_position_in_seconds(self, pos_in_percent, duration):
+        return duration * pos_in_percent
+    
+    def convert_pos_in_seconds_to_position_in_percent(self, pos_in_seconds, duration):
+        return pos_in_seconds / duration
+    
+    def convert_pos_in_seconds_to_canvas_position(self, pos_in_seconds, duration):
+        pos_in_percent = self.convert_pos_in_seconds_to_position_in_percent(pos_in_seconds, duration)
+        return self.spectrogram_image.width() * pos_in_percent
+        
 
     
         
@@ -1307,11 +1318,18 @@ class CreateTestDataPage(tk.Frame):
         if abs(finish_position_seconds - start_position_seconds) < 0.1:
 #             functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,62, False)
 #             play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,62, False)
-            self.play_clip()
+            self.play_clip(start_position_seconds)
             return
+        
+        if not self.actual_confirmed.get():
+            # The 'what' radio button hasn't been selected               
+            messagebox.showinfo("Oops", "You haven't selected an Actual Confirmed radio button")
+            return 
               
         # Create another rectangle and delete the temp_rectange.  Had to do this to stop on_move_mouse deleting the previous finished rectangle
         if self.temp_rectangle is not None:
+            
+            print("self.actual_confirmed.get() ", self.actual_confirmed.get())
 
             recording_id = self.recordings[self.current_recordings_index][0] 
           
@@ -1442,21 +1460,38 @@ class CreateTestDataPage(tk.Frame):
         
     
         
-    def play_clip(self):
-        # First draw play line
-        aLine_id = self.canvas.create_line(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, 0,self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height(), fill='red')
-       
-        # Now play the clip
-        duration = self.recordings[self.current_recordings_index][3]
-        functions.play_clip(str(self.recordings[self.current_recordings_index][0]), 0,duration, False)
+    def play_clip(self,start_position_seconds):
         
-         # https://www.youtube.com/watch?v=f8sKAot-15w
-        while True:
-            self.canvas.move(aLine_id,5,0)
+        # Stop any clip that is currently playing
+        functions.stop_clip()
+        
+               
+        self.canvas.delete("audio_position_line") # otherwise can have multiple lines on the spectrogram
+        
+        duration = self.recordings[self.current_recordings_index][3]
+        x_canvas_pos = self.convert_pos_in_seconds_to_canvas_position(start_position_seconds, duration)  
+          
+        
+#         self.aLine_id = self.canvas.create_line(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, 0,self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height(), fill='red')
+        self.aLine_id = self.canvas.create_line(x_canvas_pos, 0,x_canvas_pos, self.spectrogram_image.height(), fill='red', tags = "audio_position_line")
+        # Now play the clip
+       
+        
+        functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,duration, False)
+        
+        # https://www.youtube.com/watch?v=f8sKAot-15w
+        # Need to calculate the speed to move the line, how many pixels per second
+        speed = self.spectrogram_image.width()/duration/10 #  # Will update every 0.1 seconds
+
+        self.playing = True 
+        while self.playing:
+            self.canvas.move(self.aLine_id,speed,0)
             self.update()
             time.sleep(0.1)
         
-        
+    def stop_clip(self):
+        self.playing = False 
+        functions.stop_clip()    
     
     def __init__(self, parent, controller):
         # https://stackoverflow.com/questions/7727804/tkinter-using-scrollbars-on-a-canvas
@@ -1465,6 +1500,8 @@ class CreateTestDataPage(tk.Frame):
                   
             
         tk.Frame.__init__(self, parent)    
+        
+        self.playing = False
             
         self.temp_rectangle = None
         self.current_recordings_index = 0
@@ -1559,10 +1596,10 @@ class CreateTestDataPage(tk.Frame):
         
         
 #         play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: functions.play_clip(str(self.recordings[self.current_recordings_index][0]), 0,duration, False))
-        play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: self.play_clip())
+        play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: self.play_clip(0))
         play_button.grid(column=2, columnspan=1, row=100)
         
-        play_button = ttk.Button(self, text="Stop Playing", command=lambda: functions.stop_clip())
+        play_button = ttk.Button(self, text="Stop Playing", command=lambda: self.stop_clip())
         play_button.grid(column=3, columnspan=1, row=100)
         
         
