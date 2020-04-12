@@ -1133,6 +1133,7 @@ def insert_model_run_result_into_database(modelRunName, recording_id, startTime,
         print('\t\tUnable to insert result' + str(recording_id) + ' ' + str(startTime), '\n')  
     
 def play_clip(recording_id, start_time, duration, applyBandPassFilter):
+#     recording_id = "529941" 
     audio_in_path = getRecordingsFolder() + '/' + recording_id + '.m4a'
     print('audio_in_path ', audio_in_path)
     print('start_time ', start_time)
@@ -1614,7 +1615,59 @@ def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, 
         print(e, '\n')
         print('Error processing onset ', onset)
         
-def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_id):
+# def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_id):
+# 
+#     temp_display_images_folder_path = base_folder + '/' + run_folder + '/' + temp_display_images_folder 
+#     if not os.path.exists(temp_display_images_folder_path):
+#         os.makedirs(temp_display_images_folder_path)         
+# 
+#     try:
+#         
+#         audio_filename = str(recording_id) + '.m4a'
+#         audio_in_path = base_folder + '/' + downloaded_recordings_folder + '/' +  audio_filename 
+#         image_out_name = 'temp_spectrogram.jpg'
+#         print('image_out_name', image_out_name)           
+#        
+#         image_out_path = temp_display_images_folder_path + '/' + image_out_name
+#         
+#         y, sr = librosa.load(audio_in_path, sr=None)      
+#         
+#        
+# #         n_fft = 2048
+# #         n_fft = 512
+# #         win_length = (int)(n_fft / 2)
+# #         hop_length = (int)(win_length / 8)
+# #         D = np.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop_length, win_length = win_length))
+# 
+# #         n_fft = 512
+# #         n_fft = 256
+#         n_fft = 2048
+#         
+#         D = np.abs(librosa.stft(y, n_fft=n_fft))
+#         DB = librosa.amplitude_to_db(D, ref=np.max)
+#              
+# 
+# #         mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, fmax=8000)
+# #         S_dB = librosa.power_to_db(mel_spectrogram, ref=np.max)
+#         
+#         pylab.axis('off') # no axis
+#         pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+# #         librosa.display.specshow(S_dB,sr=sr,fmax=8000) #https://matplotlib.org/examples/color/colormaps_reference.html
+# #         librosa.display.specshow(DB, sr=sr, hop_length=hop_length, 
+# #                          x_axis='time',fmax=2000);
+#         librosa.display.specshow(DB,y_axis='linear')
+# 
+#         pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+#         pylab.close()
+#         
+#         return get_image_for_for_creating_test_data(image_out_path)
+#         
+#     except Exception as e:
+#         print(e, '\n')
+#         print('Error processing onset ', onset)
+#  
+
+def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_id, min_freq, max_freq):
 
     temp_display_images_folder_path = base_folder + '/' + run_folder + '/' + temp_display_images_folder 
     if not os.path.exists(temp_display_images_folder_path):
@@ -1630,31 +1683,17 @@ def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_i
         image_out_path = temp_display_images_folder_path + '/' + image_out_name
         
         y, sr = librosa.load(audio_in_path, sr=None)      
+#         mel_spectrogram = librosa.feature.melspectrogram(y, sr=sr, n_mels=32, fmin=700,fmax=1000)
+        mel_spectrogram = librosa.feature.melspectrogram(y, sr=sr, n_mels=32, fmin=min_freq,fmax=max_freq)
         
-       
-#         n_fft = 2048
-#         n_fft = 512
-#         win_length = (int)(n_fft / 2)
-#         hop_length = (int)(win_length / 8)
-#         D = np.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop_length, win_length = win_length))
-
-#         n_fft = 512
-#         n_fft = 256
-        n_fft = 2048
-        
-        D = np.abs(librosa.stft(y, n_fft=n_fft))
-        DB = librosa.amplitude_to_db(D, ref=np.max)
-             
-
-#         mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, fmax=8000)
-#         S_dB = librosa.power_to_db(mel_spectrogram, ref=np.max)
         
         pylab.axis('off') # no axis
         pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
 #         librosa.display.specshow(S_dB,sr=sr,fmax=8000) #https://matplotlib.org/examples/color/colormaps_reference.html
 #         librosa.display.specshow(DB, sr=sr, hop_length=hop_length, 
 #                          x_axis='time',fmax=2000);
-        librosa.display.specshow(DB,y_axis='linear')
+#         librosa.display.specshow(mel_spectrogram,y_axis='linear')
+        librosa.display.specshow(mel_spectrogram, cmap='binary', y_axis='linear')
 
         pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
         pylab.close()
@@ -1753,7 +1792,8 @@ def get_image_for_for_creating_test_data(image_name_path):
     image = Image.open(image_name_path)
     [imageSizeWidth, imageSizeHeight] = image.size
 #     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*2)), Image.ANTIALIAS)
-    image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*4)), Image.ANTIALIAS)
+#     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*4)), Image.ANTIALIAS)
+    image = image.resize((int(imageSizeWidth*8),int(imageSizeHeight*2)), Image.ANTIALIAS)
     print("Image size is ", image.size)
     spectrogram_image = ImageTk.PhotoImage(image)
     return spectrogram_image
@@ -2830,9 +2870,12 @@ def get_recording_position_in_seconds(x_mouse_pos, x_scroll_bar_minimum, x_scrol
     print("x clicked at ", recording_pos_seconds, ' seconds')
     return round(recording_pos_seconds,1)
 
-def get_recording_position_in_hertz(y_mouse_pos, y_scroll_bar_minimum, y_scroll_bar_maximum, canvas_height, recording_maximum_freq):
-    recording_pos_hertz = recording_maximum_freq - ((((y_mouse_pos/canvas_height) * (y_scroll_bar_maximum - y_scroll_bar_minimum)) + y_scroll_bar_minimum) * recording_maximum_freq)
-    
+# def get_recording_position_in_hertz(y_mouse_pos, y_scroll_bar_minimum, y_scroll_bar_maximum, canvas_height, recording_maximum_freq):
+#     recording_pos_hertz = recording_maximum_freq - ((((y_mouse_pos/canvas_height) * (y_scroll_bar_maximum - y_scroll_bar_minimum)) + y_scroll_bar_minimum) * recording_maximum_freq)    
+#     return int(recording_pos_hertz)
+
+def get_recording_position_in_hertz(y_mouse_pos, y_scroll_bar_minimum, y_scroll_bar_maximum, canvas_height, recording_minimum_freq, recording_maximum_freq):
+    recording_pos_hertz = recording_maximum_freq - ((((y_mouse_pos/canvas_height) * (y_scroll_bar_maximum - y_scroll_bar_minimum)) + y_scroll_bar_minimum) * (recording_maximum_freq - recording_minimum_freq))    
     return int(recording_pos_hertz)
     
 def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width):
@@ -2894,7 +2937,7 @@ def retrieve_test_data_from_database(recording_id):
     test_data_rows = cur.fetchall() 
     return test_data_rows
     
-def retrieve_recordings_for_creating_test_data():
+def retrieve_all_recordings_for_creating_test_data():
     table_name = 'recordings'
     
 
@@ -2904,6 +2947,19 @@ def retrieve_recordings_for_creating_test_data():
     cur = get_database_connection().cursor()
     # https://stackoverflow.com/questions/8187288/sql-select-between-dates    
     cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")      
+              
+    records = cur.fetchall()
+          
+        
+    return records
+
+def retrieve_single_recording_for_creating_test_data(recording_id):
+    table_name = 'recordings'
+    
+    
+    cur = get_database_connection().cursor()
+    # https://stackoverflow.com/questions/8187288/sql-select-between-dates    
+    cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where recording_id = ?", (str(recording_id),)) 
               
     records = cur.fetchall()
           

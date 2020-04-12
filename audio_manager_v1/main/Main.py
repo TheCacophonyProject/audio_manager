@@ -1267,7 +1267,7 @@ class CreateTestDataPage(tk.Frame):
         self.x_rectangle_start_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, duration)
         
         self.y_rectangle_start_position_percent = y_position_percent
-        self.y_rectangle_start_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)        
+        self.y_rectangle_start_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, int(self.min_freq.get()), int(self.max_freq.get()))        
 
 
     def on_move_press(self, event):
@@ -1299,7 +1299,7 @@ class CreateTestDataPage(tk.Frame):
         duration = self.recordings[self.current_recordings_index][3]
         self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, duration)
         
-        self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
+        self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, int(self.min_freq.get()), int(self.max_freq.get()))
             
         if self.y_rectangle_start_position_hertz > self.y_rectangle_finish_position_hertz:
             upper_freq_hertz = self.y_rectangle_start_position_hertz
@@ -1380,6 +1380,7 @@ class CreateTestDataPage(tk.Frame):
         
 #     def retrieve_test_data_from_database_and_add_rectangles_to_image(self,recording_id):
     def retrieve_test_data_from_database_and_add_rectangles_to_image(self):
+                
         recording_id = self.recordings[self.current_recordings_index][0]
         duration = self.recordings[self.current_recordings_index][3]
         test_data_rectangles = functions.retrieve_test_data_from_database(recording_id)
@@ -1398,36 +1399,48 @@ class CreateTestDataPage(tk.Frame):
 #             rectangle_bbox_x1 = self.spectrogram_image.width()*start_time_seconds/duration
             rectangle_bbox_x1 = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), start_time_seconds, duration)
 #             rectangle_bbox_y1 = self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000)
-            rectangle_bbox_y1 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), lower_freq_hertz, 0, 8000)
+            rectangle_bbox_y1 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), lower_freq_hertz, int(self.min_freq.get()), int(self.max_freq.get()))
             
             
 #             rectangle_bbox_x2 = self.spectrogram_image.width()*finish_time_seconds/duration
             rectangle_bbox_x2 = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), finish_time_seconds, duration)
 #             rectangle_bbox_y2 = self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000)
-            rectangle_bbox_y2 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), upper_freq_hertz, 0, 8000)
+            rectangle_bbox_y2 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), upper_freq_hertz, int(self.min_freq.get()), int(self.max_freq.get()))
 #             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000),rectangle_bbox_x2,self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000),fill='green', stipple="gray12")
             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2,fill='green', stipple="gray12")
            
            
             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_time_seconds), str(finish_time_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , what))
             
-    def retrieve_recordings_for_creating_test_data(self):
-        self.recordings = functions.retrieve_recordings_for_creating_test_data()
+#     def retrieve_recordings_for_creating_test_data(self):
+#         self.recordings = functions.retrieve_recordings_for_creating_test_data()
+
+    def retrieve_all_recordings_for_creating_test_data(self):
+        self.recordings = functions.retrieve_all_recordings_for_creating_test_data()
+        self.first_recording()
+        
+        
+    def retrieve_single_recording_for_creating_test_data(self):
+#         print("self.specific_recording_id ", self.specific_recording_id)
+        self.recordings = functions.retrieve_single_recording_for_creating_test_data(self.specific_recording_id.get())
+        self.first_recording()
+        
+        
         
     def display_spectrogram(self):
         recording_id = self.recordings[self.current_recordings_index][0]
-#         duration = self.recordings[self.current_recordings_index][3]
-        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id))
+#         recording_id = "529941"
+        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))
 
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)     
        
-        self.canvas.grid(row=20, rowspan = 50, columnspan=4, column=0)
+        self.canvas.grid(row=20, rowspan = 50, columnspan=5, column=0)
         
         self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
-        self.scroll_x.grid(row=71, columnspan=4, column=0, sticky="ew")
+        self.scroll_x.grid(row=71, columnspan=5, column=0, sticky="ew")
         
         self.scroll_y = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
-        self.scroll_y.grid(row=20,rowspan = 50, column=4, sticky="ns")
+        self.scroll_y.grid(row=20,rowspan = 50, column=5, sticky="ns")
 
         self.canvas.configure(yscrollcommand=self.scroll_y.set, xscrollcommand=self.scroll_x.set)
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
@@ -1459,7 +1472,8 @@ class CreateTestDataPage(tk.Frame):
         
     def change_spectrogram(self):
         recording_id = self.recordings[self.current_recordings_index][0]
-        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id))   
+#         recording_id = "529941"
+        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))   
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)                    
 #         self.retrieve_test_data_from_database_and_add_rectangles_to_image(recording_id)  
         self.retrieve_test_data_from_database_and_add_rectangles_to_image()           
@@ -1525,81 +1539,105 @@ class CreateTestDataPage(tk.Frame):
         msg1_instructions = "Use this page to create test data."
         msg1 = tk.Message(self, text = msg1_instructions)
         msg1.config(width=600)
-        msg1.grid(column=0, columnspan=1, row=10)                        
+        msg1.grid(column=0, columnspan=1, row=10)        
+        
+        min_freq_label = ttk.Label(self, text="Enter the minimum frequency (Hz)")
+        min_freq_label.grid(column=1, columnspan=1, row=0)
+             
+        self.min_freq = StringVar(value='700')
+        min_freq_entry = tk.Entry(self,  textvariable=self.min_freq, width=30)
+        min_freq_entry.grid(column=1, columnspan=1, row=1)        
+        
+        max_freq_label = ttk.Label(self, text="Enter the maximum frequency (Hz)")
+        max_freq_label.grid(column=2, columnspan=1, row=0)
+             
+        self.max_freq = StringVar(value='1100')
+        max_freq_entry = tk.Entry(self,  textvariable=self.max_freq, width=30)
+        max_freq_entry.grid(column=2, columnspan=1, row=1)     
+        
+        retrieve_specific_recording_id_button = ttk.Button(self, text="Retrieve all recordings", command=lambda: self.retrieve_all_recordings_for_creating_test_data())
+        retrieve_specific_recording_id_button.grid(column=3, columnspan=1, row=1)   
+        
+        self.specific_recording_id = StringVar(value='529941')   
+        specific_recording_id_entry = tk.Entry(self,  textvariable=self.specific_recording_id, width=30)
+        specific_recording_id_entry.grid(column=4, columnspan=1, row=0)        
+        
+        retrieve_specific_recording_id_button = ttk.Button(self, text="Retrieve this recording", command=lambda: self.retrieve_single_recording_for_creating_test_data())
+        retrieve_specific_recording_id_button.grid(column=4, columnspan=1, row=1)   
 
-        self.canvas_width = 1000
+        self.canvas_width = 2200
         self.canvas_height = 900
         self.canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height)   
 
-        self.retrieve_recordings_for_creating_test_data()
+#         self.retrieve_recordings_for_creating_test_data()
 
         self.recording_id_and_result_place_value = tk.StringVar()
         recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value) 
-        recording_id_label.grid(column=5, columnspan=1, row=20) 
+        recording_id_label.grid(column=6, columnspan=1, row=20) 
         self.recording_id_and_result_place_value.set("Recording Id") 
         
         # Add the radio buttons for selecting what the noise is
         
         actual_label_confirmed = ttk.Label(self, text="SET Actual Confirmed", font=LARGE_FONT)
-        actual_label_confirmed.grid(column=5, columnspan=1, row=21)
+        actual_label_confirmed.grid(column=6, columnspan=1, row=21)
               
         self.actual_confirmed = tk.StringVar()
 
         actual_confirmed_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork more-pork', variable=self.actual_confirmed, value='morepork_more-pork',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_morepork_classic.grid(column=5, columnspan=1, row=22)               
+        actual_confirmed_radio_button_morepork_classic.grid(column=6, columnspan=1, row=22)               
         
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_confirmed, value='unknown',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=5, columnspan=1, row=23)
+        actual_confirmed_radio_button_unknown.grid(column=6, columnspan=1, row=23)
         actual_confirmed_radio_button_dove = ttk.Radiobutton(self,text='Dove', variable=self.actual_confirmed, value='dove',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_dove.grid(column=5, columnspan=1, row=24)   
+        actual_confirmed_radio_button_dove.grid(column=6, columnspan=1, row=24)   
         actual_confirmed_radio_button_duck = ttk.Radiobutton(self,text='Duck', variable=self.actual_confirmed, value='duck',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_duck.grid(column=5, columnspan=1, row=25) 
+        actual_confirmed_radio_button_duck.grid(column=6, columnspan=1, row=25) 
         actual_confirmed_radio_button_dog = ttk.Radiobutton(self,text='Dog', variable=self.actual_confirmed, value='dog',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_dog.grid(column=5, columnspan=1, row=26) 
+        actual_confirmed_radio_button_dog.grid(column=6, columnspan=1, row=26) 
         actual_confirmed_radio_button_human = ttk.Radiobutton(self,text='Human', variable=self.actual_confirmed, value='human',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_human.grid(column=5, columnspan=1, row=27)   
+        actual_confirmed_radio_button_human.grid(column=6, columnspan=1, row=27)   
         actual_confirmed_radio_button_siren = ttk.Radiobutton(self,text='Siren', variable=self.actual_confirmed, value='siren',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_siren.grid(column=5, columnspan=1, row=28)
+        actual_confirmed_radio_button_siren.grid(column=6, columnspan=1, row=28)
         actual_confirmed_radio_button_bird = ttk.Radiobutton(self,text='Bird', variable=self.actual_confirmed, value='bird',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_bird.grid(column=5, columnspan=1, row=29) 
+        actual_confirmed_radio_button_bird.grid(column=6, columnspan=1, row=29) 
         actual_confirmed_radio_button_car = ttk.Radiobutton(self,text='Car', variable=self.actual_confirmed, value='car',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_car.grid(column=5, columnspan=1, row=30)
+        actual_confirmed_radio_button_car.grid(column=6, columnspan=1, row=30)
         actual_confirmed_radio_button_rumble = ttk.Radiobutton(self,text='Rumble', variable=self.actual_confirmed, value='rumble',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_rumble.grid(column=5, columnspan=1, row=31)
+        actual_confirmed_radio_button_rumble.grid(column=6, columnspan=1, row=31)
         actual_confirmed_radio_button_water = ttk.Radiobutton(self,text='Water', variable=self.actual_confirmed, value='water',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_water.grid(column=5, columnspan=1, row=32)
+        actual_confirmed_radio_button_water.grid(column=6, columnspan=1, row=32)
         actual_confirmed_radio_button_hand_saw = ttk.Radiobutton(self,text='Hand saw', variable=self.actual_confirmed, value='hand_saw',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_hand_saw.grid(column=5, columnspan=1, row=33)
+        actual_confirmed_radio_button_hand_saw.grid(column=6, columnspan=1, row=33)
         
         
         actual_confirmed_radio_button_white_noise = ttk.Radiobutton(self,text='White noise', variable=self.actual_confirmed, value='white_noise',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_white_noise.grid(column=5, columnspan=1, row=34)
+        actual_confirmed_radio_button_white_noise.grid(column=6, columnspan=1, row=34)
         actual_confirmed_radio_button_plane = ttk.Radiobutton(self,text='Plane', variable=self.actual_confirmed, value='plane',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_plane.grid(column=5, columnspan=1, row=35)
+        actual_confirmed_radio_button_plane.grid(column=6, columnspan=1, row=35)
         actual_confirmed_radio_button_cow = ttk.Radiobutton(self,text='Cow', variable=self.actual_confirmed, value='cow',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_cow.grid(column=5, columnspan=1, row=36) 
+        actual_confirmed_radio_button_cow.grid(column=6, columnspan=1, row=36) 
         actual_confirmed_radio_button_buzzy_insect = ttk.Radiobutton(self,text='Buzzy insect', variable=self.actual_confirmed, value='buzzy_insect',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_buzzy_insect.grid(column=5, columnspan=1, row=37) 
+        actual_confirmed_radio_button_buzzy_insect.grid(column=6, columnspan=1, row=37) 
         actual_confirmed_radio_morepork_more_pork_part = ttk.Radiobutton(self,text='Morepork more-pork Part', variable=self.actual_confirmed, value='morepork_more-pork_part',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_morepork_more_pork_part.grid(column=5, columnspan=1, row=38) 
+        actual_confirmed_radio_morepork_more_pork_part.grid(column=6, columnspan=1, row=38) 
         actual_confirmed_radio_button_hammering = ttk.Radiobutton(self,text='Hammering', variable=self.actual_confirmed, value='hammering',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_hammering.grid(column=5, columnspan=5, row=39)  
+        actual_confirmed_radio_button_hammering.grid(column=6, columnspan=1, row=39)  
         actual_confirmed_radio_button_frog = ttk.Radiobutton(self,text='Frog', variable=self.actual_confirmed, value='frog',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_frog.grid(column=5, columnspan=5, row=248)
+        actual_confirmed_radio_button_frog.grid(column=6, columnspan=1, row=40)
         actual_confirmed_radio_button_chainsaw = ttk.Radiobutton(self,text='Chainsaw', variable=self.actual_confirmed, value='chainsaw',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_chainsaw.grid(column=5, columnspan=5, row=40) 
+        actual_confirmed_radio_button_chainsaw.grid(column=6, columnspan=1, row=41) 
         actual_confirmed_radio_button_crackle = ttk.Radiobutton(self,text='Crackle', variable=self.actual_confirmed, value='crackle',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_crackle.grid(column=5, columnspan=5, row=41)  
+        actual_confirmed_radio_button_crackle.grid(column=6, columnspan=1, row=42)  
         actual_confirmed_radio_button_car_horn = ttk.Radiobutton(self,text='Car horn', variable=self.actual_confirmed, value='car_horn',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_car_horn.grid(column=5, columnspan=5, row=42)
+        actual_confirmed_radio_button_car_horn.grid(column=6, columnspan=1, row=43)
         actual_confirmed_radio_button_fire_work = ttk.Radiobutton(self,text='Fire work', variable=self.actual_confirmed, value='fire_work',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_fire_work.grid(column=5, columnspan=5, row=43)
+        actual_confirmed_radio_button_fire_work.grid(column=6, columnspan=1, row=44)
         actual_confirmed_radio_button_maybe_morepork_more_pork = ttk.Radiobutton(self,text='Maybe Morepork more-pork', variable=self.actual_confirmed, value='maybe_morepork_more-pork',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_maybe_morepork_more_pork.grid(column=5, columnspan=1, row=44)
+        actual_confirmed_radio_button_maybe_morepork_more_pork.grid(column=6, columnspan=1, row=45)
         actual_confirmed_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.actual_confirmed, value='music',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_music.grid(column=5, columnspan=1, row=45)   
+        actual_confirmed_radio_button_music.grid(column=6, columnspan=1, row=46)   
                         
-        self.first_recording()
+#         self.first_recording()
         
         first_recording_button = ttk.Button(self, text="First Recording", command=lambda: self.first_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         first_recording_button.grid(column=0, columnspan=1, row=100) 
@@ -1618,7 +1656,7 @@ class CreateTestDataPage(tk.Frame):
         
         
         next_recording_button = ttk.Button(self, text="Next Recording", command=lambda: self.next_recording()) # https://effbot.org/tkinterbook/canvas.htm))
-        next_recording_button.grid(column=4, columnspan=2, row=100)        
+        next_recording_button.grid(column=4, columnspan=1, row=100)        
                                  
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=120) 
