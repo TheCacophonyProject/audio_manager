@@ -1793,7 +1793,8 @@ def get_image_for_for_creating_test_data(image_name_path):
     [imageSizeWidth, imageSizeHeight] = image.size
 #     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*2)), Image.ANTIALIAS)
 #     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*4)), Image.ANTIALIAS)
-    image = image.resize((int(imageSizeWidth*8),int(imageSizeHeight*2)), Image.ANTIALIAS)
+#     image = image.resize((int(imageSizeWidth*8),int(imageSizeHeight*2)), Image.ANTIALIAS)
+    image = image.resize((int(imageSizeWidth*16),int(imageSizeHeight*2)), Image.ANTIALIAS)
     print("Image size is ", image.size)
     spectrogram_image = ImageTk.PhotoImage(image)
     return spectrogram_image
@@ -2878,10 +2879,23 @@ def get_recording_position_in_hertz(y_mouse_pos, y_scroll_bar_minimum, y_scroll_
     recording_pos_hertz = recording_maximum_freq - ((((y_mouse_pos/canvas_height) * (y_scroll_bar_maximum - y_scroll_bar_minimum)) + y_scroll_bar_minimum) * (recording_maximum_freq - recording_minimum_freq))    
     return int(recording_pos_hertz)
     
-def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width):
-    x_position_percent = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum)
+# def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width):
+#     x_position_percent = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum)
+# #     print("x_position_percent ", x_position_percent)
+#     return x_position_percent
+
+def spectrogram_clicked_at(x_or_y_mouse_pos, x_or_y_scroll_bar_minimum, x_or_y_scroll_bar_maximum, canvas_width_or_height):
+    
+#     print("x_or_y_mouse_pos ", x_or_y_mouse_pos )
+#     print("x_or_y_scroll_bar_minimum ", x_or_y_scroll_bar_minimum )
+#     print("x_or_y_scroll_bar_maximum ", x_or_y_scroll_bar_maximum )
+#     print("canvas_width_or_height ", canvas_width_or_height )
+    
+    
+    x_or_y_position_percent = (((x_or_y_mouse_pos/canvas_width_or_height) * (x_or_y_scroll_bar_maximum - x_or_y_scroll_bar_minimum)) + x_or_y_scroll_bar_minimum)
 #     print("x_position_percent ", x_position_percent)
-    return x_position_percent
+    return x_or_y_position_percent
+
 def convert_pos_in_percent_to_position_in_seconds(pos_in_percent, duration):
     return duration * pos_in_percent
     
