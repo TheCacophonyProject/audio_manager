@@ -1495,7 +1495,7 @@ class CreateTestDataPage(tk.Frame):
 #             rectangle_bbox_y1 = self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000)
 #             rectangle_bbox_y1 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), lower_freq_hertz, 0, 8000)
 #             rectangle_bbox_y1 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), lower_freq_hertz, int(self.min_freq.get()), int(self.max_freq.get()))
-            rectangle_bbox_y1 = ((how_far_upper_freq_hertz_from_top_of_freq_range/frequency_range)/frequency_range)*spectrogram_image_height
+            rectangle_bbox_y1 = (how_far_upper_freq_hertz_from_top_of_freq_range/frequency_range)*spectrogram_image_height
             print("rectangle_bbox_y1 ", rectangle_bbox_y1) 
              
 #             rectangle_bbox_x2 = self.spectrogram_image.width()*finish_time_seconds/duration
@@ -1504,7 +1504,7 @@ class CreateTestDataPage(tk.Frame):
             print("rectangle_bbox_x2 ", rectangle_bbox_x2) 
 #             rectangle_bbox_y2 = self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000)
 #             rectangle_bbox_y2 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), upper_freq_hertz, int(self.min_freq.get()), int(self.max_freq.get()))
-            rectangle_bbox_y2 = ((how_far_lower_freq_hertz_from_top_of_freq_range/frequency_range)/frequency_range)*spectrogram_image_height
+            rectangle_bbox_y2 = (how_far_lower_freq_hertz_from_top_of_freq_range/frequency_range)*spectrogram_image_height
             print("rectangle_bbox_y2 ", rectangle_bbox_y2)
 #             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000),rectangle_bbox_x2,self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000),fill='green', stipple="gray12")
             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2,fill='green', stipple="gray12")
