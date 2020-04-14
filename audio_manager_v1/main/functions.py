@@ -17,7 +17,8 @@ from scipy import signal
 from scipy.signal import butter, lfilter, freqz
 import numpy as np
 from scipy.ndimage.filters import maximum_filter
-import pylab
+# import pylab
+import matplotlib.pyplot as plt
 import librosa.display
 
 import soundfile as sf
@@ -1482,11 +1483,12 @@ def create_focused_mel_spectrogram_jps_using_onset_pairs():
             y_part = y[start_position_array:end_position_array]  
             mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
             
-            pylab.axis('off') # no axis
-            pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+#             pylab.axis('off') # no axis
+            plt.axis('off') # no axis
+            plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
             librosa.display.specshow(mel_spectrogram, cmap='binary') #https://matplotlib.org/examples/color/colormaps_reference.html
-            pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
-            pylab.close()
+            plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+            plt.close()
             
         except Exception as e:
             print(e, '\n')
@@ -1565,11 +1567,11 @@ def create_spectrogram_jpg_files_for_next_model_run_or_model_test(testing):
           
             mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
              
-            pylab.axis('off') # no axis
-            pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+            plt.axis('off') # no axis
+            plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
             librosa.display.specshow(mel_spectrogram, cmap='binary') #https://matplotlib.org/examples/color/colormaps_reference.html
-            pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
-            pylab.close()
+            plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+            plt.close()
              
         except Exception as e:
             print(e, '\n')
@@ -1602,11 +1604,11 @@ def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, 
         y_part = y[start_position_array:end_position_array]  
         mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
         
-        pylab.axis('off') # no axis
-        pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+        plt.axis('off') # no axis
+        plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
         librosa.display.specshow(mel_spectrogram, cmap='binary') #https://matplotlib.org/examples/color/colormaps_reference.html
-        pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
-        pylab.close()
+        plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+        plt.close()
         
         return get_image(image_out_path)
         
@@ -1614,7 +1616,8 @@ def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, 
         print(e, '\n')
         print('Error processing onset ', onset)
         
-def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_id):
+# def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_id):
+def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_id, min_freq, max_freq):
 
     temp_display_images_folder_path = base_folder + '/' + run_folder + '/' + temp_display_images_folder 
     if not os.path.exists(temp_display_images_folder_path):
@@ -1629,7 +1632,9 @@ def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_i
        
         image_out_path = temp_display_images_folder_path + '/' + image_out_name
         
-        y, sr = librosa.load(audio_in_path, sr=None)      
+        y, sr = librosa.load(audio_in_path, sr=None)     
+#         mel_spectrogram = librosa.feature.melspectrogram(y, sr=sr, n_mels=32, fmin=min_freq,fmax=max_freq) 
+        D = np.abs(librosa.stft(y))
         
        
 #         n_fft = 2048
@@ -1640,24 +1645,35 @@ def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_i
 
 #         n_fft = 512
 #         n_fft = 256
-        n_fft = 2048
+#         n_fft = 2048
+#         
+#         D = np.abs(librosa.stft(y, n_fft=n_fft))
+#         DB = librosa.amplitude_to_db(D, ref=np.max)
+#              
         
-        D = np.abs(librosa.stft(y, n_fft=n_fft))
-        DB = librosa.amplitude_to_db(D, ref=np.max)
-             
-
 #         mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, fmax=8000)
 #         S_dB = librosa.power_to_db(mel_spectrogram, ref=np.max)
         
-        pylab.axis('off') # no axis
-        pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+#         pylab.ylim([0, 2000])
+#         pylab.xlim([0, 20])
+        plt.axis('off') # no axis
+        
+        
+        plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+        
+       
 #         librosa.display.specshow(S_dB,sr=sr,fmax=8000) #https://matplotlib.org/examples/color/colormaps_reference.html
 #         librosa.display.specshow(DB, sr=sr, hop_length=hop_length, 
 #                          x_axis='time',fmax=2000);
-        librosa.display.specshow(DB,y_axis='linear')
+#         librosa.display.specshow(DB,y_axis='linear')
+#         librosa.display.specshow(mel_spectrogram, cmap='binary', y_axis='linear')
+        librosa.display.specshow(librosa.amplitude_to_db(D,ref=np.max),  cmap='binary', y_axis='linear', x_axis='time')
+        
+#         https://github.com/librosa/librosa/issues/331
+        plt.ylim([min_freq,max_freq])
 
-        pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
-        pylab.close()
+        plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+        plt.close()
         
         return get_image_for_for_creating_test_data(image_out_path)
         
@@ -1691,11 +1707,11 @@ def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_ti
         y_part = y[start_position_array:end_position_array]  
         mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
         
-        pylab.axis('off') # no axis
-        pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+        plt.axis('off') # no axis
+        plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
         librosa.display.specshow(mel_spectrogram, cmap='binary') #https://matplotlib.org/examples/color/colormaps_reference.html
-        pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
-        pylab.close()
+        plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+        plt.close()
         
 #         return get_image(image_out_path)
         
@@ -1728,11 +1744,11 @@ def get_single_waveform_image(recording_id, start_time_seconds, duration_seconds
                     
         y_part = y[start_position_array:end_position_array]  
     
-        pylab.axis('off') # no axis
-        pylab.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+        plt.axis('off') # no axis
+        plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
         librosa.display.waveplot(y=y_part, sr=sr)
-        pylab.savefig(image_out_path, bbox_inches=None, pad_inches=0)
-        pylab.close()
+        plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+        plt.close()
         
         return get_image(image_out_path)
         
@@ -1751,9 +1767,12 @@ def get_image(image_name_path):
 def get_image_for_for_creating_test_data(image_name_path): 
         
     image = Image.open(image_name_path)
+    print("Image size is ", image.size)
     [imageSizeWidth, imageSizeHeight] = image.size
 #     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*2)), Image.ANTIALIAS)
-    image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*4)), Image.ANTIALIAS)
+#     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*4)), Image.ANTIALIAS)
+    image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight)), Image.ANTIALIAS)
+#     image = image.resize(2000,900, Image.ANTIALIAS)
     print("Image size is ", image.size)
     spectrogram_image = ImageTk.PhotoImage(image)
     return spectrogram_image
@@ -2830,15 +2849,54 @@ def get_recording_position_in_seconds(x_mouse_pos, x_scroll_bar_minimum, x_scrol
     print("x clicked at ", recording_pos_seconds, ' seconds')
     return round(recording_pos_seconds,1)
 
-def get_recording_position_in_hertz(y_mouse_pos, y_scroll_bar_minimum, y_scroll_bar_maximum, canvas_height, recording_maximum_freq):
-    recording_pos_hertz = recording_maximum_freq - ((((y_mouse_pos/canvas_height) * (y_scroll_bar_maximum - y_scroll_bar_minimum)) + y_scroll_bar_minimum) * recording_maximum_freq)
-    
+# def get_recording_position_in_hertz(y_mouse_pos, y_scroll_bar_minimum, y_scroll_bar_maximum, canvas_height, recording_maximum_freq):
+#     recording_pos_hertz = recording_maximum_freq - ((((y_mouse_pos/canvas_height) * (y_scroll_bar_maximum - y_scroll_bar_minimum)) + y_scroll_bar_minimum) * recording_maximum_freq)
+#     
+#     return int(recording_pos_hertz)
+
+# def get_recording_position_in_hertz(y_mouse_pos, y_scroll_bar_minimum, y_scroll_bar_maximum, canvas_height, recording_minimum_freq, recording_maximum_freq):
+#     recording_pos_hertz = recording_maximum_freq - ((((y_mouse_pos/canvas_height) * (y_scroll_bar_maximum - y_scroll_bar_minimum)) + y_scroll_bar_minimum) * (recording_maximum_freq - recording_minimum_freq))    
+#     return int(recording_pos_hertz)
+
+def get_recording_position_in_hertz(y_mouse_pos, canvas_height, recording_minimum_freq, recording_maximum_freq):
+    recording_pos_hertz = recording_maximum_freq - ((y_mouse_pos/canvas_height) * (recording_maximum_freq - recording_minimum_freq))
     return int(recording_pos_hertz)
     
-def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width):
+# def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width):
+#     x_position_percent = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum)
+# #     print("x_position_percent ", x_position_percent)
+#     return x_position_percent
+
+def get_spectrogram_clicked_at_y_percent(y_mouse_pos,canvas_height):
+    return y_mouse_pos/canvas_height
+
+def spectrogram_clicked_at_x_percent(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width):
     x_position_percent = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum)
 #     print("x_position_percent ", x_position_percent)
     return x_position_percent
+
+def convert_event_x_pos_to_canvas_x_pos(event_x):
+    return event_x
+
+def convert_pos_in_secs_to_canvas_pos2(recording_pos_seconds, recording_length, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width):
+    print("recording_pos_seconds ", recording_pos_seconds)
+    print("x_scroll_bar_minimum ", x_scroll_bar_minimum)
+    print("x_scroll_bar_maximum ", x_scroll_bar_maximum)
+    print("canvas_width ", canvas_width)
+    
+    recording_pos_seconds_div_recording_length = recording_pos_seconds/recording_length
+    print("recording_pos_seconds_div_recording_length ", recording_pos_seconds_div_recording_length)
+    recording_pos_seconds_div_recording_length_minus_x_scroll_bar_minimum = recording_pos_seconds_div_recording_length - x_scroll_bar_minimum
+    print("recording_pos_seconds_div_recording_length_minus_x_scroll_bar_minimum ", recording_pos_seconds_div_recording_length_minus_x_scroll_bar_minimum) 
+    x_scroll_bar_maximum_minus_x_scroll_bar_minimum = x_scroll_bar_maximum-x_scroll_bar_minimum
+    print("x_scroll_bar_maximum_minus_x_scroll_bar_minimum ", x_scroll_bar_maximum_minus_x_scroll_bar_minimum) 
+    result = ((recording_pos_seconds_div_recording_length_minus_x_scroll_bar_minimum)*x_scroll_bar_maximum_minus_x_scroll_bar_minimum)* canvas_width
+    print("result ", result)
+    
+    x_mouse_pos = (((recording_pos_seconds/recording_length)-x_scroll_bar_minimum)*(x_scroll_bar_maximum-x_scroll_bar_minimum))*canvas_width
+    return x_mouse_pos
+    
+
 def convert_pos_in_percent_to_position_in_seconds(pos_in_percent, duration):
     return duration * pos_in_percent
     

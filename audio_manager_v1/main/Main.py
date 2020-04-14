@@ -1250,32 +1250,80 @@ class CreateTestDataPage(tk.Frame):
 
         
     def leftMousePressedcallback(self, event):
+        print("event.x ", event.x)
         
 
         # Find the positions of the scroll bars
         self.x_scroll_bar_minimum = self.scroll_x.get()[0]   
         self.x_scroll_bar_maximum = self.scroll_x.get()[1]
         
-        self.y_scroll_bar_minimum = self.scroll_y.get()[0]      
-        self.y_scroll_bar_maximum = self.scroll_y.get()[1]       
+        print("self.x_scroll_bar_minimum ", self.x_scroll_bar_minimum)
+        print("self.x_scroll_bar_maximum ", self.x_scroll_bar_maximum)
         
-        x_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
-        y_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)        
+#         self.y_scroll_bar_minimum = self.scroll_y.get()[0]      
+#         self.y_scroll_bar_maximum = self.scroll_y.get()[1]       
+        
+#         x_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
+#         y_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)        
+
+#         self.x_rectangle_start_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
+       
+        
+        the_width = self.canvas.cget("width")
+        print("the_width ", the_width)
+        self.x_rectangle_start_position_percent = functions.spectrogram_clicked_at_x_percent(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, int(self.canvas.cget("width")))
+        print("self.x_rectangle_start_position_percent ", self.x_rectangle_start_position_percent)
+        
  
-        self.x_rectangle_start_position_percent = x_position_percent
-        duration = self.recordings[self.current_recordings_index][3]
-        self.x_rectangle_start_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, duration)
+#         self.x_rectangle_start_position_percent = x_position_percent
+#         duration = self.recordings[self.current_recordings_index][3]
+#         self.x_rectangle_start_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, duration)
+#         
+#         self.y_rectangle_start_position_percent = y_position_percent
+#         self.y_rectangle_start_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
+#         self.y_rectangle_start_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)
         
-        self.y_rectangle_start_position_percent = y_position_percent
-        self.y_rectangle_start_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)        
+        print("event.y ", event.y)
+        print("self.canvas_height ", self.canvas.cget("height"))
+        
+#         self.y_rectangle_start_position_percent = functions.get_spectrogram_clicked_at_y_percent(event.y, self.canvas_height)
+        self.y_rectangle_start_position_percent = functions.get_spectrogram_clicked_at_y_percent(event.y, self.spectrogram_image.height())     
+        
+        
+        
+           
+        print("self.y_rectangle_start_position_percent ", self.y_rectangle_start_position_percent)    
+ 
+#         self.x_rectangle_start_position_percent = x_position_percent
+        duration = self.recordings[self.current_recordings_index][3]
+       
+        self.x_rectangle_start_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, int(self.canvas.cget("width")), duration)
+        
+#         self.y_rectangle_start_position_percent = y_position_percent
+#         print("self.min_freq.get() ",self.min_freq.get() )
+#         print("self.max_freq.get() ",self.max_freq.get() )
+#         self.y_rectangle_start_position_hertz = functions.get_recording_position_in_hertz(event.y, self.canvas_height, int(self.min_freq.get()), int(self.max_freq.get()))
+        self.y_rectangle_start_position_hertz = functions.get_recording_position_in_hertz(event.y, self.spectrogram_image.height(), int(self.min_freq.get()), int(self.max_freq.get()))  
+#         print("self.y_rectangle_start_position_hertz ", self.y_rectangle_start_position_hertz)         
+
+        
 
 
     def on_move_press(self, event):
         if self.temp_rectangle is not None:
             self.canvas.delete(self.temp_rectangle)
         
-        self.x_rectangle_finish_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
-        self.y_rectangle_finish_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)        
+#         self.x_rectangle_finish_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
+#         self.y_rectangle_finish_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)
+
+        self.x_rectangle_finish_position_percent = functions.spectrogram_clicked_at_x_percent(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, int(self.canvas.cget("width")))
+        
+#         print("event.y ", event.y)
+#         print("self.canvas_height ", self.canvas_height)
+#         self.y_rectangle_finish_position_percent = functions.get_spectrogram_clicked_at_y_percent(event.y, self.canvas_height)
+        self.y_rectangle_finish_position_percent = functions.get_spectrogram_clicked_at_y_percent(event.y, self.spectrogram_image.height())     
+        
+#         print("self.y_rectangle_finish_position_percent ", self.y_rectangle_finish_position_percent)        
         # print("Mouse is at position ", event.x, event.y)
         
         if not self.actual_confirmed.get():
@@ -1284,10 +1332,11 @@ class CreateTestDataPage(tk.Frame):
 
         rectangle_bbox_x1 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_start_position_percent)
         rectangle_bbox_y1 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.height(), self.y_rectangle_start_position_percent)
+#         print("rectangle_bbox_y1 ", rectangle_bbox_y1)
         
         rectangle_bbox_x2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
         rectangle_bbox_y2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.height(), self.y_rectangle_finish_position_percent)
-        
+#         print("rectangle_bbox_y2 ", rectangle_bbox_y2)
         
 #         rectangle_y_finish_position = functions.convert_x_postion_percent_to_x_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
 #         self.temp_rectangle = self.canvas.create_rectangle(rectangle_x_start_position, self.spectrogram_image.height()*self.y_rectangle_start_position_percent, rectangle_y_finish_position, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent )
@@ -1297,9 +1346,14 @@ class CreateTestDataPage(tk.Frame):
         
     def leftMouseReleasedcallback(self, event):
         duration = self.recordings[self.current_recordings_index][3]
-        self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, duration)
+#         self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, duration)
+        self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, int(self.canvas.cget("width")), duration)
         
-        self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
+#         self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, int(self.min_freq.get()), int(self.max_freq.get()))
+#         self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.canvas_height, int(self.min_freq.get()), int(self.max_freq.get()))
+        self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.spectrogram_image.height(), int(self.min_freq.get()), int(self.max_freq.get()))
+        
+        
             
         if self.y_rectangle_start_position_hertz > self.y_rectangle_finish_position_hertz:
             upper_freq_hertz = self.y_rectangle_start_position_hertz
@@ -1380,10 +1434,36 @@ class CreateTestDataPage(tk.Frame):
         
 #     def retrieve_test_data_from_database_and_add_rectangles_to_image(self,recording_id):
     def retrieve_test_data_from_database_and_add_rectangles_to_image(self):
+        
+#         canvas_width = self.canvas.cget("width") # canvas width is the width of the part that is showing
+#         print("canvas_width ", canvas_width)
+#         
+#         spectrogram_image_width = self.spectrogram_image.width()
+#         print("spectrogram_image_width ", spectrogram_image_width)
+#         duration = 60
+#         
+#         # if start at 10 secs
+#         rectangle_bbox_x1 = (10/60) * spectrogram_image_width
+#         
+#         
+# #         rectangle_bbox_x1 = 2460
+#         rectangle_bbox_y1 = 10
+#         rectangle_bbox_x2 = rectangle_bbox_x1 + (40/60) * spectrogram_image_width
+#         rectangle_bbox_y2 = 100
+#         
+#         
+#         aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1, rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2, fill='green', stipple="gray12" )
+        
         recording_id = self.recordings[self.current_recordings_index][0]
         duration = self.recordings[self.current_recordings_index][3]
         test_data_rectangles = functions.retrieve_test_data_from_database(recording_id)
+        spectrogram_image_width = self.spectrogram_image.width()
+        spectrogram_image_height = self.spectrogram_image.height()
         
+        print("spectrogram_image_height ", spectrogram_image_height)
+         
+        
+         
         for test_data_rectangle in test_data_rectangles:
             recording_id = test_data_rectangle[0]
             start_time_seconds = test_data_rectangle[1]
@@ -1391,24 +1471,45 @@ class CreateTestDataPage(tk.Frame):
             lower_freq_hertz = test_data_rectangle[3]
             upper_freq_hertz = test_data_rectangle[4]
             what = test_data_rectangle[5]
-         
-
+            
+            frequency_range = int(self.max_freq.get()) - int(self.min_freq.get())
+            print("int(self.max_freq.get() ", int(self.max_freq.get()))
+            print("int(self.min_freq.get() ", int(self.min_freq.get()))
+            print("frequency_range ", frequency_range)
+            
+            how_far_upper_freq_hertz_from_top_of_freq_range = int(self.max_freq.get()) - upper_freq_hertz
+            print("how_far_upper_freq_hertz_from_top_of_freq_range ", how_far_upper_freq_hertz_from_top_of_freq_range)
+            how_far_lower_freq_hertz_from_top_of_freq_range = int(self.max_freq.get()) - lower_freq_hertz
+            print("how_far_lower_freq_hertz_from_top_of_freq_range ", how_far_lower_freq_hertz_from_top_of_freq_range)
+             
+                   
+             
+          
+ 
 #             aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*start_time_seconds/62,self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000),self.spectrogram_image.width()*finish_time_seconds/62,self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000),fill='green', stipple="gray12")
-           
+            
 #             rectangle_bbox_x1 = self.spectrogram_image.width()*start_time_seconds/duration
-            rectangle_bbox_x1 = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), start_time_seconds, duration)
+#             rectangle_bbox_x1 = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), start_time_seconds, duration)
+            rectangle_bbox_x1 = (start_time_seconds/duration) * spectrogram_image_width
+            print("rectangle_bbox_x1 ", rectangle_bbox_x1)
 #             rectangle_bbox_y1 = self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000)
-            rectangle_bbox_y1 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), lower_freq_hertz, 0, 8000)
-            
-            
+#             rectangle_bbox_y1 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), lower_freq_hertz, 0, 8000)
+#             rectangle_bbox_y1 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), lower_freq_hertz, int(self.min_freq.get()), int(self.max_freq.get()))
+            rectangle_bbox_y1 = ((how_far_upper_freq_hertz_from_top_of_freq_range/frequency_range)/frequency_range)*spectrogram_image_height
+            print("rectangle_bbox_y1 ", rectangle_bbox_y1) 
+             
 #             rectangle_bbox_x2 = self.spectrogram_image.width()*finish_time_seconds/duration
-            rectangle_bbox_x2 = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), finish_time_seconds, duration)
+#             rectangle_bbox_x2 = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), finish_time_seconds, duration)
+            rectangle_bbox_x2 = (finish_time_seconds/duration) * spectrogram_image_width
+            print("rectangle_bbox_x2 ", rectangle_bbox_x2) 
 #             rectangle_bbox_y2 = self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000)
-            rectangle_bbox_y2 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), upper_freq_hertz, 0, 8000)
+#             rectangle_bbox_y2 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), upper_freq_hertz, int(self.min_freq.get()), int(self.max_freq.get()))
+            rectangle_bbox_y2 = ((how_far_lower_freq_hertz_from_top_of_freq_range/frequency_range)/frequency_range)*spectrogram_image_height
+            print("rectangle_bbox_y2 ", rectangle_bbox_y2)
 #             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000),rectangle_bbox_x2,self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000),fill='green', stipple="gray12")
             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2,fill='green', stipple="gray12")
-           
-           
+            
+            
             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_time_seconds), str(finish_time_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , what))
             
     def retrieve_recordings_for_creating_test_data(self):
@@ -1417,19 +1518,23 @@ class CreateTestDataPage(tk.Frame):
     def display_spectrogram(self):
         recording_id = self.recordings[self.current_recordings_index][0]
 #         duration = self.recordings[self.current_recordings_index][3]
-        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id))
-
-        self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)     
+#         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id))
+        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))
+        print("self.spectrogram_image.height() ", self.spectrogram_image.height())
+        
+        self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)   
+        self.canvas.configure(height=self.spectrogram_image.height())  
        
         self.canvas.grid(row=20, rowspan = 50, columnspan=4, column=0)
         
         self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
         self.scroll_x.grid(row=71, columnspan=4, column=0, sticky="ew")
         
-        self.scroll_y = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
-        self.scroll_y.grid(row=20,rowspan = 50, column=4, sticky="ns")
+#         self.scroll_y = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+#         self.scroll_y.grid(row=20,rowspan = 50, column=4, sticky="ns")
 
-        self.canvas.configure(yscrollcommand=self.scroll_y.set, xscrollcommand=self.scroll_x.set)
+#         self.canvas.configure(yscrollcommand=self.scroll_y.set, xscrollcommand=self.scroll_x.set)
+        self.canvas.configure(xscrollcommand=self.scroll_x.set)
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
               
         self.canvas.bind("<Button-1>", self.leftMousePressedcallback)        
@@ -1459,7 +1564,9 @@ class CreateTestDataPage(tk.Frame):
         
     def change_spectrogram(self):
         recording_id = self.recordings[self.current_recordings_index][0]
-        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id))   
+#         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id)) 
+        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))  
+        self.canvas.configure(height=self.spectrogram_image.height())  
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)                    
 #         self.retrieve_test_data_from_database_and_add_rectangles_to_image(recording_id)  
         self.retrieve_test_data_from_database_and_add_rectangles_to_image()           
@@ -1525,12 +1632,30 @@ class CreateTestDataPage(tk.Frame):
         msg1_instructions = "Use this page to create test data."
         msg1 = tk.Message(self, text = msg1_instructions)
         msg1.config(width=600)
-        msg1.grid(column=0, columnspan=1, row=10)                        
+        msg1.grid(column=0, columnspan=1, row=10)     
+        
+        min_freq_label = ttk.Label(self, text="Enter the minimum frequency (Hz)")
+        min_freq_label.grid(column=1, columnspan=1, row=0)
+             
+        self.min_freq = StringVar(value='700')
+        min_freq_entry = tk.Entry(self,  textvariable=self.min_freq, width=30)
+        min_freq_entry.grid(column=1, columnspan=1, row=1)        
+        
+        max_freq_label = ttk.Label(self, text="Enter the maximum frequency (Hz)")
+        max_freq_label.grid(column=2, columnspan=1, row=0)
+             
+        self.max_freq = StringVar(value='1100')
+        max_freq_entry = tk.Entry(self,  textvariable=self.max_freq, width=30)
+        max_freq_entry.grid(column=2, columnspan=1, row=1)                    
 
-        self.canvas_width = 1000
-        self.canvas_height = 900
-        self.canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height)   
-
+#         self.canvas_width = 1000
+#         self.canvas_height = 900
+#         self.canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height)  
+        
+        self.canvas = tk.Canvas(self, width=10, height=10)  
+        self.canvas.config(height=200)
+        self.canvas.config(width=400)
+       
         self.retrieve_recordings_for_creating_test_data()
 
         self.recording_id_and_result_place_value = tk.StringVar()
