@@ -1616,7 +1616,7 @@ def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, 
         print(e, '\n')
         print('Error processing onset ', onset)
         
-# def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_id):
+
 def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_id, min_freq, max_freq):
 
     temp_display_images_folder_path = base_folder + '/' + run_folder + '/' + temp_display_images_folder 
@@ -1636,42 +1636,13 @@ def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_i
 #         mel_spectrogram = librosa.feature.melspectrogram(y, sr=sr, n_mels=32, fmin=min_freq,fmax=max_freq) 
         D = np.abs(librosa.stft(y))
         
-       
-#         n_fft = 2048
-#         n_fft = 512
-#         win_length = (int)(n_fft / 2)
-#         hop_length = (int)(win_length / 8)
-#         D = np.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop_length, win_length = win_length))
-
-#         n_fft = 512
-#         n_fft = 256
-#         n_fft = 2048
-#         
-#         D = np.abs(librosa.stft(y, n_fft=n_fft))
-#         DB = librosa.amplitude_to_db(D, ref=np.max)
-#              
+        plt.axis('off') # no axis                
+        plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge   
         
-#         mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, fmax=8000)
-#         S_dB = librosa.power_to_db(mel_spectrogram, ref=np.max)
-        
-#         pylab.ylim([0, 2000])
-#         pylab.xlim([0, 20])
-        plt.axis('off') # no axis
-        
-        
-        plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
-        
-       
-#         librosa.display.specshow(S_dB,sr=sr,fmax=8000) #https://matplotlib.org/examples/color/colormaps_reference.html
-#         librosa.display.specshow(DB, sr=sr, hop_length=hop_length, 
-#                          x_axis='time',fmax=2000);
-#         librosa.display.specshow(DB,y_axis='linear')
-#         librosa.display.specshow(mel_spectrogram, cmap='binary', y_axis='linear')
         librosa.display.specshow(librosa.amplitude_to_db(D,ref=np.max),  cmap='binary', y_axis='linear', x_axis='time')
         
 #         https://github.com/librosa/librosa/issues/331
         plt.ylim([min_freq,max_freq])
-
         plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
         plt.close()
         

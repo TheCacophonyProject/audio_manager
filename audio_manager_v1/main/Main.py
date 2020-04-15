@@ -1243,88 +1243,43 @@ class CreateTagsOnCacophonyServerFromModelRunPage(tk.Frame):
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=70) 
         
-
         
-class CreateTestDataPage(tk.Frame):    
-    
-
+class CreateTestDataPage(tk.Frame):   
+   
         
     def leftMousePressedcallback(self, event):
-        print("event.x ", event.x)
-        
-
-        # Find the positions of the scroll bars
+    
         self.x_scroll_bar_minimum = self.scroll_x.get()[0]   
-        self.x_scroll_bar_maximum = self.scroll_x.get()[1]
-        
-        print("self.x_scroll_bar_minimum ", self.x_scroll_bar_minimum)
-        print("self.x_scroll_bar_maximum ", self.x_scroll_bar_maximum)
-        
-#         self.y_scroll_bar_minimum = self.scroll_y.get()[0]      
-#         self.y_scroll_bar_maximum = self.scroll_y.get()[1]       
-        
-#         x_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
-#         y_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)        
-
-#         self.x_rectangle_start_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
-       
-        
-        the_width = self.canvas.cget("width")
-        print("the_width ", the_width)
+        self.x_scroll_bar_maximum = self.scroll_x.get()[1]       
+              
+#         the_width = self.canvas.cget("width")
+#         print("the_width ", the_width)
         self.x_rectangle_start_position_percent = functions.spectrogram_clicked_at_x_percent(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, int(self.canvas.cget("width")))
-        print("self.x_rectangle_start_position_percent ", self.x_rectangle_start_position_percent)
+#         print("self.x_rectangle_start_position_percent ", self.x_rectangle_start_position_percent)
         
- 
-#         self.x_rectangle_start_position_percent = x_position_percent
-#         duration = self.recordings[self.current_recordings_index][3]
-#         self.x_rectangle_start_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, duration)
-#         
-#         self.y_rectangle_start_position_percent = y_position_percent
-#         self.y_rectangle_start_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, 8000)
-#         self.y_rectangle_start_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)
+#         print("event.y ", event.y)
+#         print("self.canvas_height ", self.canvas.cget("height"))
         
-        print("event.y ", event.y)
-        print("self.canvas_height ", self.canvas.cget("height"))
-        
-#         self.y_rectangle_start_position_percent = functions.get_spectrogram_clicked_at_y_percent(event.y, self.canvas_height)
-        self.y_rectangle_start_position_percent = functions.get_spectrogram_clicked_at_y_percent(event.y, self.spectrogram_image.height())     
-        
-        
-        
+        self.y_rectangle_start_position_percent = functions.get_spectrogram_clicked_at_y_percent(event.y, self.spectrogram_image.height())  
            
-        print("self.y_rectangle_start_position_percent ", self.y_rectangle_start_position_percent)    
+#         print("self.y_rectangle_start_position_percent ", self.y_rectangle_start_position_percent)    
  
-#         self.x_rectangle_start_position_percent = x_position_percent
         duration = self.recordings[self.current_recordings_index][3]
        
-        self.x_rectangle_start_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, int(self.canvas.cget("width")), duration)
-        
-#         self.y_rectangle_start_position_percent = y_position_percent
-#         print("self.min_freq.get() ",self.min_freq.get() )
-#         print("self.max_freq.get() ",self.max_freq.get() )
-#         self.y_rectangle_start_position_hertz = functions.get_recording_position_in_hertz(event.y, self.canvas_height, int(self.min_freq.get()), int(self.max_freq.get()))
-        self.y_rectangle_start_position_hertz = functions.get_recording_position_in_hertz(event.y, self.spectrogram_image.height(), int(self.min_freq.get()), int(self.max_freq.get()))  
-#         print("self.y_rectangle_start_position_hertz ", self.y_rectangle_start_position_hertz)         
+        self.x_rectangle_start_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, int(self.canvas.cget("width")), duration)        
 
-        
+        self.y_rectangle_start_position_hertz = functions.get_recording_position_in_hertz(event.y, self.spectrogram_image.height(), int(self.min_freq.get()), int(self.max_freq.get()))  
+   
 
 
     def on_move_press(self, event):
         if self.temp_rectangle is not None:
             self.canvas.delete(self.temp_rectangle)
         
-#         self.x_rectangle_finish_position_percent = functions.spectrogram_clicked_at(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width)
-#         self.y_rectangle_finish_position_percent = functions.spectrogram_clicked_at(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height)
 
         self.x_rectangle_finish_position_percent = functions.spectrogram_clicked_at_x_percent(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, int(self.canvas.cget("width")))
-        
-#         print("event.y ", event.y)
-#         print("self.canvas_height ", self.canvas_height)
-#         self.y_rectangle_finish_position_percent = functions.get_spectrogram_clicked_at_y_percent(event.y, self.canvas_height)
         self.y_rectangle_finish_position_percent = functions.get_spectrogram_clicked_at_y_percent(event.y, self.spectrogram_image.height())     
         
-#         print("self.y_rectangle_finish_position_percent ", self.y_rectangle_finish_position_percent)        
-        # print("Mouse is at position ", event.x, event.y)
         
         if not self.actual_confirmed.get():
             # The 'what' radio button hasn't been selected 
@@ -1332,29 +1287,20 @@ class CreateTestDataPage(tk.Frame):
 
         rectangle_bbox_x1 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_start_position_percent)
         rectangle_bbox_y1 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.height(), self.y_rectangle_start_position_percent)
-#         print("rectangle_bbox_y1 ", rectangle_bbox_y1)
         
         rectangle_bbox_x2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
         rectangle_bbox_y2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.height(), self.y_rectangle_finish_position_percent)
-#         print("rectangle_bbox_y2 ", rectangle_bbox_y2)
-        
-#         rectangle_y_finish_position = functions.convert_x_postion_percent_to_x_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
-#         self.temp_rectangle = self.canvas.create_rectangle(rectangle_x_start_position, self.spectrogram_image.height()*self.y_rectangle_start_position_percent, rectangle_y_finish_position, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent )
+
         self.temp_rectangle = self.canvas.create_rectangle(rectangle_bbox_x1, rectangle_bbox_y1, rectangle_bbox_x2, rectangle_bbox_y2 )
         
         
         
     def leftMouseReleasedcallback(self, event):
         duration = self.recordings[self.current_recordings_index][3]
-#         self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, self.canvas_width, duration)
+
         self.x_rectangle_finish_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, int(self.canvas.cget("width")), duration)
-        
-#         self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.y_scroll_bar_minimum, self.y_scroll_bar_maximum, self.canvas_height, int(self.min_freq.get()), int(self.max_freq.get()))
-#         self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.canvas_height, int(self.min_freq.get()), int(self.max_freq.get()))
         self.y_rectangle_finish_position_hertz = functions.get_recording_position_in_hertz(event.y, self.spectrogram_image.height(), int(self.min_freq.get()), int(self.max_freq.get()))
-        
-        
-            
+                  
         if self.y_rectangle_start_position_hertz > self.y_rectangle_finish_position_hertz:
             upper_freq_hertz = self.y_rectangle_start_position_hertz
             lower_freq_hertz = self.y_rectangle_finish_position_hertz
@@ -1381,30 +1327,22 @@ class CreateTestDataPage(tk.Frame):
         # Create another rectangle and delete the temp_rectangle.  Had to do this to stop on_move_mouse deleting the previous finished rectangle
         if self.temp_rectangle is not None:
             
-            print("self.actual_confirmed.get() ", self.actual_confirmed.get())
+#             print("self.actual_confirmed.get() ", self.actual_confirmed.get())
 
-            recording_id = self.recordings[self.current_recordings_index][0] 
-          
-#             x_rectangle_spectrogram_image_start_position = functions.convert_x_postion_percent_to_x_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_start_position_percent)
-#             x_rectangle_spectrogram_image_finish_position = functions.convert_x_postion_percent_to_x_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
+            recording_id = self.recordings[self.current_recordings_index][0]           
+
             rectangle_bbox_x1 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_start_position_percent)
             rectangle_bbox_y1 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.height(), self.y_rectangle_start_position_percent)
             
             rectangle_bbox_x2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
             rectangle_bbox_y2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.height(), self.y_rectangle_finish_position_percent)
             
-#             x_rectangle_spectrogram_image_finish_position = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
-            
-            
-            # http://www.kosbie.net/cmu/fall-10/15-110/koz/misc-demos/src/semi-transparent-stipple-demo.py
-#             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1, self.spectrogram_image.height()*self.y_rectangle_start_position_percent,x_rectangle_spectrogram_image_finish_position, self.spectrogram_image.height()*self.y_rectangle_finish_position_percent, fill='green', stipple="gray12" )
+
             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1, rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2, fill='green', stipple="gray12" )
         
-            self.canvas.delete(self.temp_rectangle)           
-
+            self.canvas.delete(self.temp_rectangle) 
             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , self.actual_confirmed.get()))
-              
-                      
+                                  
             functions.insert_test_data_into_database(recording_id, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, self.actual_confirmed.get())   
 
     def rightMousePressedcallback(self, event):        
@@ -1416,9 +1354,6 @@ class CreateTestDataPage(tk.Frame):
             # Deleted it from the database
                        
             tags_from_item = self.canvas.gettags(selected_item_id)
-#             print("tags_from_item ", tags_from_item)
-#             for tag in tags_from_item:                      
-#                 print("tag ", tag)
                 
             recording_id = tags_from_item[0]
             start_time_seconds = tags_from_item[1]
@@ -1432,90 +1367,29 @@ class CreateTestDataPage(tk.Frame):
             # Now delete it from the canvas
             self.canvas.delete(selected_item_id)       
         
-#     def retrieve_test_data_from_database_and_add_rectangles_to_image(self,recording_id):
-    def retrieve_test_data_from_database_and_add_rectangles_to_image(self):
-        
-#         canvas_width = self.canvas.cget("width") # canvas width is the width of the part that is showing
-#         print("canvas_width ", canvas_width)
-#         
-#         spectrogram_image_width = self.spectrogram_image.width()
-#         print("spectrogram_image_width ", spectrogram_image_width)
-#         duration = 60
-#         
-#         # if start at 10 secs
-#         rectangle_bbox_x1 = (10/60) * spectrogram_image_width
-#         
-#         
-# #         rectangle_bbox_x1 = 2460
-#         rectangle_bbox_y1 = 10
-#         rectangle_bbox_x2 = rectangle_bbox_x1 + (40/60) * spectrogram_image_width
-#         rectangle_bbox_y2 = 100
-#         
-#         
-#         aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1, rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2, fill='green', stipple="gray12" )
-        
+
+    def retrieve_test_data_from_database_and_add_rectangles_to_image(self):  
+              
         recording_id = self.recordings[self.current_recordings_index][0]
         duration = self.recordings[self.current_recordings_index][3]
-        test_data_rectangles = functions.retrieve_test_data_from_database(recording_id)
-        spectrogram_image_width = self.spectrogram_image.width()
-        spectrogram_image_height = self.spectrogram_image.height()
-        
-        print("spectrogram_image_height ", spectrogram_image_height)
-         
-        
-         
+        test_data_rectangles = functions.retrieve_test_data_from_database(recording_id)     
+                          
         for test_data_rectangle in test_data_rectangles:
             recording_id = test_data_rectangle[0]
             start_time_seconds = test_data_rectangle[1]
             finish_time_seconds = test_data_rectangle[2]
             lower_freq_hertz = test_data_rectangle[3]
             upper_freq_hertz = test_data_rectangle[4]
-            what = test_data_rectangle[5]
-            
-#             frequency_range = int(self.max_freq.get()) - int(self.min_freq.get())
-#             print("int(self.max_freq.get() ", int(self.max_freq.get()))
-#             print("int(self.min_freq.get() ", int(self.min_freq.get()))
-#             print("frequency_range ", frequency_range)
-#             
-#             how_far_upper_freq_hertz_from_top_of_freq_range = int(self.max_freq.get()) - upper_freq_hertz
-#             print("how_far_upper_freq_hertz_from_top_of_freq_range ", how_far_upper_freq_hertz_from_top_of_freq_range)
-#             how_far_lower_freq_hertz_from_top_of_freq_range = int(self.max_freq.get()) - lower_freq_hertz
-#             print("how_far_lower_freq_hertz_from_top_of_freq_range ", how_far_lower_freq_hertz_from_top_of_freq_range)
-#              
-                   
-             
-          
- 
-#             aRectangle_id = self.canvas.create_rectangle(self.spectrogram_image.width()*start_time_seconds/62,self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000),self.spectrogram_image.width()*finish_time_seconds/62,self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000),fill='green', stipple="gray12")
-            
-#             rectangle_bbox_x1 = self.spectrogram_image.width()*start_time_seconds/duration
-#             rectangle_bbox_x1 = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), start_time_seconds, duration)
-#             rectangle_bbox_x1 = (start_time_seconds/duration) * spectrogram_image_width
+            what = test_data_rectangle[5]            
+
             rectangle_bbox_x1 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(start_time_seconds, duration, self.spectrogram_image.width())
-#             print("rectangle_bbox_x1 ", rectangle_bbox_x1)
-#             rectangle_bbox_y1 = self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000)
-#             rectangle_bbox_y1 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), lower_freq_hertz, 0, 8000)
-#             rectangle_bbox_y1 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), lower_freq_hertz, int(self.min_freq.get()), int(self.max_freq.get()))
-#             rectangle_bbox_y1 = (how_far_upper_freq_hertz_from_top_of_freq_range/frequency_range)*spectrogram_image_height
-            rectangle_bbox_y1 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), lower_freq_hertz, self.spectrogram_image.height())   
-            
-         
-            print("rectangle_bbox_y1 ", rectangle_bbox_y1) 
-             
-#             rectangle_bbox_x2 = self.spectrogram_image.width()*finish_time_seconds/duration
-#             rectangle_bbox_x2 = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), finish_time_seconds, duration)
-#             rectangle_bbox_x2 = (finish_time_seconds/duration) * spectrogram_image_width
+            rectangle_bbox_y1 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), lower_freq_hertz, self.spectrogram_image.height())  
             rectangle_bbox_x2 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(finish_time_seconds, duration, self.spectrogram_image.width())
-            print("rectangle_bbox_x2 ", rectangle_bbox_x2) 
-#             rectangle_bbox_y2 = self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000)
-#             rectangle_bbox_y2 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), upper_freq_hertz, int(self.min_freq.get()), int(self.max_freq.get()))
-#             rectangle_bbox_y2 = (how_far_lower_freq_hertz_from_top_of_freq_range/frequency_range)*spectrogram_image_height
             rectangle_bbox_y2 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), upper_freq_hertz, self.spectrogram_image.height())
-            print("rectangle_bbox_y2 ", rectangle_bbox_y2)
-#             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000),rectangle_bbox_x2,self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000),fill='green', stipple="gray12")
-            aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2,fill='green', stipple="gray12")
+           
+            aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2,fill='green', stipple="gray12")         
             
-            
+            # Attach details of test_data to the rectangles (so can 'look' at it one day - with mouse hover?)
             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_time_seconds), str(finish_time_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , what))
             
     def retrieve_recordings_for_creating_test_data(self):
@@ -1523,23 +1397,19 @@ class CreateTestDataPage(tk.Frame):
         
     def display_spectrogram(self):
         recording_id = self.recordings[self.current_recordings_index][0]
-#         duration = self.recordings[self.current_recordings_index][3]
-#         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id))
+
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))
-        print("self.spectrogram_image.height() ", self.spectrogram_image.height())
+#         print("self.spectrogram_image.height() ", self.spectrogram_image.height())
         
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)   
         self.canvas.configure(height=self.spectrogram_image.height())  
        
-        self.canvas.grid(row=20, rowspan = 50, columnspan=4, column=0)
+        self.canvas.grid(row=20, rowspan = 50, columnspan=10, column=0)
         
         self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
-        self.scroll_x.grid(row=71, columnspan=4, column=0, sticky="ew")
+        self.scroll_x.grid(row=71, columnspan=10, column=0, sticky="ew")
         
-#         self.scroll_y = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
-#         self.scroll_y.grid(row=20,rowspan = 50, column=4, sticky="ns")
 
-#         self.canvas.configure(yscrollcommand=self.scroll_y.set, xscrollcommand=self.scroll_x.set)
         self.canvas.configure(xscrollcommand=self.scroll_x.set)
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
               
@@ -1549,7 +1419,7 @@ class CreateTestDataPage(tk.Frame):
         
         self.canvas.bind("<Button-3>", self.rightMousePressedcallback) 
         
-#         self.retrieve_test_data_from_database_and_add_rectangles_to_image(recording_id)
+
         self.retrieve_test_data_from_database_and_add_rectangles_to_image()           
 
         self.recording_id_and_result_place_value.set("Recording Id: " + str(recording_id)) 
@@ -1557,6 +1427,7 @@ class CreateTestDataPage(tk.Frame):
     def first_recording(self):
             self.current_recordings_index = 0
             self.display_spectrogram()   
+            
             
     def previous_recording(self):
         if self.current_recordings_index > 0:
@@ -1574,36 +1445,32 @@ class CreateTestDataPage(tk.Frame):
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))  
         self.canvas.configure(height=self.spectrogram_image.height())  
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)                    
-#         self.retrieve_test_data_from_database_and_add_rectangles_to_image(recording_id)  
-        self.retrieve_test_data_from_database_and_add_rectangles_to_image()           
+
+        self.retrieve_test_data_from_database_and_add_rectangles_to_image()          
 
         self.recording_id_and_result_place_value.set("Recording Id: " + str(recording_id)) # + " Result: " + str(self.current_recordings_index))   
         
     def confirm_actual(self):  
-        print("Radio button pressed")    
+        # Don't really to call this method    
         print('self.actual_confirmed.get() ', self.actual_confirmed.get())    
         
     
         
-    def play_clip(self,start_position_seconds):
+    def play_clip(self,start_position_seconds, applyBandPassFilter):
         
         # Stop any clip that is currently playing
-        functions.stop_clip()
-        
+        functions.stop_clip()        
                
         self.canvas.delete("audio_position_line") # otherwise can have multiple lines on the spectrogram
         
         duration = self.recordings[self.current_recordings_index][3]
-#         x_canvas_pos = self.convert_pos_in_seconds_to_canvas_position(start_position_seconds, duration)  
+ 
         x_canvas_pos = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), start_position_seconds, duration)  
-          
-        
-#         self.aLine_id = self.canvas.create_line(self.spectrogram_image.width()*self.x_rectangle_start_position_percent, 0,self.spectrogram_image.width()*self.x_rectangle_start_position_percent, self.spectrogram_image.height(), fill='red')
+       
         self.aLine_id = self.canvas.create_line(x_canvas_pos, 0,x_canvas_pos, self.spectrogram_image.height(), fill='red', tags = "audio_position_line")
         # Now play the clip
        
-        
-        functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,duration, False)
+        functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,duration, applyBandPassFilter)
         
         # https://www.youtube.com/watch?v=f8sKAot-15w
         # Need to calculate the speed to move the line, how many pixels per second
@@ -1618,6 +1485,25 @@ class CreateTestDataPage(tk.Frame):
     def stop_clip(self):
         self.playing = False 
         functions.stop_clip()    
+        
+    def load_specific_recording_from_creating_test_data(self):
+        recording_to_load_id = int(self.specific_recording_id.get())
+        print(recording_to_load_id)
+        
+        # find the index of the recording with this recording_id
+        length = len(self.recordings)
+        for i in range(length):
+            recording_id = int(self.recordings[i][0])
+            print("i is ", i," ", recording_id )
+            if recording_id == recording_to_load_id:
+                print("Found it")
+                self.current_recordings_index = i
+                break
+        
+        # Now load this recording
+        self.change_spectrogram()
+                
+        
     
     def __init__(self, parent, controller):
         # https://stackoverflow.com/questions/7727804/tkinter-using-scrollbars-on-a-canvas
@@ -1652,83 +1538,87 @@ class CreateTestDataPage(tk.Frame):
              
         self.max_freq = StringVar(value='1100')
         max_freq_entry = tk.Entry(self,  textvariable=self.max_freq, width=30)
-        max_freq_entry.grid(column=2, columnspan=1, row=1)                    
+        max_freq_entry.grid(column=2, columnspan=1, row=1)                  
 
-#         self.canvas_width = 1000
-#         self.canvas_height = 900
-#         self.canvas = tk.Canvas(self, width=self.canvas_width, height=self.canvas_height)  
         
         self.canvas = tk.Canvas(self, width=10, height=10)  
-        self.canvas.config(height=200)
-        self.canvas.config(width=400)
+
+        self.canvas.config(height=test_data_canvas_width)
+        self.canvas.config(width=test_data_canvas_height)
+        
+        self.specific_recording_id = StringVar(value='537809')   
+        specific_recording_id_entry = tk.Entry(self,  textvariable=self.specific_recording_id, width=30)
+        specific_recording_id_entry.grid(column=3, columnspan=1, row=0)        
+        
+        retrieve_specific_recording_id_button = ttk.Button(self, text="Retrieve this recording (has to be in test_data)", command=lambda: self.load_specific_recording_from_creating_test_data())
+        retrieve_specific_recording_id_button.grid(column=3, columnspan=1, row=1)   
        
         self.retrieve_recordings_for_creating_test_data()
 
         self.recording_id_and_result_place_value = tk.StringVar()
         recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value) 
-        recording_id_label.grid(column=5, columnspan=1, row=20) 
+        recording_id_label.grid(column=11, columnspan=1, row=20) 
         self.recording_id_and_result_place_value.set("Recording Id") 
         
         # Add the radio buttons for selecting what the noise is
         
         actual_label_confirmed = ttk.Label(self, text="SET Actual Confirmed", font=LARGE_FONT)
-        actual_label_confirmed.grid(column=5, columnspan=1, row=21)
+        actual_label_confirmed.grid(column=11, columnspan=1, row=21)
               
         self.actual_confirmed = tk.StringVar()
 
         actual_confirmed_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork more-pork', variable=self.actual_confirmed, value='morepork_more-pork',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_morepork_classic.grid(column=5, columnspan=1, row=22)               
+        actual_confirmed_radio_button_morepork_classic.grid(column=11, columnspan=1, row=22)               
         
         actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_confirmed, value='unknown',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=5, columnspan=1, row=23)
+        actual_confirmed_radio_button_unknown.grid(column=11, columnspan=1, row=23)
         actual_confirmed_radio_button_dove = ttk.Radiobutton(self,text='Dove', variable=self.actual_confirmed, value='dove',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_dove.grid(column=5, columnspan=1, row=24)   
+        actual_confirmed_radio_button_dove.grid(column=11, columnspan=1, row=24)   
         actual_confirmed_radio_button_duck = ttk.Radiobutton(self,text='Duck', variable=self.actual_confirmed, value='duck',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_duck.grid(column=5, columnspan=1, row=25) 
+        actual_confirmed_radio_button_duck.grid(column=11, columnspan=1, row=25) 
         actual_confirmed_radio_button_dog = ttk.Radiobutton(self,text='Dog', variable=self.actual_confirmed, value='dog',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_dog.grid(column=5, columnspan=1, row=26) 
+        actual_confirmed_radio_button_dog.grid(column=11, columnspan=1, row=26) 
         actual_confirmed_radio_button_human = ttk.Radiobutton(self,text='Human', variable=self.actual_confirmed, value='human',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_human.grid(column=5, columnspan=1, row=27)   
+        actual_confirmed_radio_button_human.grid(column=11, columnspan=1, row=27)   
         actual_confirmed_radio_button_siren = ttk.Radiobutton(self,text='Siren', variable=self.actual_confirmed, value='siren',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_siren.grid(column=5, columnspan=1, row=28)
+        actual_confirmed_radio_button_siren.grid(column=11, columnspan=1, row=28)
         actual_confirmed_radio_button_bird = ttk.Radiobutton(self,text='Bird', variable=self.actual_confirmed, value='bird',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_bird.grid(column=5, columnspan=1, row=29) 
+        actual_confirmed_radio_button_bird.grid(column=11, columnspan=1, row=29) 
         actual_confirmed_radio_button_car = ttk.Radiobutton(self,text='Car', variable=self.actual_confirmed, value='car',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_car.grid(column=5, columnspan=1, row=30)
+        actual_confirmed_radio_button_car.grid(column=11, columnspan=1, row=30)
         actual_confirmed_radio_button_rumble = ttk.Radiobutton(self,text='Rumble', variable=self.actual_confirmed, value='rumble',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_rumble.grid(column=5, columnspan=1, row=31)
+        actual_confirmed_radio_button_rumble.grid(column=11, columnspan=1, row=31)
         actual_confirmed_radio_button_water = ttk.Radiobutton(self,text='Water', variable=self.actual_confirmed, value='water',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_water.grid(column=5, columnspan=1, row=32)
+        actual_confirmed_radio_button_water.grid(column=11, columnspan=1, row=32)
         actual_confirmed_radio_button_hand_saw = ttk.Radiobutton(self,text='Hand saw', variable=self.actual_confirmed, value='hand_saw',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_hand_saw.grid(column=5, columnspan=1, row=33)
-        
+        actual_confirmed_radio_button_hand_saw.grid(column=11, columnspan=1, row=33)        
         
         actual_confirmed_radio_button_white_noise = ttk.Radiobutton(self,text='White noise', variable=self.actual_confirmed, value='white_noise',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_white_noise.grid(column=5, columnspan=1, row=34)
+        actual_confirmed_radio_button_white_noise.grid(column=11, columnspan=1, row=34)
         actual_confirmed_radio_button_plane = ttk.Radiobutton(self,text='Plane', variable=self.actual_confirmed, value='plane',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_plane.grid(column=5, columnspan=1, row=35)
+        actual_confirmed_radio_button_plane.grid(column=11, columnspan=1, row=35)
         actual_confirmed_radio_button_cow = ttk.Radiobutton(self,text='Cow', variable=self.actual_confirmed, value='cow',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_cow.grid(column=5, columnspan=1, row=36) 
+        actual_confirmed_radio_button_cow.grid(column=11, columnspan=1, row=36) 
         actual_confirmed_radio_button_buzzy_insect = ttk.Radiobutton(self,text='Buzzy insect', variable=self.actual_confirmed, value='buzzy_insect',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_buzzy_insect.grid(column=5, columnspan=1, row=37) 
+        actual_confirmed_radio_button_buzzy_insect.grid(column=11, columnspan=1, row=37) 
         actual_confirmed_radio_morepork_more_pork_part = ttk.Radiobutton(self,text='Morepork more-pork Part', variable=self.actual_confirmed, value='morepork_more-pork_part',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_morepork_more_pork_part.grid(column=5, columnspan=1, row=38) 
+        actual_confirmed_radio_morepork_more_pork_part.grid(column=11, columnspan=1, row=38) 
         actual_confirmed_radio_button_hammering = ttk.Radiobutton(self,text='Hammering', variable=self.actual_confirmed, value='hammering',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_hammering.grid(column=5, columnspan=5, row=39)  
+        actual_confirmed_radio_button_hammering.grid(column=11, columnspan=1, row=39)  
         actual_confirmed_radio_button_frog = ttk.Radiobutton(self,text='Frog', variable=self.actual_confirmed, value='frog',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_frog.grid(column=5, columnspan=5, row=248)
+        actual_confirmed_radio_button_frog.grid(column=11, columnspan=1, row=40)
         actual_confirmed_radio_button_chainsaw = ttk.Radiobutton(self,text='Chainsaw', variable=self.actual_confirmed, value='chainsaw',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_chainsaw.grid(column=5, columnspan=5, row=40) 
+        actual_confirmed_radio_button_chainsaw.grid(column=11, columnspan=1, row=41) 
         actual_confirmed_radio_button_crackle = ttk.Radiobutton(self,text='Crackle', variable=self.actual_confirmed, value='crackle',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_crackle.grid(column=5, columnspan=5, row=41)  
+        actual_confirmed_radio_button_crackle.grid(column=11, columnspan=1, row=42)  
         actual_confirmed_radio_button_car_horn = ttk.Radiobutton(self,text='Car horn', variable=self.actual_confirmed, value='car_horn',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_car_horn.grid(column=5, columnspan=5, row=42)
+        actual_confirmed_radio_button_car_horn.grid(column=11, columnspan=1, row=43)
         actual_confirmed_radio_button_fire_work = ttk.Radiobutton(self,text='Fire work', variable=self.actual_confirmed, value='fire_work',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_fire_work.grid(column=5, columnspan=5, row=43)
+        actual_confirmed_radio_button_fire_work.grid(column=11, columnspan=1, row=44)
         actual_confirmed_radio_button_maybe_morepork_more_pork = ttk.Radiobutton(self,text='Maybe Morepork more-pork', variable=self.actual_confirmed, value='maybe_morepork_more-pork',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_maybe_morepork_more_pork.grid(column=5, columnspan=1, row=44)
+        actual_confirmed_radio_button_maybe_morepork_more_pork.grid(column=11, columnspan=1, row=45)
         actual_confirmed_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.actual_confirmed, value='music',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_music.grid(column=5, columnspan=1, row=45)   
+        actual_confirmed_radio_button_music.grid(column=11, columnspan=1, row=46)   
                         
         self.first_recording()
         
@@ -1740,19 +1630,20 @@ class CreateTestDataPage(tk.Frame):
         
         
 #         play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: functions.play_clip(str(self.recordings[self.current_recordings_index][0]), 0,duration, False))
-        play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: self.play_clip(0))
+        play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: self.play_clip(0, False))
         play_button.grid(column=2, columnspan=1, row=100)
+        
+        play_filtered_button = ttk.Button(self, text="Play filtered", command=lambda: self.play_clip(0, True))
+        play_filtered_button.grid(column=2, columnspan=1, row=110)
         
         play_button = ttk.Button(self, text="Stop Playing", command=lambda: self.stop_clip())
         play_button.grid(column=3, columnspan=1, row=100)
-        
-        
-        
+                
         next_recording_button = ttk.Button(self, text="Next Recording", command=lambda: self.next_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         next_recording_button.grid(column=4, columnspan=2, row=100)        
                                  
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=120) 
+        back_to_home_button.grid(column=0, columnspan=1, row=110) 
 
         
 app = Main_GUI()
