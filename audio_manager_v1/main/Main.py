@@ -1472,16 +1472,16 @@ class CreateTestDataPage(tk.Frame):
             upper_freq_hertz = test_data_rectangle[4]
             what = test_data_rectangle[5]
             
-            frequency_range = int(self.max_freq.get()) - int(self.min_freq.get())
-            print("int(self.max_freq.get() ", int(self.max_freq.get()))
-            print("int(self.min_freq.get() ", int(self.min_freq.get()))
-            print("frequency_range ", frequency_range)
-            
-            how_far_upper_freq_hertz_from_top_of_freq_range = int(self.max_freq.get()) - upper_freq_hertz
-            print("how_far_upper_freq_hertz_from_top_of_freq_range ", how_far_upper_freq_hertz_from_top_of_freq_range)
-            how_far_lower_freq_hertz_from_top_of_freq_range = int(self.max_freq.get()) - lower_freq_hertz
-            print("how_far_lower_freq_hertz_from_top_of_freq_range ", how_far_lower_freq_hertz_from_top_of_freq_range)
-             
+#             frequency_range = int(self.max_freq.get()) - int(self.min_freq.get())
+#             print("int(self.max_freq.get() ", int(self.max_freq.get()))
+#             print("int(self.min_freq.get() ", int(self.min_freq.get()))
+#             print("frequency_range ", frequency_range)
+#             
+#             how_far_upper_freq_hertz_from_top_of_freq_range = int(self.max_freq.get()) - upper_freq_hertz
+#             print("how_far_upper_freq_hertz_from_top_of_freq_range ", how_far_upper_freq_hertz_from_top_of_freq_range)
+#             how_far_lower_freq_hertz_from_top_of_freq_range = int(self.max_freq.get()) - lower_freq_hertz
+#             print("how_far_lower_freq_hertz_from_top_of_freq_range ", how_far_lower_freq_hertz_from_top_of_freq_range)
+#              
                    
              
           
@@ -1490,21 +1490,27 @@ class CreateTestDataPage(tk.Frame):
             
 #             rectangle_bbox_x1 = self.spectrogram_image.width()*start_time_seconds/duration
 #             rectangle_bbox_x1 = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), start_time_seconds, duration)
-            rectangle_bbox_x1 = (start_time_seconds/duration) * spectrogram_image_width
-            print("rectangle_bbox_x1 ", rectangle_bbox_x1)
+#             rectangle_bbox_x1 = (start_time_seconds/duration) * spectrogram_image_width
+            rectangle_bbox_x1 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(start_time_seconds, duration, self.spectrogram_image.width())
+#             print("rectangle_bbox_x1 ", rectangle_bbox_x1)
 #             rectangle_bbox_y1 = self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000)
 #             rectangle_bbox_y1 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), lower_freq_hertz, 0, 8000)
 #             rectangle_bbox_y1 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), lower_freq_hertz, int(self.min_freq.get()), int(self.max_freq.get()))
-            rectangle_bbox_y1 = (how_far_upper_freq_hertz_from_top_of_freq_range/frequency_range)*spectrogram_image_height
+#             rectangle_bbox_y1 = (how_far_upper_freq_hertz_from_top_of_freq_range/frequency_range)*spectrogram_image_height
+            rectangle_bbox_y1 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), lower_freq_hertz, self.spectrogram_image.height())   
+            
+         
             print("rectangle_bbox_y1 ", rectangle_bbox_y1) 
              
 #             rectangle_bbox_x2 = self.spectrogram_image.width()*finish_time_seconds/duration
 #             rectangle_bbox_x2 = functions.convert_pos_in_seconds_to_canvas_position(self.spectrogram_image.width(), finish_time_seconds, duration)
-            rectangle_bbox_x2 = (finish_time_seconds/duration) * spectrogram_image_width
+#             rectangle_bbox_x2 = (finish_time_seconds/duration) * spectrogram_image_width
+            rectangle_bbox_x2 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(finish_time_seconds, duration, self.spectrogram_image.width())
             print("rectangle_bbox_x2 ", rectangle_bbox_x2) 
 #             rectangle_bbox_y2 = self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000)
 #             rectangle_bbox_y2 = functions.convert_frequency_to_vertical_position_on_spectrogram(self.spectrogram_image.height(), upper_freq_hertz, int(self.min_freq.get()), int(self.max_freq.get()))
-            rectangle_bbox_y2 = (how_far_lower_freq_hertz_from_top_of_freq_range/frequency_range)*spectrogram_image_height
+#             rectangle_bbox_y2 = (how_far_lower_freq_hertz_from_top_of_freq_range/frequency_range)*spectrogram_image_height
+            rectangle_bbox_y2 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), upper_freq_hertz, self.spectrogram_image.height())
             print("rectangle_bbox_y2 ", rectangle_bbox_y2)
 #             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,self.spectrogram_image.height() - (self.spectrogram_image.height()*lower_freq_hertz/8000),rectangle_bbox_x2,self.spectrogram_image.height() - (self.spectrogram_image.height()*upper_freq_hertz/8000),fill='green', stipple="gray12")
             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2,fill='green', stipple="gray12")

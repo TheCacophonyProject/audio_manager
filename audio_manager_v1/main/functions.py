@@ -2895,7 +2895,15 @@ def convert_pos_in_secs_to_canvas_pos2(recording_pos_seconds, recording_length, 
     
     x_mouse_pos = (((recording_pos_seconds/recording_length)-x_scroll_bar_minimum)*(x_scroll_bar_maximum-x_scroll_bar_minimum))*canvas_width
     return x_mouse_pos
-    
+
+def convert_time_in_seconds_to_x_value_for_canvas_create_method(start_time_seconds, duration, spectrogram_image_width):
+    return  ((start_time_seconds/duration) * spectrogram_image_width)  
+
+def convert_frequency_to_y_value_for_canvas_create_method(spectrogram_image_min_freq, spectrogram_image_max_freq, freq_to_convert, spectrogram_image_height):    
+    frequency_range = spectrogram_image_max_freq - spectrogram_image_min_freq
+    how_far_from_top_of_freq_range = spectrogram_image_max_freq - freq_to_convert   
+    result =  (how_far_from_top_of_freq_range/frequency_range)*spectrogram_image_height    
+    return  result    
 
 def convert_pos_in_percent_to_position_in_seconds(pos_in_percent, duration):
     return duration * pos_in_percent
