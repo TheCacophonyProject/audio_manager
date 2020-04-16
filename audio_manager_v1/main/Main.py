@@ -3,6 +3,7 @@ Created on 5 Sep 2019
 Modified 17 12 2019a
 
 @author: tim
+this was the testing rectangles branch, but now is the master
 '''
 from tkinter.messagebox import showinfo
 from threading import Thread
