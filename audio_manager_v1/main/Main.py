@@ -3,7 +3,7 @@ Created on 5 Sep 2019
 Modified 17 12 2019a
 
 @author: tim
-this was the testing rectangles branch, but now is the master
+
 '''
 from tkinter.messagebox import showinfo
 from threading import Thread
@@ -1423,7 +1423,9 @@ class CreateTestDataPage(tk.Frame):
 
         self.retrieve_test_data_from_database_and_add_rectangles_to_image()           
 
-        self.recording_id_and_result_place_value.set("Recording Id: " + str(recording_id)) 
+        self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) 
+        self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
+#         self.recording_index_out_of_total_of_recordings_value.set("Result  recordings")
 
     def first_recording(self):
             self.current_recordings_index = 0
@@ -1439,6 +1441,7 @@ class CreateTestDataPage(tk.Frame):
         if self.current_recordings_index < (len(self.recordings) - 2): 
             self.current_recordings_index = self.current_recordings_index + 1
             self.change_spectrogram() 
+           
         
     def change_spectrogram(self):
         recording_id = self.recordings[self.current_recordings_index][0]
@@ -1449,7 +1452,9 @@ class CreateTestDataPage(tk.Frame):
 
         self.retrieve_test_data_from_database_and_add_rectangles_to_image()          
 
-        self.recording_id_and_result_place_value.set("Recording Id: " + str(recording_id)) # + " Result: " + str(self.current_recordings_index))   
+        self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) # + " Result: " + str(self.current_recordings_index))   
+        
+        self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
         
     def confirm_actual(self):  
         # Don't really to call this method    
@@ -1504,6 +1509,10 @@ class CreateTestDataPage(tk.Frame):
         # Now load this recording
         self.change_spectrogram()
                 
+    def load_specific_recording_by_result_index(self):  
+        self.current_recordings_index = int(self.specific_recording_index.get())
+        self.change_spectrogram()
+        # Now change 
         
     
     def __init__(self, parent, controller):
@@ -1547,19 +1556,28 @@ class CreateTestDataPage(tk.Frame):
         self.canvas.config(height=test_data_canvas_width)
         self.canvas.config(width=test_data_canvas_height)
         
-        self.specific_recording_id = StringVar(value='537809')   
+        self.specific_recording_id = StringVar(value='0')   
         specific_recording_id_entry = tk.Entry(self,  textvariable=self.specific_recording_id, width=30)
         specific_recording_id_entry.grid(column=3, columnspan=1, row=0)        
         
         retrieve_specific_recording_id_button = ttk.Button(self, text="Retrieve this recording (has to be in test_data)", command=lambda: self.load_specific_recording_from_creating_test_data())
-        retrieve_specific_recording_id_button.grid(column=3, columnspan=1, row=1)   
+        retrieve_specific_recording_id_button.grid(column=3, columnspan=1, row=1)  
+        
+        self.specific_recording_index = StringVar(value='0')   
+        specific_recording_index_entry = tk.Entry(self,  textvariable=self.specific_recording_index, width=30)
+        specific_recording_index_entry.grid(column=4, columnspan=1, row=0)        
+        
+        retrieve_specific_recording_index_button = ttk.Button(self, text="Retrieve this recording (result index)", command=lambda: self.load_specific_recording_by_result_index())
+        retrieve_specific_recording_index_button.grid(column=4, columnspan=1, row=1, rowspan=1)   
        
         self.retrieve_recordings_for_creating_test_data()
 
-        self.recording_id_and_result_place_value = tk.StringVar()
-        recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value) 
+        self.recording_id_and_result_place_value2 = tk.StringVar()
+        recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value2) 
         recording_id_label.grid(column=11, columnspan=1, row=20) 
-        self.recording_id_and_result_place_value.set("Recording Id") 
+        self.recording_id_and_result_place_value2.set("Recording Id") 
+        
+        
         
         # Add the radio buttons for selecting what the noise is
         
@@ -1621,7 +1639,7 @@ class CreateTestDataPage(tk.Frame):
         actual_confirmed_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.actual_confirmed, value='music',command=lambda: self.confirm_actual())
         actual_confirmed_radio_button_music.grid(column=11, columnspan=1, row=46)   
                         
-        self.first_recording()
+#         self.first_recording()
         
         first_recording_button = ttk.Button(self, text="First Recording", command=lambda: self.first_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         first_recording_button.grid(column=0, columnspan=1, row=100) 
@@ -1639,12 +1657,21 @@ class CreateTestDataPage(tk.Frame):
         
         play_button = ttk.Button(self, text="Stop Playing", command=lambda: self.stop_clip())
         play_button.grid(column=3, columnspan=1, row=100)
+        
+        self.recording_index_out_of_total_of_recordings_value = tk.StringVar()
+        recording_index_label = ttk.Label(self, textvariable=self.recording_index_out_of_total_of_recordings_value) 
+        recording_index_label.grid(column=3, columnspan=1, row=110) 
+        self.recording_index_out_of_total_of_recordings_value.set("Result ") 
+        
+              
                 
         next_recording_button = ttk.Button(self, text="Next Recording", command=lambda: self.next_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         next_recording_button.grid(column=4, columnspan=2, row=100)        
                                  
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=110) 
+        
+        self.first_recording()
 
         
 app = Main_GUI()
