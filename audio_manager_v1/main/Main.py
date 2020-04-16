@@ -1444,6 +1444,7 @@ class CreateTestDataPage(tk.Frame):
            
         
     def change_spectrogram(self):
+        self.stop_clip()
         recording_id = self.recordings[self.current_recordings_index][0]
 #         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id)) 
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))  
@@ -1456,13 +1457,18 @@ class CreateTestDataPage(tk.Frame):
         
         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
         
+        if self.auto_play.get():
+            self.play_clip(0)
+            
+        
+        
     def confirm_actual(self):  
         # Don't really to call this method    
         print('self.actual_confirmed.get() ', self.actual_confirmed.get())    
         
     
         
-    def play_clip(self,start_position_seconds, applyBandPassFilter):
+    def play_clip(self,start_position_seconds):
         
         # Stop any clip that is currently playing
         functions.stop_clip()        
@@ -1476,7 +1482,7 @@ class CreateTestDataPage(tk.Frame):
         self.aLine_id = self.canvas.create_line(x_canvas_pos, 0,x_canvas_pos, self.spectrogram_image.height(), fill='red', tags = "audio_position_line")
         # Now play the clip
        
-        functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,duration, applyBandPassFilter)
+        functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,duration, self.play_filtered.get())
         
         # https://www.youtube.com/watch?v=f8sKAot-15w
         # Need to calculate the speed to move the line, how many pixels per second
@@ -1500,14 +1506,18 @@ class CreateTestDataPage(tk.Frame):
         length = len(self.recordings)
         for i in range(length):
             recording_id = int(self.recordings[i][0])
-            print("i is ", i," ", recording_id )
+#             print("i is ", i," ", recording_id )
             if recording_id == recording_to_load_id:
-                print("Found it")
+#                 print("Found it")
                 self.current_recordings_index = i
-                break
+                # Now load this recording
+                self.change_spectrogram()
+                return
+            
+        # If it gets here then it didn't find the recording so display a message
+        messagebox.showinfo("Oops", "That recording id is not in the available test recordings")
         
-        # Now load this recording
-        self.change_spectrogram()
+        
                 
     def load_specific_recording_by_result_index(self):  
         self.current_recordings_index = int(self.specific_recording_index.get())
@@ -1563,7 +1573,8 @@ class CreateTestDataPage(tk.Frame):
         retrieve_specific_recording_id_button = ttk.Button(self, text="Retrieve this recording (has to be in test_data)", command=lambda: self.load_specific_recording_from_creating_test_data())
         retrieve_specific_recording_id_button.grid(column=3, columnspan=1, row=1)  
         
-        self.specific_recording_index = StringVar(value='0')   
+#         self.specific_recording_index = StringVar(value='0')
+        self.specific_recording_index = StringVar(value='0')      
         specific_recording_index_entry = tk.Entry(self,  textvariable=self.specific_recording_index, width=30)
         specific_recording_index_entry.grid(column=4, columnspan=1, row=0)        
         
@@ -1639,7 +1650,7 @@ class CreateTestDataPage(tk.Frame):
         actual_confirmed_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.actual_confirmed, value='music',command=lambda: self.confirm_actual())
         actual_confirmed_radio_button_music.grid(column=11, columnspan=1, row=46)   
                         
-#         self.first_recording()
+
         
         first_recording_button = ttk.Button(self, text="First Recording", command=lambda: self.first_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         first_recording_button.grid(column=0, columnspan=1, row=100) 
@@ -1648,12 +1659,15 @@ class CreateTestDataPage(tk.Frame):
         previous_recording_button.grid(column=1, columnspan=1, row=100) 
         
         
-#         play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: functions.play_clip(str(self.recordings[self.current_recordings_index][0]), 0,duration, False))
-        play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: self.play_clip(0, False))
+
+        play_button = ttk.Button(self, text="Play Recording", command=lambda: self.play_clip(0))
         play_button.grid(column=2, columnspan=1, row=100)
         
-        play_filtered_button = ttk.Button(self, text="Play filtered", command=lambda: self.play_clip(0, True))
-        play_filtered_button.grid(column=2, columnspan=1, row=110)
+        
+        # https://effbot.org/tkinterbook/checkbutton.htm
+        self.play_filtered = BooleanVar()
+        play_filtered_Checkbuttton = Checkbutton(self, text="Apply Filter to Playback", variable=self.play_filtered)
+        play_filtered_Checkbuttton.grid(column=2, columnspan=1, row=110)
         
         play_button = ttk.Button(self, text="Stop Playing", command=lambda: self.stop_clip())
         play_button.grid(column=3, columnspan=1, row=100)
@@ -1666,7 +1680,11 @@ class CreateTestDataPage(tk.Frame):
               
                 
         next_recording_button = ttk.Button(self, text="Next Recording", command=lambda: self.next_recording()) # https://effbot.org/tkinterbook/canvas.htm))
-        next_recording_button.grid(column=4, columnspan=2, row=100)        
+        next_recording_button.grid(column=4, columnspan=1, row=100)   
+        
+        self.auto_play = BooleanVar()
+        auto_play_Checkbuttton = Checkbutton(self, text="Automatically play", variable=self.auto_play)
+        auto_play_Checkbuttton.grid(column=5, columnspan=1, row=100)     
                                  
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=110) 
