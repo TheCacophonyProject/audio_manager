@@ -1393,13 +1393,13 @@ class CreateTestDataPage(tk.Frame):
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))
         
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)   
-        self.canvas.configure(height=self.spectrogram_image.height())  
+        self.canvas.configure(height=self.spectrogram_image.height())             
        
         self.canvas.grid(row=20, rowspan = 50, columnspan=10, column=0)
         
         self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
         self.scroll_x.grid(row=71, columnspan=10, column=0, sticky="ew")        
-
+      
         self.canvas.configure(xscrollcommand=self.scroll_x.set)
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
               
@@ -1442,7 +1442,8 @@ class CreateTestDataPage(tk.Frame):
 #         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id)) 
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))  
         self.canvas.configure(height=self.spectrogram_image.height())  
-        self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)                    
+        self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)  
+                             
 
         self.retrieve_test_data_from_database_and_add_rectangles_to_image()  
         self.draw_horizontal_frequency_reference_line()          
@@ -1547,14 +1548,14 @@ class CreateTestDataPage(tk.Frame):
         max_freq_label = ttk.Label(self, text="Enter the maximum frequency (Hz)")
         max_freq_label.grid(column=2, columnspan=1, row=0)
              
-        self.max_freq = StringVar(value='1100')
+        self.max_freq = StringVar(value='1000')
         max_freq_entry = tk.Entry(self,  textvariable=self.max_freq, width=30)
         max_freq_entry.grid(column=2, columnspan=1, row=1)
         
         horizonal_ref_line_freq_label = ttk.Label(self, text="Enter the frequency (Hz) of the horizontal reference line")
         horizonal_ref_line_freq_label.grid(column=3, columnspan=1, row=0)
         
-        self.horizonal_ref_line_freq = StringVar(value='800')      
+        self.horizonal_ref_line_freq = StringVar(value='850')      
         horizonal_ref_line_freq_entry = tk.Entry(self,  textvariable=self.horizonal_ref_line_freq, width=30)
         horizonal_ref_line_freq_entry.grid(column=3, columnspan=1, row=1)  
         

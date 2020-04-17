@@ -1742,6 +1742,7 @@ def get_image_for_for_creating_test_data(image_name_path):
     [imageSizeWidth, imageSizeHeight] = image.size
 #     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*2)), Image.ANTIALIAS)
 #     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*4)), Image.ANTIALIAS)
+#     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight)), Image.ANTIALIAS)
     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight)), Image.ANTIALIAS)
 #     image = image.resize(2000,900, Image.ANTIALIAS)
     print("Image size is ", image.size)
