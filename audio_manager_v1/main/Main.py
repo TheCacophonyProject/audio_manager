@@ -1416,9 +1416,26 @@ class CreateTestDataPage(tk.Frame):
         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) 
         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
 
-    def first_recording(self):
-            self.current_recordings_index = 0
-            self.display_spectrogram()               
+#     def first_recording_not_yet_analysed(self):
+#             # Find index of first recording that hasn't been analysed
+#             # This will mean checking against the test_data_recording_analysis table
+#             what_to_filter_on = self.marked_as_what.get()
+#             # find the index of the recording with this recording_id
+#             length = len(self.recordings)
+#             for i in range(length):
+#                 recording_id = int(self.recordings[i][0])
+#                 # See if this recording_id is in the test_data_recording_analysis table with an entry with the same 'what'
+#                 has_been_analysed = functions.has_this_recording_been_analysed_for_this(recording_id, what_to_filter_on)
+#                 if  not has_been_analysed:
+#                     break
+#             self.current_recordings_index = i
+#             self.change_spectrogram()
+#                     
+                
+                
+                
+                
+                             
             
     def previous_recording(self):
         if self.current_recordings_index > 0:
@@ -1541,14 +1558,14 @@ class CreateTestDataPage(tk.Frame):
         min_freq_label = ttk.Label(self, text="Enter the minimum frequency (Hz)")
         min_freq_label.grid(column=1, columnspan=1, row=0)
              
-        self.min_freq = StringVar(value='700')
+        self.min_freq = StringVar(value='600')
         min_freq_entry = tk.Entry(self,  textvariable=self.min_freq, width=30)
         min_freq_entry.grid(column=1, columnspan=1, row=1)        
         
         max_freq_label = ttk.Label(self, text="Enter the maximum frequency (Hz)")
         max_freq_label.grid(column=2, columnspan=1, row=0)
              
-        self.max_freq = StringVar(value='1000')
+        self.max_freq = StringVar(value='1100')
         max_freq_entry = tk.Entry(self,  textvariable=self.max_freq, width=30)
         max_freq_entry.grid(column=2, columnspan=1, row=1)
         
@@ -1645,7 +1662,7 @@ class CreateTestDataPage(tk.Frame):
         actual_confirmed_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.actual_confirmed, value='music',command=lambda: self.confirm_actual())
         actual_confirmed_radio_button_music.grid(column=11, columnspan=1, row=46)   
        
-        first_recording_button = ttk.Button(self, text="First Recording", command=lambda: self.first_recording()) # https://effbot.org/tkinterbook/canvas.htm))
+        first_recording_button = ttk.Button(self, text="First Recording - not yet analysed", command=lambda: self.first_recording_not_yet_analysed()) # https://effbot.org/tkinterbook/canvas.htm))
         first_recording_button.grid(column=0, columnspan=1, row=100) 
                        
         previous_recording_button = ttk.Button(self, text="Previous Recording", command=lambda: self.previous_recording()) # https://effbot.org/tkinterbook/canvas.htm))
@@ -1685,6 +1702,7 @@ class CreateTestDataPage(tk.Frame):
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=110) 
         
+#         self.first_recording()
         self.first_recording()
 
         

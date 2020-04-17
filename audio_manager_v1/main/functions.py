@@ -2932,7 +2932,7 @@ def retrieve_test_data_from_database(recording_id):
     test_data_rows = cur.fetchall() 
     return test_data_rows
     
-def retrieve_recordings_for_creating_test_data():
+def retrieve_recordings_for_creating_test_data(what_filter):
     table_name = 'recordings'
     
     firstDate = recordings_for_creating_test_data_start_date 
@@ -2941,7 +2941,11 @@ def retrieve_recordings_for_creating_test_data():
     cur = get_database_connection().cursor()
     # https://stackoverflow.com/questions/8187288/sql-select-between-dates    
 #     cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")      
-    cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")      
+    
+    if what_filter is None:
+        cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")
+    else:
+        cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' and recording_id NOT IN (SELECT recording_id FROM test_data_recording_analysis WHERE recording_id = recording_id and what = 'morepork_more-pork')") 
                
     records = cur.fetchall()
                   
@@ -2958,3 +2962,21 @@ def mark_recording_as_analysed(recording_id, what):
         print(e, '\n')
         print('\t\tUnable to insert test_data_recording_analysis ' + str(recording_id), '\n')  
     
+def has_this_recording_been_analysed_for_this(recording_id, what_to_filter_on):
+    try: 
+        cur = get_database_connection().cursor()
+        cur.execute("SELECT ID FROM test_data_recording_analysis WHERE recording_id = ? and what = ?", (recording_id, what_to_filter_on))
+        record = cur.fetchone()             # https://stackoverflow.com/questions/2440147/how-to-check-the-existence-of-a-row-in-sqlite-with-python
+        
+        if record is None:
+            return False
+        else:
+            return True
+        
+    except Exception as e:
+        print(e, '\n')
+
+
+
+
+
