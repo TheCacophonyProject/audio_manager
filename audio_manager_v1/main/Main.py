@@ -1251,27 +1251,17 @@ class CreateTestDataPage(tk.Frame):
     def leftMousePressedcallback(self, event):
     
         self.x_scroll_bar_minimum = self.scroll_x.get()[0]   
-        self.x_scroll_bar_maximum = self.scroll_x.get()[1]       
-              
-#         the_width = self.canvas.cget("width")
-#         print("the_width ", the_width)
-        self.x_rectangle_start_position_percent = functions.spectrogram_clicked_at_x_percent(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, int(self.canvas.cget("width")))
-#         print("self.x_rectangle_start_position_percent ", self.x_rectangle_start_position_percent)
-        
-#         print("event.y ", event.y)
-#         print("self.canvas_height ", self.canvas.cget("height"))
-        
+        self.x_scroll_bar_maximum = self.scroll_x.get()[1]                     
+
+        self.x_rectangle_start_position_percent = functions.spectrogram_clicked_at_x_percent(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, int(self.canvas.cget("width")))        
         self.y_rectangle_start_position_percent = functions.get_spectrogram_clicked_at_y_percent(event.y, self.spectrogram_image.height())  
-           
-#         print("self.y_rectangle_start_position_percent ", self.y_rectangle_start_position_percent)    
- 
+            
         duration = self.recordings[self.current_recordings_index][3]
        
         self.x_rectangle_start_position_seconds = functions.get_recording_position_in_seconds(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, int(self.canvas.cget("width")), duration)        
 
         self.y_rectangle_start_position_hertz = functions.get_recording_position_in_hertz(event.y, self.spectrogram_image.height(), int(self.min_freq.get()), int(self.max_freq.get()))  
    
-
 
     def on_move_press(self, event):
         if self.temp_rectangle is not None:
@@ -1326,9 +1316,7 @@ class CreateTestDataPage(tk.Frame):
             return 
               
         # Create another rectangle and delete the temp_rectangle.  Had to do this to stop on_move_mouse deleting the previous finished rectangle
-        if self.temp_rectangle is not None:
-            
-#             print("self.actual_confirmed.get() ", self.actual_confirmed.get())
+        if self.temp_rectangle is not None:           
 
             recording_id = self.recordings[self.current_recordings_index][0]           
 
@@ -1338,7 +1326,6 @@ class CreateTestDataPage(tk.Frame):
             rectangle_bbox_x2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
             rectangle_bbox_y2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.height(), self.y_rectangle_finish_position_percent)
             
-
             aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1, rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2, fill='green', stipple="gray12" )
         
             self.canvas.delete(self.temp_rectangle) 
@@ -1400,7 +1387,6 @@ class CreateTestDataPage(tk.Frame):
         recording_id = self.recordings[self.current_recordings_index][0]
 
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))
-#         print("self.spectrogram_image.height() ", self.spectrogram_image.height())
         
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)   
         self.canvas.configure(height=self.spectrogram_image.height())  
@@ -1408,8 +1394,7 @@ class CreateTestDataPage(tk.Frame):
         self.canvas.grid(row=20, rowspan = 50, columnspan=10, column=0)
         
         self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
-        self.scroll_x.grid(row=71, columnspan=10, column=0, sticky="ew")
-        
+        self.scroll_x.grid(row=71, columnspan=10, column=0, sticky="ew")        
 
         self.canvas.configure(xscrollcommand=self.scroll_x.set)
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
@@ -1420,17 +1405,14 @@ class CreateTestDataPage(tk.Frame):
         
         self.canvas.bind("<Button-3>", self.rightMousePressedcallback) 
         
-
         self.retrieve_test_data_from_database_and_add_rectangles_to_image()           
 
         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) 
         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
-#         self.recording_index_out_of_total_of_recordings_value.set("Result  recordings")
 
     def first_recording(self):
             self.current_recordings_index = 0
-            self.display_spectrogram()   
-            
+            self.display_spectrogram()               
             
     def previous_recording(self):
         if self.current_recordings_index > 0:
@@ -1441,7 +1423,12 @@ class CreateTestDataPage(tk.Frame):
         if self.current_recordings_index < (len(self.recordings) - 2): 
             self.current_recordings_index = self.current_recordings_index + 1
             self.change_spectrogram() 
-           
+            
+    def next_recording_and_mark_as_analysed(self):
+        recording_id = self.recordings[self.current_recordings_index][0]
+        what = self.marked_as_what.get()
+        functions.mark_recording_as_analysed(recording_id, what)
+        self.next_recording()            
         
     def change_spectrogram(self):
         self.stop_clip()
@@ -1458,15 +1445,15 @@ class CreateTestDataPage(tk.Frame):
         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
         
         if self.auto_play.get():
-            self.play_clip(0)
-            
-        
-        
+            self.play_clip(0)           
+                
     def confirm_actual(self):  
-        # Don't really to call this method    
-        print('self.actual_confirmed.get() ', self.actual_confirmed.get())    
-        
-    
+       
+        print('self.actual_confirmed.get() ', self.actual_confirmed.get()) 
+        # Set the what box - used to enter row in test_data_recording_analysis table     
+        self.marked_as_what.set(self.actual_confirmed.get())
+           
+            
         
     def play_clip(self,start_position_seconds):
         
@@ -1506,9 +1493,7 @@ class CreateTestDataPage(tk.Frame):
         length = len(self.recordings)
         for i in range(length):
             recording_id = int(self.recordings[i][0])
-#             print("i is ", i," ", recording_id )
             if recording_id == recording_to_load_id:
-#                 print("Found it")
                 self.current_recordings_index = i
                 # Now load this recording
                 self.change_spectrogram()
@@ -1529,8 +1514,7 @@ class CreateTestDataPage(tk.Frame):
         # https://stackoverflow.com/questions/7727804/tkinter-using-scrollbars-on-a-canvas
         # https://stackoverflow.com/questions/43731784/tkinter-canvas-scrollbar-with-grid
         # https://riptutorial.com/tkinter/example/27784/scrolling-a-canvas-widget-horizontally-and-vertically
-                  
-            
+                              
         tk.Frame.__init__(self, parent)    
         
         self.playing = False
@@ -1558,8 +1542,7 @@ class CreateTestDataPage(tk.Frame):
              
         self.max_freq = StringVar(value='1100')
         max_freq_entry = tk.Entry(self,  textvariable=self.max_freq, width=30)
-        max_freq_entry.grid(column=2, columnspan=1, row=1)                  
-
+        max_freq_entry.grid(column=2, columnspan=1, row=1)
         
         self.canvas = tk.Canvas(self, width=10, height=10)  
 
@@ -1571,9 +1554,8 @@ class CreateTestDataPage(tk.Frame):
         specific_recording_id_entry.grid(column=3, columnspan=1, row=0)        
         
         retrieve_specific_recording_id_button = ttk.Button(self, text="Retrieve this recording (has to be in test_data)", command=lambda: self.load_specific_recording_from_creating_test_data())
-        retrieve_specific_recording_id_button.grid(column=3, columnspan=1, row=1)  
-        
-#         self.specific_recording_index = StringVar(value='0')
+        retrieve_specific_recording_id_button.grid(column=3, columnspan=1, row=1)          
+
         self.specific_recording_index = StringVar(value='0')      
         specific_recording_index_entry = tk.Entry(self,  textvariable=self.specific_recording_index, width=30)
         specific_recording_index_entry.grid(column=4, columnspan=1, row=0)        
@@ -1587,9 +1569,7 @@ class CreateTestDataPage(tk.Frame):
         recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value2) 
         recording_id_label.grid(column=11, columnspan=1, row=20) 
         self.recording_id_and_result_place_value2.set("Recording Id") 
-        
-        
-        
+                
         # Add the radio buttons for selecting what the noise is
         
         actual_label_confirmed = ttk.Label(self, text="SET Actual Confirmed", font=LARGE_FONT)
@@ -1649,17 +1629,13 @@ class CreateTestDataPage(tk.Frame):
         actual_confirmed_radio_button_maybe_morepork_more_pork.grid(column=11, columnspan=1, row=45)
         actual_confirmed_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.actual_confirmed, value='music',command=lambda: self.confirm_actual())
         actual_confirmed_radio_button_music.grid(column=11, columnspan=1, row=46)   
-                        
-
-        
+       
         first_recording_button = ttk.Button(self, text="First Recording", command=lambda: self.first_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         first_recording_button.grid(column=0, columnspan=1, row=100) 
                        
         previous_recording_button = ttk.Button(self, text="Previous Recording", command=lambda: self.previous_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         previous_recording_button.grid(column=1, columnspan=1, row=100) 
         
-        
-
         play_button = ttk.Button(self, text="Play Recording", command=lambda: self.play_clip(0))
         play_button.grid(column=2, columnspan=1, row=100)
         
@@ -1676,15 +1652,20 @@ class CreateTestDataPage(tk.Frame):
         recording_index_label = ttk.Label(self, textvariable=self.recording_index_out_of_total_of_recordings_value) 
         recording_index_label.grid(column=3, columnspan=1, row=110) 
         self.recording_index_out_of_total_of_recordings_value.set("Result ") 
-        
-              
-                
-        next_recording_button = ttk.Button(self, text="Next Recording", command=lambda: self.next_recording()) # https://effbot.org/tkinterbook/canvas.htm))
+                 
+        next_recording_button = ttk.Button(self, text="Next Recording (Do NOT mark as Analysed)", command=lambda: self.next_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         next_recording_button.grid(column=4, columnspan=1, row=100)   
+        
+        self.marked_as_what = StringVar(value='morepork_more-pork')      
+        marked_as_what_entry = tk.Entry(self,  textvariable=self.marked_as_what, width=30)
+        marked_as_what_entry.grid(column=5, columnspan=1, row=100)   
+        
+        next_recording_button = ttk.Button(self, text="Next Recording (Mark as Analysed)", command=lambda: self.next_recording_and_mark_as_analysed()) # https://effbot.org/tkinterbook/canvas.htm))
+        next_recording_button.grid(column=5, columnspan=1, row=110)  
         
         self.auto_play = BooleanVar()
         auto_play_Checkbuttton = Checkbutton(self, text="Automatically play", variable=self.auto_play)
-        auto_play_Checkbuttton.grid(column=5, columnspan=1, row=100)     
+        auto_play_Checkbuttton.grid(column=6, columnspan=1, row=100)     
                                  
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=110) 

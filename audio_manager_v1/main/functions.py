@@ -2934,19 +2934,26 @@ def retrieve_test_data_from_database(recording_id):
 def retrieve_recordings_for_creating_test_data():
     table_name = 'recordings'
     
-
     firstDate = recordings_for_creating_test_data_start_date 
     lastDate = recordings_for_creating_test_data_end_date 
     
     cur = get_database_connection().cursor()
     # https://stackoverflow.com/questions/8187288/sql-select-between-dates    
-    cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")      
-              
+#     cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")      
+    cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")      
+               
     records = cur.fetchall()
-          
-        
+                  
     return records
         
-    
-       
+def mark_recording_as_analysed(recording_id, what):
+    try: 
+        cur = get_database_connection().cursor()
+        sql = ''' INSERT INTO test_data_recording_analysis(recording_id, what)
+                      VALUES(?,?) '''
+        cur.execute(sql, (recording_id, what))
+        get_database_connection().commit()   
+    except Exception as e:
+        print(e, '\n')
+        print('\t\tUnable to insert test_data_recording_analysis ' + str(recording_id), '\n')  
     
