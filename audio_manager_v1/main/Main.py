@@ -1380,6 +1380,10 @@ class CreateTestDataPage(tk.Frame):
             # Attach details of test_data to the rectangles (so can 'look' at it one day - with mouse hover?)
             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_time_seconds), str(finish_time_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , what))
             
+    def draw_horizontal_frequency_reference_line(self):
+        ref_line_canvas_value = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.horizonal_ref_line_freq.get()), self.spectrogram_image.height())  
+        ref_line_id = self.canvas.create_line(0,ref_line_canvas_value,self.spectrogram_image.width(),ref_line_canvas_value, fill='blue')
+            
     def retrieve_recordings_for_creating_test_data(self):
         self.recordings = functions.retrieve_recordings_for_creating_test_data()
         
@@ -1405,7 +1409,9 @@ class CreateTestDataPage(tk.Frame):
         
         self.canvas.bind("<Button-3>", self.rightMousePressedcallback) 
         
-        self.retrieve_test_data_from_database_and_add_rectangles_to_image()           
+        self.retrieve_test_data_from_database_and_add_rectangles_to_image()    
+        
+        self.draw_horizontal_frequency_reference_line()       
 
         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) 
         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
@@ -1438,7 +1444,8 @@ class CreateTestDataPage(tk.Frame):
         self.canvas.configure(height=self.spectrogram_image.height())  
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)                    
 
-        self.retrieve_test_data_from_database_and_add_rectangles_to_image()          
+        self.retrieve_test_data_from_database_and_add_rectangles_to_image()  
+        self.draw_horizontal_frequency_reference_line()          
 
         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) # + " Result: " + str(self.current_recordings_index))   
         
@@ -1544,6 +1551,13 @@ class CreateTestDataPage(tk.Frame):
         max_freq_entry = tk.Entry(self,  textvariable=self.max_freq, width=30)
         max_freq_entry.grid(column=2, columnspan=1, row=1)
         
+        horizonal_ref_line_freq_label = ttk.Label(self, text="Enter the frequency (Hz) of the horizontal reference line")
+        horizonal_ref_line_freq_label.grid(column=3, columnspan=1, row=0)
+        
+        self.horizonal_ref_line_freq = StringVar(value='800')      
+        horizonal_ref_line_freq_entry = tk.Entry(self,  textvariable=self.horizonal_ref_line_freq, width=30)
+        horizonal_ref_line_freq_entry.grid(column=3, columnspan=1, row=1)  
+        
         self.canvas = tk.Canvas(self, width=10, height=10)  
 
         self.canvas.config(height=test_data_canvas_width)
@@ -1551,17 +1565,17 @@ class CreateTestDataPage(tk.Frame):
         
         self.specific_recording_id = StringVar(value='0')   
         specific_recording_id_entry = tk.Entry(self,  textvariable=self.specific_recording_id, width=30)
-        specific_recording_id_entry.grid(column=3, columnspan=1, row=0)        
+        specific_recording_id_entry.grid(column=4, columnspan=1, row=0)        
         
         retrieve_specific_recording_id_button = ttk.Button(self, text="Retrieve this recording (has to be in test_data)", command=lambda: self.load_specific_recording_from_creating_test_data())
-        retrieve_specific_recording_id_button.grid(column=3, columnspan=1, row=1)          
+        retrieve_specific_recording_id_button.grid(column=4, columnspan=1, row=1)          
 
         self.specific_recording_index = StringVar(value='0')      
         specific_recording_index_entry = tk.Entry(self,  textvariable=self.specific_recording_index, width=30)
-        specific_recording_index_entry.grid(column=4, columnspan=1, row=0)        
+        specific_recording_index_entry.grid(column=5, columnspan=1, row=0)        
         
         retrieve_specific_recording_index_button = ttk.Button(self, text="Retrieve this recording (result index)", command=lambda: self.load_specific_recording_by_result_index())
-        retrieve_specific_recording_index_button.grid(column=4, columnspan=1, row=1, rowspan=1)   
+        retrieve_specific_recording_index_button.grid(column=5, columnspan=1, row=1, rowspan=1)   
        
         self.retrieve_recordings_for_creating_test_data()
 
