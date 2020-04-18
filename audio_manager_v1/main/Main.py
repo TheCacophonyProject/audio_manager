@@ -1384,8 +1384,27 @@ class CreateTestDataPage(tk.Frame):
         ref_line_canvas_value = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.horizonal_ref_line_freq.get()), self.spectrogram_image.height())  
         ref_line_id = self.canvas.create_line(0,ref_line_canvas_value,self.spectrogram_image.width(),ref_line_canvas_value, fill='blue')
             
-    def retrieve_recordings_for_creating_test_data(self):
-        self.recordings = functions.retrieve_recordings_for_creating_test_data()
+    
+#     def update_display(self, current_recordings_index):
+# 
+#         recording_id = self.recordings[current_recordings_index]
+#         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id))    
+#         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
+    
+    def retrieve_recordings_for_creating_test_data(self,what_filter):
+        
+        self.recordings = functions.retrieve_recordings_for_creating_test_data(what_filter)  
+        
+              
+# #         self.update_display(0)
+#         recording_id = self.recordings[0]
+#         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id))    
+#         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
+
+    def reload_recordings_for_creating_test_data(self,what_filter):
+        self.retrieve_recordings_for_creating_test_data(what_filter)
+        self.change_spectrogram()        
+        
         
     def display_spectrogram(self):
         recording_id = self.recordings[self.current_recordings_index][0]
@@ -1411,7 +1430,9 @@ class CreateTestDataPage(tk.Frame):
         
         self.retrieve_test_data_from_database_and_add_rectangles_to_image()    
         
-        self.draw_horizontal_frequency_reference_line()       
+        self.draw_horizontal_frequency_reference_line()   
+        
+#         self.update_display(self.current_recordings_index)    
 
         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) 
         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
@@ -1463,11 +1484,16 @@ class CreateTestDataPage(tk.Frame):
                              
 
         self.retrieve_test_data_from_database_and_add_rectangles_to_image()  
-        self.draw_horizontal_frequency_reference_line()          
-
-        self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) # + " Result: " + str(self.current_recordings_index))   
+        self.draw_horizontal_frequency_reference_line()   
         
+#         self.update_display(self, self.current_recordings_index)       
+        
+        self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) 
         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
+
+#         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) # + " Result: " + str(self.current_recordings_index))   
+#         
+#         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
         
         if self.auto_play.get():
             self.play_clip(0)           
@@ -1595,7 +1621,7 @@ class CreateTestDataPage(tk.Frame):
         retrieve_specific_recording_index_button = ttk.Button(self, text="Retrieve this recording (result index)", command=lambda: self.load_specific_recording_by_result_index())
         retrieve_specific_recording_index_button.grid(column=5, columnspan=1, row=1, rowspan=1)   
        
-        self.retrieve_recordings_for_creating_test_data()
+        self.retrieve_recordings_for_creating_test_data("morepork_more-pork")
 
         self.recording_id_and_result_place_value2 = tk.StringVar()
         recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value2) 
@@ -1662,8 +1688,14 @@ class CreateTestDataPage(tk.Frame):
         actual_confirmed_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.actual_confirmed, value='music',command=lambda: self.confirm_actual())
         actual_confirmed_radio_button_music.grid(column=11, columnspan=1, row=46)   
        
-        first_recording_button = ttk.Button(self, text="First Recording - not yet analysed", command=lambda: self.first_recording_not_yet_analysed()) # https://effbot.org/tkinterbook/canvas.htm))
-        first_recording_button.grid(column=0, columnspan=1, row=100) 
+        first_not_yet_analysed_recording_button = ttk.Button(self, text="First Recording - not yet analysed", command=lambda: self.reload_recordings_for_creating_test_data(self.marked_as_what.get())) # https://effbot.org/tkinterbook/canvas.htm))
+        first_not_yet_analysed_recording_button.grid(column=0, columnspan=1, row=100) 
+        
+#         first_recording_button = ttk.Button(self, text="First Recording - not yet analysed", command=lambda: self.retrieve_recordings_for_creating_test_data(self.marked_as_what.get())) # https://effbot.org/tkinterbook/canvas.htm))
+#         first_recording_button.grid(column=0, columnspan=1, row=100) 
+        
+        first_recording_button = ttk.Button(self, text="First Recording (includes already analysed)", command=lambda: self.reload_recordings_for_creating_test_data(None)) # https://effbot.org/tkinterbook/canvas.htm))
+        first_recording_button.grid(column=0, columnspan=1, row=110) 
                        
         previous_recording_button = ttk.Button(self, text="Previous Recording", command=lambda: self.previous_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         previous_recording_button.grid(column=1, columnspan=1, row=100) 
@@ -1700,10 +1732,11 @@ class CreateTestDataPage(tk.Frame):
         auto_play_Checkbuttton.grid(column=6, columnspan=1, row=100)     
                                  
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=110) 
+        back_to_home_button.grid(column=0, columnspan=1, row=120) 
         
+        self.display_spectrogram()
 #         self.first_recording()
-        self.first_recording()
+#         self.first_recording()
 
         
 app = Main_GUI()
