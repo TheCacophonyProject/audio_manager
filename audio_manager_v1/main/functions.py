@@ -1618,6 +1618,9 @@ def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, 
         
 
 def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_id, min_freq, max_freq):
+    
+    print("min_freq ", min_freq)
+    print("max_freq ", max_freq)
 
     temp_display_images_folder_path = base_folder + '/' + run_folder + '/' + temp_display_images_folder 
     if not os.path.exists(temp_display_images_folder_path):
@@ -1633,16 +1636,25 @@ def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_i
         image_out_path = temp_display_images_folder_path + '/' + image_out_name
         
         y, sr = librosa.load(audio_in_path, sr=None)     
-#         mel_spectrogram = librosa.feature.melspectrogram(y, sr=sr, n_mels=32, fmin=min_freq,fmax=max_freq) 
-        D = np.abs(librosa.stft(y))
-        
-        plt.axis('off') # no axis                
-        plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge   
-        
-        librosa.display.specshow(librosa.amplitude_to_db(D,ref=np.max),  cmap='binary', y_axis='linear', x_axis='time')
-        
-#         https://github.com/librosa/librosa/issues/331
-        plt.ylim([min_freq,max_freq])
+# #         mel_spectrogram = librosa.feature.melspectrogram(y, sr=sr, n_mels=32, fmin=min_freq,fmax=max_freq) 
+#         D = np.abs(librosa.stft(y))
+#         
+#         plt.axis('off') # no axis                
+#         plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge   
+#         
+# #         librosa.display.specshow(librosa.amplitude_to_db(D,ref=np.max),  cmap='binary', y_axis='linear', x_axis='time')
+#         librosa.display.specshow(D,  cmap='binary', y_axis='linear', x_axis='time')
+#         
+# #         https://github.com/librosa/librosa/issues/331
+# #         plt.ylim([min_freq,max_freq])
+#         plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+#         plt.close()
+
+        mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=min_freq,fmax=max_freq)
+         
+        plt.axis('off') # no axis
+        plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+        librosa.display.specshow(mel_spectrogram, cmap='binary') #https://matplotlib.org/examples/color/colormaps_reference.html
         plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
         plt.close()
         

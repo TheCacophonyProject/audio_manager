@@ -1267,7 +1267,6 @@ class CreateTestDataPage(tk.Frame):
         if self.temp_rectangle is not None:
             self.canvas.delete(self.temp_rectangle)
         
-
         self.x_rectangle_finish_position_percent = functions.spectrogram_clicked_at_x_percent(event.x, self.x_scroll_bar_minimum, self.x_scroll_bar_maximum, int(self.canvas.cget("width")))
         self.y_rectangle_finish_position_percent = functions.get_spectrogram_clicked_at_y_percent(event.y, self.spectrogram_image.height())     
         
@@ -1383,13 +1382,7 @@ class CreateTestDataPage(tk.Frame):
     def draw_horizontal_frequency_reference_line(self):
         ref_line_canvas_value = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.horizonal_ref_line_freq.get()), self.spectrogram_image.height())  
         ref_line_id = self.canvas.create_line(0,ref_line_canvas_value,self.spectrogram_image.width(),ref_line_canvas_value, fill='blue')
-            
     
-#     def update_display(self, current_recordings_index):
-# 
-#         recording_id = self.recordings[current_recordings_index]
-#         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id))    
-#         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
     
     def retrieve_recordings_for_creating_test_data(self,what_filter):
         if what_filter is None:
@@ -1398,12 +1391,7 @@ class CreateTestDataPage(tk.Frame):
             self.config(bg="light grey")
         
         self.recordings = functions.retrieve_recordings_for_creating_test_data(what_filter)  
-        
-              
-# #         self.update_display(0)
-#         recording_id = self.recordings[0]
-#         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id))    
-#         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
+
 
     def reload_recordings_for_creating_test_data(self,what_filter):
         self.retrieve_recordings_for_creating_test_data(what_filter)
@@ -1436,31 +1424,8 @@ class CreateTestDataPage(tk.Frame):
         
         self.draw_horizontal_frequency_reference_line()   
         
-#         self.update_display(self.current_recordings_index)    
-
         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) 
-        self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
-
-#     def first_recording_not_yet_analysed(self):
-#             # Find index of first recording that hasn't been analysed
-#             # This will mean checking against the test_data_recording_analysis table
-#             what_to_filter_on = self.marked_as_what.get()
-#             # find the index of the recording with this recording_id
-#             length = len(self.recordings)
-#             for i in range(length):
-#                 recording_id = int(self.recordings[i][0])
-#                 # See if this recording_id is in the test_data_recording_analysis table with an entry with the same 'what'
-#                 has_been_analysed = functions.has_this_recording_been_analysed_for_this(recording_id, what_to_filter_on)
-#                 if  not has_been_analysed:
-#                     break
-#             self.current_recordings_index = i
-#             self.change_spectrogram()
-#                     
-                
-                
-                
-                
-                             
+        self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")                           
             
     def previous_recording(self):
         if self.current_recordings_index > 0:
@@ -1489,15 +1454,9 @@ class CreateTestDataPage(tk.Frame):
 
         self.retrieve_test_data_from_database_and_add_rectangles_to_image()  
         self.draw_horizontal_frequency_reference_line()   
-        
-#         self.update_display(self, self.current_recordings_index)       
-        
+                
         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) 
         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
-
-#         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) # + " Result: " + str(self.current_recordings_index))   
-#         
-#         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
         
         if self.auto_play.get():
             self.play_clip(0)           
@@ -1507,7 +1466,6 @@ class CreateTestDataPage(tk.Frame):
         print('self.actual_confirmed.get() ', self.actual_confirmed.get()) 
         # Set the what box - used to enter row in test_data_recording_analysis table     
         self.marked_as_what.set(self.actual_confirmed.get())
-           
             
         
     def play_clip(self,start_position_seconds):
@@ -1534,7 +1492,10 @@ class CreateTestDataPage(tk.Frame):
         while self.playing:
             self.canvas.move(self.aLine_id,speed,0)
             self.update()
-            time.sleep(0.05)
+#             time.sleep(0.05)
+#             time.sleep(0.0499) # line was moving fractionally slow
+#             time.sleep(0.049) # line was moving fractionally slow
+            time.sleep(0.0495) # line was moving fractionally slow
         
     def stop_clip(self):
         self.playing = False 
@@ -1588,7 +1549,7 @@ class CreateTestDataPage(tk.Frame):
         min_freq_label = ttk.Label(self, text="Enter the minimum frequency (Hz)")
         min_freq_label.grid(column=1, columnspan=1, row=0)
              
-        self.min_freq = StringVar(value='600')
+        self.min_freq = StringVar(value='700')
         min_freq_entry = tk.Entry(self,  textvariable=self.min_freq, width=30)
         min_freq_entry.grid(column=1, columnspan=1, row=1)        
         
@@ -1602,7 +1563,7 @@ class CreateTestDataPage(tk.Frame):
         horizonal_ref_line_freq_label = ttk.Label(self, text="Enter the frequency (Hz) of the horizontal reference line")
         horizonal_ref_line_freq_label.grid(column=3, columnspan=1, row=0)
         
-        self.horizonal_ref_line_freq = StringVar(value='850')      
+        self.horizonal_ref_line_freq = StringVar(value='900')      
         horizonal_ref_line_freq_entry = tk.Entry(self,  textvariable=self.horizonal_ref_line_freq, width=30)
         horizonal_ref_line_freq_entry.grid(column=3, columnspan=1, row=1)  
         
@@ -1611,7 +1572,7 @@ class CreateTestDataPage(tk.Frame):
         self.canvas.config(height=test_data_canvas_width)
         self.canvas.config(width=test_data_canvas_height)
         
-        self.specific_recording_id = StringVar(value='0')   
+        self.specific_recording_id = StringVar(value='544235')   
         specific_recording_id_entry = tk.Entry(self,  textvariable=self.specific_recording_id, width=30)
         specific_recording_id_entry.grid(column=4, columnspan=1, row=0)        
         
@@ -1695,9 +1656,6 @@ class CreateTestDataPage(tk.Frame):
         first_not_yet_analysed_recording_button = ttk.Button(self, text="First Recording - not yet analysed", command=lambda: self.reload_recordings_for_creating_test_data(self.marked_as_what.get())) # https://effbot.org/tkinterbook/canvas.htm))
         first_not_yet_analysed_recording_button.grid(column=0, columnspan=1, row=100) 
         
-#         first_recording_button = ttk.Button(self, text="First Recording - not yet analysed", command=lambda: self.retrieve_recordings_for_creating_test_data(self.marked_as_what.get())) # https://effbot.org/tkinterbook/canvas.htm))
-#         first_recording_button.grid(column=0, columnspan=1, row=100) 
-        
         first_recording_button = ttk.Button(self, text="First Recording (includes already analysed)", command=lambda: self.reload_recordings_for_creating_test_data(None)) # https://effbot.org/tkinterbook/canvas.htm))
         first_recording_button.grid(column=0, columnspan=1, row=110) 
                        
@@ -1705,8 +1663,7 @@ class CreateTestDataPage(tk.Frame):
         previous_recording_button.grid(column=1, columnspan=1, row=100) 
         
         play_button = ttk.Button(self, text="Play Recording", command=lambda: self.play_clip(0))
-        play_button.grid(column=2, columnspan=1, row=100)
-        
+        play_button.grid(column=2, columnspan=1, row=100)        
         
         # https://effbot.org/tkinterbook/checkbutton.htm
         self.play_filtered = BooleanVar()
@@ -1739,8 +1696,6 @@ class CreateTestDataPage(tk.Frame):
         back_to_home_button.grid(column=0, columnspan=1, row=120) 
         
         self.display_spectrogram()
-#         self.first_recording()
-#         self.first_recording()
 
         
 app = Main_GUI()
