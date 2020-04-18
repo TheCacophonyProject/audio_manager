@@ -1392,6 +1392,10 @@ class CreateTestDataPage(tk.Frame):
 #         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
     
     def retrieve_recordings_for_creating_test_data(self,what_filter):
+        if what_filter is None:
+            self.config(bg="red")
+        else:
+            self.config(bg="light grey")
         
         self.recordings = functions.retrieve_recordings_for_creating_test_data(what_filter)  
         

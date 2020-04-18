@@ -2945,7 +2945,7 @@ def retrieve_recordings_for_creating_test_data(what_filter):
     if what_filter is None:
         cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")
     else:
-        cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' and recording_id NOT IN (SELECT recording_id FROM test_data_recording_analysis WHERE recording_id = recording_id and what = 'morepork_more-pork')") 
+        cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' and recording_id NOT IN (SELECT recording_id FROM test_data_recording_analysis WHERE recording_id = recording_id and what = 'morepork_more-pork') order by recordingDateTime ASC") 
                
     records = cur.fetchall()
                   
