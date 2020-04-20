@@ -3020,7 +3020,19 @@ def has_this_recording_been_analysed_for_this(recording_id, what_to_filter_on):
     except Exception as e:
         print(e, '\n')
 
-
+def get_spectrogram_rectangle_selection_colour(what):
+#     what = "morepork_more-pork"
+    # http://www.science.smith.edu/dftwiki/index.php/Color_Charts_for_TKinter
+    switcher = {
+        "morepork_more-pork": "green",
+        "maybe_morepork_more-pork":"yellow",
+        "morepork_more-pork_part":"blue",
+        "cow": "dark orange"
+        
+    }
+#     print("It was ", switcher.get(what, "blue"))
+    return switcher.get(what, "red")
+    
 
 
 

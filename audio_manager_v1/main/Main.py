@@ -1325,7 +1325,11 @@ class CreateTestDataPage(tk.Frame):
             rectangle_bbox_x2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.width(), self.x_rectangle_finish_position_percent)
             rectangle_bbox_y2 = functions.convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(self.spectrogram_image.height(), self.y_rectangle_finish_position_percent)
             
-            aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1, rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2, fill='green', stipple="gray12" )
+            what = self.actual_confirmed.get()
+            
+            fill_colour = functions.get_spectrogram_rectangle_selection_colour(what)
+            
+            aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1, rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2, fill=fill_colour, stipple="gray12" )
         
             self.canvas.delete(self.temp_rectangle) 
             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , self.actual_confirmed.get()))
@@ -1376,8 +1380,10 @@ class CreateTestDataPage(tk.Frame):
             rectangle_bbox_y1 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), lower_freq_hertz, self.spectrogram_image.height())  
             rectangle_bbox_x2 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(finish_time_seconds, duration, self.spectrogram_image.width())
             rectangle_bbox_y2 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), upper_freq_hertz, self.spectrogram_image.height())
+            
+            fill_colour = functions.get_spectrogram_rectangle_selection_colour(what)
            
-            aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2,fill='green', stipple="gray12")         
+            aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2,fill=fill_colour, stipple="gray12")         
             
             # Attach details of test_data to the rectangles (so can 'look' at it one day - with mouse hover?)
             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_time_seconds), str(finish_time_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , what))
