@@ -124,6 +124,10 @@ db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2.db"
 
 # test_data_canvas_width = 500
 # test_data_canvas_height = 2000
-test_data_canvas_width = 1000
-test_data_canvas_height = 2000
+# test_data_canvas_width = 1000
+# test_data_canvas_height = 2000
+test_data_canvas_height = 1000
+# test_data_canvas_width = 2380
+test_data_canvas_width = 2455
+
 conn = None

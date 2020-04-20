@@ -1330,7 +1330,10 @@ class CreateTestDataPage(tk.Frame):
             self.canvas.delete(self.temp_rectangle) 
             self.canvas.itemconfig(aRectangle_id, tags=(str(recording_id), str(start_position_seconds), str(finish_position_seconds), str(lower_freq_hertz), str(upper_freq_hertz) , self.actual_confirmed.get()))
                                   
-            functions.insert_test_data_into_database(recording_id, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, self.actual_confirmed.get())   
+            result = functions.insert_test_data_into_database(recording_id, start_position_seconds, finish_position_seconds, lower_freq_hertz, upper_freq_hertz, self.actual_confirmed.get())
+            if not result:                
+                messagebox.showinfo("Oops", "Could not update database - is it locked?")   
+                self.canvas.delete(aRectangle_id) 
 
     def rightMousePressedcallback(self, event):        
       
@@ -1400,16 +1403,17 @@ class CreateTestDataPage(tk.Frame):
         
     def display_spectrogram(self):
         recording_id = self.recordings[self.current_recordings_index][0]
+        recording_device_super_name = self.recordings[self.current_recordings_index][4]
 
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))
         
         self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)   
         self.canvas.configure(height=self.spectrogram_image.height())             
        
-        self.canvas.grid(row=20, rowspan = 50, columnspan=10, column=0)
+        self.canvas.grid(row=20, rowspan = 50, columnspan=20, column=0)
         
         self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
-        self.scroll_x.grid(row=71, columnspan=10, column=0, sticky="ew")        
+        self.scroll_x.grid(row=71, columnspan=20, column=0, sticky="ew")        
       
         self.canvas.configure(xscrollcommand=self.scroll_x.set)
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
@@ -1424,7 +1428,7 @@ class CreateTestDataPage(tk.Frame):
         
         self.draw_horizontal_frequency_reference_line()   
         
-        self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) 
+        self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id) + " at location " + recording_device_super_name) 
         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")                           
             
     def previous_recording(self):
@@ -1440,8 +1444,12 @@ class CreateTestDataPage(tk.Frame):
     def next_recording_and_mark_as_analysed(self):
         recording_id = self.recordings[self.current_recordings_index][0]
         what = self.marked_as_what.get()
-        functions.mark_recording_as_analysed(recording_id, what)
-        self.next_recording()            
+        result = functions.mark_recording_as_analysed(recording_id, what)
+        if result:
+            self.next_recording()
+        else:
+            messagebox.showinfo("Oops", "Could not update database - is it locked?")
+                    
         
     def change_spectrogram(self):
         self.stop_clip()
@@ -1544,7 +1552,7 @@ class CreateTestDataPage(tk.Frame):
         msg1_instructions = "Use this page to create test data."
         msg1 = tk.Message(self, text = msg1_instructions)
         msg1.config(width=600)
-        msg1.grid(column=0, columnspan=1, row=10)     
+        msg1.grid(column=0, columnspan=1, row=1)     
         
         min_freq_label = ttk.Label(self, text="Enter the minimum frequency (Hz)")
         min_freq_label.grid(column=1, columnspan=1, row=0)
@@ -1567,10 +1575,14 @@ class CreateTestDataPage(tk.Frame):
         horizonal_ref_line_freq_entry = tk.Entry(self,  textvariable=self.horizonal_ref_line_freq, width=30)
         horizonal_ref_line_freq_entry.grid(column=3, columnspan=1, row=1)  
         
-        self.canvas = tk.Canvas(self, width=10, height=10)  
+        self.canvas = tk.Canvas(self, width=10, height=10)
+#         self.canvas = tk.Canvas(self, width=20, height=10)    
 
-        self.canvas.config(height=test_data_canvas_width)
-        self.canvas.config(width=test_data_canvas_height)
+#         self.canvas.config(height=test_data_canvas_width)
+#         self.canvas.config(width=test_data_canvas_height)
+        
+        self.canvas.config(height=test_data_canvas_height)
+        self.canvas.config(width=test_data_canvas_width)
         
         self.specific_recording_id = StringVar(value='544235')   
         specific_recording_id_entry = tk.Entry(self,  textvariable=self.specific_recording_id, width=30)
@@ -1585,73 +1597,15 @@ class CreateTestDataPage(tk.Frame):
         
         retrieve_specific_recording_index_button = ttk.Button(self, text="Retrieve this recording (result index)", command=lambda: self.load_specific_recording_by_result_index())
         retrieve_specific_recording_index_button.grid(column=5, columnspan=1, row=1, rowspan=1)   
+        
+        self.recording_id_and_result_place_value2 = tk.StringVar()
+        recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value2) 
+        recording_id_label.grid(column=6, columnspan=1, row=0) 
+        self.recording_id_and_result_place_value2.set("Recording Id") 
        
         self.retrieve_recordings_for_creating_test_data("morepork_more-pork")
 
-        self.recording_id_and_result_place_value2 = tk.StringVar()
-        recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value2) 
-        recording_id_label.grid(column=11, columnspan=1, row=20) 
-        self.recording_id_and_result_place_value2.set("Recording Id") 
-                
-        # Add the radio buttons for selecting what the noise is
-        
-        actual_label_confirmed = ttk.Label(self, text="SET Actual Confirmed", font=LARGE_FONT)
-        actual_label_confirmed.grid(column=11, columnspan=1, row=21)
-              
-        self.actual_confirmed = tk.StringVar()
 
-        actual_confirmed_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork more-pork', variable=self.actual_confirmed, value='morepork_more-pork',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_morepork_classic.grid(column=11, columnspan=1, row=22)               
-        
-        actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_confirmed, value='unknown',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_unknown.grid(column=11, columnspan=1, row=23)
-        actual_confirmed_radio_button_dove = ttk.Radiobutton(self,text='Dove', variable=self.actual_confirmed, value='dove',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_dove.grid(column=11, columnspan=1, row=24)   
-        actual_confirmed_radio_button_duck = ttk.Radiobutton(self,text='Duck', variable=self.actual_confirmed, value='duck',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_duck.grid(column=11, columnspan=1, row=25) 
-        actual_confirmed_radio_button_dog = ttk.Radiobutton(self,text='Dog', variable=self.actual_confirmed, value='dog',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_dog.grid(column=11, columnspan=1, row=26) 
-        actual_confirmed_radio_button_human = ttk.Radiobutton(self,text='Human', variable=self.actual_confirmed, value='human',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_human.grid(column=11, columnspan=1, row=27)   
-        actual_confirmed_radio_button_siren = ttk.Radiobutton(self,text='Siren', variable=self.actual_confirmed, value='siren',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_siren.grid(column=11, columnspan=1, row=28)
-        actual_confirmed_radio_button_bird = ttk.Radiobutton(self,text='Bird', variable=self.actual_confirmed, value='bird',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_bird.grid(column=11, columnspan=1, row=29) 
-        actual_confirmed_radio_button_car = ttk.Radiobutton(self,text='Car', variable=self.actual_confirmed, value='car',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_car.grid(column=11, columnspan=1, row=30)
-        actual_confirmed_radio_button_rumble = ttk.Radiobutton(self,text='Rumble', variable=self.actual_confirmed, value='rumble',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_rumble.grid(column=11, columnspan=1, row=31)
-        actual_confirmed_radio_button_water = ttk.Radiobutton(self,text='Water', variable=self.actual_confirmed, value='water',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_water.grid(column=11, columnspan=1, row=32)
-        actual_confirmed_radio_button_hand_saw = ttk.Radiobutton(self,text='Hand saw', variable=self.actual_confirmed, value='hand_saw',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_hand_saw.grid(column=11, columnspan=1, row=33)        
-        
-        actual_confirmed_radio_button_white_noise = ttk.Radiobutton(self,text='White noise', variable=self.actual_confirmed, value='white_noise',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_white_noise.grid(column=11, columnspan=1, row=34)
-        actual_confirmed_radio_button_plane = ttk.Radiobutton(self,text='Plane', variable=self.actual_confirmed, value='plane',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_plane.grid(column=11, columnspan=1, row=35)
-        actual_confirmed_radio_button_cow = ttk.Radiobutton(self,text='Cow', variable=self.actual_confirmed, value='cow',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_cow.grid(column=11, columnspan=1, row=36) 
-        actual_confirmed_radio_button_buzzy_insect = ttk.Radiobutton(self,text='Buzzy insect', variable=self.actual_confirmed, value='buzzy_insect',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_buzzy_insect.grid(column=11, columnspan=1, row=37) 
-        actual_confirmed_radio_morepork_more_pork_part = ttk.Radiobutton(self,text='Morepork more-pork Part', variable=self.actual_confirmed, value='morepork_more-pork_part',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_morepork_more_pork_part.grid(column=11, columnspan=1, row=38) 
-        actual_confirmed_radio_button_hammering = ttk.Radiobutton(self,text='Hammering', variable=self.actual_confirmed, value='hammering',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_hammering.grid(column=11, columnspan=1, row=39)  
-        actual_confirmed_radio_button_frog = ttk.Radiobutton(self,text='Frog', variable=self.actual_confirmed, value='frog',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_frog.grid(column=11, columnspan=1, row=40)
-        actual_confirmed_radio_button_chainsaw = ttk.Radiobutton(self,text='Chainsaw', variable=self.actual_confirmed, value='chainsaw',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_chainsaw.grid(column=11, columnspan=1, row=41) 
-        actual_confirmed_radio_button_crackle = ttk.Radiobutton(self,text='Crackle', variable=self.actual_confirmed, value='crackle',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_crackle.grid(column=11, columnspan=1, row=42)  
-        actual_confirmed_radio_button_car_horn = ttk.Radiobutton(self,text='Car horn', variable=self.actual_confirmed, value='car_horn',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_car_horn.grid(column=11, columnspan=1, row=43)
-        actual_confirmed_radio_button_fire_work = ttk.Radiobutton(self,text='Fire work', variable=self.actual_confirmed, value='fire_work',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_fire_work.grid(column=11, columnspan=1, row=44)
-        actual_confirmed_radio_button_maybe_morepork_more_pork = ttk.Radiobutton(self,text='Maybe Morepork more-pork', variable=self.actual_confirmed, value='maybe_morepork_more-pork',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_maybe_morepork_more_pork.grid(column=11, columnspan=1, row=45)
-        actual_confirmed_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.actual_confirmed, value='music',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_music.grid(column=11, columnspan=1, row=46)   
        
         first_not_yet_analysed_recording_button = ttk.Button(self, text="First Recording - not yet analysed", command=lambda: self.reload_recordings_for_creating_test_data(self.marked_as_what.get())) # https://effbot.org/tkinterbook/canvas.htm))
         first_not_yet_analysed_recording_button.grid(column=0, columnspan=1, row=100) 
@@ -1685,15 +1639,83 @@ class CreateTestDataPage(tk.Frame):
         marked_as_what_entry = tk.Entry(self,  textvariable=self.marked_as_what, width=30)
         marked_as_what_entry.grid(column=5, columnspan=1, row=100)   
         
-        next_recording_button = ttk.Button(self, text="Next Recording (Mark as Analysed)", command=lambda: self.next_recording_and_mark_as_analysed()) # https://effbot.org/tkinterbook/canvas.htm))
+        # Note I used a different button type for this button so I could change the background colour
+        next_recording_button = tk.Button(self, text="Next Recording (Mark as Analysed)", bg='green', command=lambda: self.next_recording_and_mark_as_analysed()) # https://effbot.org/tkinterbook/canvas.htm))
         next_recording_button.grid(column=5, columnspan=1, row=110)  
         
         self.auto_play = BooleanVar()
         auto_play_Checkbuttton = Checkbutton(self, text="Automatically play", variable=self.auto_play)
-        auto_play_Checkbuttton.grid(column=6, columnspan=1, row=100)     
+        auto_play_Checkbuttton.grid(column=6, columnspan=1, row=100)  
+        
+#         self.recording_id_and_result_place_value2 = tk.StringVar()
+#         recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value2) 
+#         recording_id_label.grid(column=0, columnspan=1, row=200) 
+#         self.recording_id_and_result_place_value2.set("Recording Id") 
+                
+        # Add the radio buttons for selecting what the noise is
+        
+        actual_label_confirmed = ttk.Label(self, text="SET Actual Confirmed", font=LARGE_FONT)
+        actual_label_confirmed.grid(column=0, columnspan=1, row=201)
+              
+        self.actual_confirmed = tk.StringVar()
+
+        actual_confirmed_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork more-pork', variable=self.actual_confirmed, value='morepork_more-pork',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_morepork_classic.grid(column=0, columnspan=1, row=202)               
+        
+        actual_confirmed_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_confirmed, value='unknown',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_unknown.grid(column=1, columnspan=1, row=202)
+        actual_confirmed_radio_button_dove = ttk.Radiobutton(self,text='Dove', variable=self.actual_confirmed, value='dove',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_dove.grid(column=2, columnspan=1, row=202)   
+        actual_confirmed_radio_button_duck = ttk.Radiobutton(self,text='Duck', variable=self.actual_confirmed, value='duck',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_duck.grid(column=3, columnspan=1, row=202) 
+        actual_confirmed_radio_button_dog = ttk.Radiobutton(self,text='Dog', variable=self.actual_confirmed, value='dog',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_dog.grid(column=4, columnspan=1, row=202) 
+        actual_confirmed_radio_button_human = ttk.Radiobutton(self,text='Human', variable=self.actual_confirmed, value='human',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_human.grid(column=5, columnspan=1, row=202)   
+        actual_confirmed_radio_button_siren = ttk.Radiobutton(self,text='Siren', variable=self.actual_confirmed, value='siren',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_siren.grid(column=6, columnspan=1, row=202)
+        
+        actual_confirmed_radio_button_bird = ttk.Radiobutton(self,text='Bird', variable=self.actual_confirmed, value='bird',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_bird.grid(column=0, columnspan=1, row=203) 
+        actual_confirmed_radio_button_car = ttk.Radiobutton(self,text='Car', variable=self.actual_confirmed, value='car',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_car.grid(column=1, columnspan=1, row=203)
+        actual_confirmed_radio_button_rumble = ttk.Radiobutton(self,text='Rumble', variable=self.actual_confirmed, value='rumble',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_rumble.grid(column=2, columnspan=1, row=203)
+        actual_confirmed_radio_button_water = ttk.Radiobutton(self,text='Water', variable=self.actual_confirmed, value='water',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_water.grid(column=3, columnspan=1, row=203)
+        actual_confirmed_radio_button_hand_saw = ttk.Radiobutton(self,text='Hand saw', variable=self.actual_confirmed, value='hand_saw',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_hand_saw.grid(column=4, columnspan=1, row=203) 
+        actual_confirmed_radio_button_white_noise = ttk.Radiobutton(self,text='White noise', variable=self.actual_confirmed, value='white_noise',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_white_noise.grid(column=5, columnspan=1, row=203)
+        actual_confirmed_radio_button_plane = ttk.Radiobutton(self,text='Plane', variable=self.actual_confirmed, value='plane',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_plane.grid(column=6, columnspan=1, row=203)
+        
+        actual_confirmed_radio_button_cow = ttk.Radiobutton(self,text='Cow', variable=self.actual_confirmed, value='cow',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_cow.grid(column=0, columnspan=1, row=204) 
+        actual_confirmed_radio_button_buzzy_insect = ttk.Radiobutton(self,text='Buzzy insect', variable=self.actual_confirmed, value='buzzy_insect',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_buzzy_insect.grid(column=1, columnspan=1, row=204) 
+        actual_confirmed_radio_morepork_more_pork_part = ttk.Radiobutton(self,text='Morepork more-pork Part', variable=self.actual_confirmed, value='morepork_more-pork_part',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_morepork_more_pork_part.grid(column=2, columnspan=1, row=204) 
+        actual_confirmed_radio_button_hammering = ttk.Radiobutton(self,text='Hammering', variable=self.actual_confirmed, value='hammering',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_hammering.grid(column=3, columnspan=1, row=204)  
+        actual_confirmed_radio_button_frog = ttk.Radiobutton(self,text='Frog', variable=self.actual_confirmed, value='frog',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_frog.grid(column=4, columnspan=1, row=204)
+        actual_confirmed_radio_button_chainsaw = ttk.Radiobutton(self,text='Chainsaw', variable=self.actual_confirmed, value='chainsaw',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_chainsaw.grid(column=5, columnspan=1, row=204) 
+        actual_confirmed_radio_button_crackle = ttk.Radiobutton(self,text='Crackle', variable=self.actual_confirmed, value='crackle',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_crackle.grid(column=6, columnspan=1, row=204)  
+        
+        actual_confirmed_radio_button_car_horn = ttk.Radiobutton(self,text='Car horn', variable=self.actual_confirmed, value='car_horn',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_car_horn.grid(column=0, columnspan=1, row=205)
+        actual_confirmed_radio_button_fire_work = ttk.Radiobutton(self,text='Fire work', variable=self.actual_confirmed, value='fire_work',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_fire_work.grid(column=1, columnspan=1, row=205)
+        actual_confirmed_radio_button_maybe_morepork_more_pork = ttk.Radiobutton(self,text='Maybe Morepork more-pork', variable=self.actual_confirmed, value='maybe_morepork_more-pork',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_maybe_morepork_more_pork.grid(column=2, columnspan=1, row=205)
+        actual_confirmed_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.actual_confirmed, value='music',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_music.grid(column=3, columnspan=1, row=205)     
                                  
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=120) 
+        back_to_home_button.grid(column=0, columnspan=1, row=300) 
         
         self.display_spectrogram()
 

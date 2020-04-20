@@ -134,6 +134,20 @@ def retrieve_available_recordings_from_server(device_name, device_super_name):
             ids_of_recordings_to_still_to_download.append(recording_id)
         else:
             print('Already have recording ',recording_id, ' so will not download')
+            # but still check to see if it is in database (some aren't if the database was locked)
+            try: 
+                cur = get_database_connection().cursor()
+                cur.execute("SELECT ID FROM recordings WHERE recording_id = ?", (recording_id, ))
+                records = cur.fetchone()             # https://stackoverflow.com/questions/2440147/how-to-check-the-existence-of-a-row-in-sqlite-with-python
+                
+                if records is None:
+                    insert_recording_into_database(recording_id,recording_id + '.m4a' ,device_name,device_super_name)
+                    # Also get recording information from server
+                    update_recording_information_for_single_recording(recording_id)
+                                
+            except Exception as e:
+                print(e, '\n')
+            
        
     for recording_id in ids_of_recordings_to_still_to_download:
 #         print('About to get token for downloading ',recording_id)
@@ -206,7 +220,7 @@ def get_recording_ids_for_device_name(device_name):
     current_max_recording_id_for_this_device = rows[0][0]
     if current_max_recording_id_for_this_device is None:
         current_max_recording_id_for_this_device = 0
-    
+    current_max_recording_id_for_this_device = 0
         
     print('device_name ', device_name)
     print('max_recording_id ', current_max_recording_id_for_this_device)
@@ -724,7 +738,7 @@ def scan_local_folder_for_recordings_not_in_local_db_and_update(device_name, dev
         # https://stackoverflow.com/questions/16561362/python-how-to-check-if-a-result-set-is-empty
         row = cur.fetchone()
         if row == None:
-           # Get the information for this recording from server and insert into local db   
+            # Get the information for this recording from server and insert into local db   
             filename = recording_id + '.m4a'
             insert_recording_into_database(recording_id,filename, device_name,device_super_name) # The device name will be updated next when getting infor from server
             # Now update this recording with information from server
@@ -1755,8 +1769,10 @@ def get_image_for_for_creating_test_data(image_name_path):
 #     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*2)), Image.ANTIALIAS)
 #     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight*4)), Image.ANTIALIAS)
 #     image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight)), Image.ANTIALIAS)
-    image = image.resize((int(imageSizeWidth*4),int(imageSizeHeight)), Image.ANTIALIAS)
-#     image = image.resize(2000,900, Image.ANTIALIAS)
+#     image = image.resize((int(imageSizeWidth*3.9),int(imageSizeHeight)), Image.ANTIALIAS)
+#     image = image.resize((int(imageSizeWidth*3.85),int(imageSizeHeight)), Image.ANTIALIAS)
+    image = image.resize((int(imageSizeWidth*3.84),int(imageSizeHeight)), Image.ANTIALIAS)
+
     print("Image size is ", image.size)
     spectrogram_image = ImageTk.PhotoImage(image)
     return spectrogram_image
@@ -2925,9 +2941,11 @@ def insert_test_data_into_database(recording_id, start_time_seconds, finish_time
         cur2 = get_database_connection().cursor()
         cur2.execute(sql, (recording_id, start_time_seconds, finish_time_seconds, lower_freq_hertz, upper_freq_hertz, what, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ ))
         get_database_connection().commit()
+        return True
     except Exception as e:
         print(e, '\n')
-        print('\t\tUnable to insert test_data ' + str(recording_id), '\n')      
+        print('\t\tUnable to insert test_data ' + str(recording_id), '\n')   
+        return False   
     
  
 def delete_test_data_row(recording_id, start_time_seconds, finish_time_seconds, lower_freq_hertz, upper_freq_hertz, what): 
@@ -2962,9 +2980,9 @@ def retrieve_recordings_for_creating_test_data(what_filter):
 #     records = cur.fetchall()
 
     if what_filter is None:
-        cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recording_id ASC")
+        cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration, device_super_name from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recording_id ASC")
     else:
-        cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' and recording_id NOT IN (SELECT recording_id FROM test_data_recording_analysis WHERE recording_id = recording_id and what = 'morepork_more-pork') order by recording_id ASC") 
+        cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration, device_super_name from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' and recording_id NOT IN (SELECT recording_id FROM test_data_recording_analysis WHERE recording_id = recording_id and what = 'morepork_more-pork') order by recording_id ASC") 
                
     records = cur.fetchall()
                   
@@ -2972,14 +2990,21 @@ def retrieve_recordings_for_creating_test_data(what_filter):
         
 def mark_recording_as_analysed(recording_id, what):
     try: 
+        
+        if has_this_recording_been_analysed_for_this(recording_id, what):
+            # No need to try to insert data as it is already in database (and there is a unique constraint)
+            return True 
+                
         cur = get_database_connection().cursor()
         sql = ''' INSERT INTO test_data_recording_analysis(recording_id, what)
                       VALUES(?,?) '''
         cur.execute(sql, (recording_id, what))
         get_database_connection().commit()   
+        return True
     except Exception as e:
         print(e, '\n')
         print('\t\tUnable to insert test_data_recording_analysis ' + str(recording_id), '\n')  
+        return False   
     
 def has_this_recording_been_analysed_for_this(recording_id, what_to_filter_on):
     try: 
