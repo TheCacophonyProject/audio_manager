@@ -1454,6 +1454,7 @@ class CreateTestDataPage(tk.Frame):
     def change_spectrogram(self):
         self.stop_clip()
         recording_id = self.recordings[self.current_recordings_index][0]
+        recording_device_super_name = self.recordings[self.current_recordings_index][4]
 #         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id)) 
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))  
         self.canvas.configure(height=self.spectrogram_image.height())  
@@ -1463,7 +1464,8 @@ class CreateTestDataPage(tk.Frame):
         self.retrieve_test_data_from_database_and_add_rectangles_to_image()  
         self.draw_horizontal_frequency_reference_line()   
                 
-        self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id)) 
+#         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id))
+        self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id) + " at location " + recording_device_super_name)  
         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
         
         if self.auto_play.get():
