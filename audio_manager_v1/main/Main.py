@@ -1449,7 +1449,8 @@ class CreateTestDataPage(tk.Frame):
             
     def next_recording_and_mark_as_analysed(self):
         recording_id = self.recordings[self.current_recordings_index][0]
-        what = self.marked_as_what.get()
+#         what = self.marked_as_what2.get()
+        what = self.marked_as_what_combobox.get()
         result = functions.mark_recording_as_analysed(recording_id, what)
         if result:
             self.next_recording()
@@ -1481,7 +1482,7 @@ class CreateTestDataPage(tk.Frame):
        
         print('self.actual_confirmed.get() ', self.actual_confirmed.get()) 
         # Set the what box - used to enter row in test_data_recording_analysis table     
-        self.marked_as_what.set(self.actual_confirmed.get())
+#         self.marked_as_what.set(self.actual_confirmed.get())
             
         
     def play_clip(self,start_position_seconds):
@@ -1615,7 +1616,7 @@ class CreateTestDataPage(tk.Frame):
 
 
        
-        first_not_yet_analysed_recording_button = ttk.Button(self, text="First Recording - not yet analysed", command=lambda: self.reload_recordings_for_creating_test_data(self.marked_as_what.get())) # https://effbot.org/tkinterbook/canvas.htm))
+        first_not_yet_analysed_recording_button = ttk.Button(self, text="First Recording - not yet analysed", command=lambda: self.reload_recordings_for_creating_test_data(self.marked_as_what2.get())) # https://effbot.org/tkinterbook/canvas.htm))
         first_not_yet_analysed_recording_button.grid(column=0, columnspan=1, row=100) 
         
         first_recording_button = ttk.Button(self, text="First Recording (includes already analysed)", command=lambda: self.reload_recordings_for_creating_test_data(None)) # https://effbot.org/tkinterbook/canvas.htm))
@@ -1643,9 +1644,17 @@ class CreateTestDataPage(tk.Frame):
         next_recording_button = ttk.Button(self, text="Next Recording (Do NOT mark as Analysed)", command=lambda: self.next_recording()) # https://effbot.org/tkinterbook/canvas.htm))
         next_recording_button.grid(column=4, columnspan=1, row=100)   
         
-        self.marked_as_what = StringVar(value='morepork_more-pork')      
-        marked_as_what_entry = tk.Entry(self,  textvariable=self.marked_as_what, width=30)
-        marked_as_what_entry.grid(column=5, columnspan=1, row=100)   
+#         self.marked_as_what = StringVar(value='morepork_more-pork')      
+#         marked_as_what_entry = tk.Entry(self,  textvariable=self.marked_as_what, width=30)
+#         marked_as_what_entry.grid(column=5, columnspan=1, row=100)  
+
+#         self.marked_as_what2 = StringVar(value='morepork_more-pork')      
+#         self.marked_as_what_combobox = ttk.Combobox(self,  values=['tim','bob','simon'], width=30)
+        self.marked_as_what_combobox = ttk.Combobox(self,  values=parameters.class_names.split(","), width=30)
+       
+            
+        self.marked_as_what_combobox.grid(column=5, columnspan=1, row=100)  
+        self.marked_as_what_combobox.current(0) 
         
         # Note I used a different button type for this button so I could change the background colour
         next_recording_button = tk.Button(self, text="Next Recording (Mark as Analysed)", bg='green', command=lambda: self.next_recording_and_mark_as_analysed()) # https://effbot.org/tkinterbook/canvas.htm))
