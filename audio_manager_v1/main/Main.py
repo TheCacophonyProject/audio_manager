@@ -130,7 +130,7 @@ class HomePage(tk.Frame):
                             command=lambda: controller.show_frame(CreateTagsOnCacophonyServerFromModelRunPage))        
         createTagsOnCacophonyServerFromModelRunPage_button.pack()
         
-        createTestDataPage_button = ttk.Button(self, text="Create test data ",
+        createTestDataPage_button = ttk.Button(self, text="Create test/validation data",
                             command=lambda: controller.show_frame(CreateTestDataPage))        
         createTestDataPage_button.pack()
         
@@ -160,28 +160,13 @@ class RecordingsPage(tk.Frame):
         
         device_super_name = StringVar(value='Hammond_Park')
         device_super_name_entry = tk.Entry(self,  textvariable=device_super_name, width=30)
-        device_super_name_entry.grid(column=1, columnspan=1,row=2)
-               
-#         get_recordings_button = ttk.Button(self, text="Load Recordings from local folder ",
-#                             command=lambda: functions.load_recordings_from_local_folder(device_name.get(), device_super_name.get()))
-#         get_recordings_button.grid(column=0, columnspan=1, row=3)
-#         
-#         load_recordings_from_local_folder_instructions = "Useful if you have the recordings on a usb drive - not for downloading from server"
-# 
-#         msg1 = tk.Message(self, text = load_recordings_from_local_folder_instructions)
-#         msg1.config(width=600)
-#         msg1.grid(column=1, columnspan=2, row=3)  
-# 
-#         get_recording_information_from_server_button = ttk.Button(self, text="Get Recording Information for recordings imported from local file system",
-#                             command=lambda: functions.update_recording_information_for_all_local_database_recordings())
-#         get_recording_information_from_server_button.grid(column=0, columnspan=1, row=4)
+        device_super_name_entry.grid(column=1, columnspan=1,row=2)               
         
         get_new_recordings_from_server_button = ttk.Button(self, text="Get New Recordings For specified Device from Server",
                             command=lambda: functions.get_recordings_from_server(device_name.get(), device_super_name.get()))
         get_new_recordings_from_server_button.grid(column=0, columnspan=1, row=5)
         
         get_new_recordings_from_server_instructions = "This will get the recordings for the device in the device name box. It will also assign a super name from the Super Name box"
-
 
         msg2 = tk.Message(self, text = get_new_recordings_from_server_instructions)
         msg2.config(width=600)
@@ -209,15 +194,7 @@ class RecordingsPage(tk.Frame):
         msg3.config(width=600)
         msg3.grid(column=1, columnspan=2, row=10)   
         
-#         scan_local_folder_for_recordings_not_in_local_db_and_update_button = ttk.Button(self, text="Scan recordings folder for recordings not in local db and update",
-#                             command=lambda: functions.scan_local_folder_for_recordings_not_in_local_db_and_update(device_name.get(), device_super_name.get()))
-#         scan_local_folder_for_recordings_not_in_local_db_and_update_button.grid(column=0, columnspan=1, row=6)
-#        
-#         scan_recordings_folder_instructions = "If you do NOT know the device name or super name enter unknown in the fields. The device name will be updated automatically"
-# 
-#         msg3 = tk.Message(self, text = scan_recordings_folder_instructions)
-#         msg3.config(width=600)
-#         msg3.grid(column=1, columnspan=1, row=6)               
+            
         
         back_to_home_button = ttk.Button(self, text="Back to Home",
                             command=lambda: controller.show_frame(HomePage))
@@ -1454,6 +1431,8 @@ class CreateTestDataPage(tk.Frame):
         result = functions.mark_recording_as_analysed(recording_id, what)
         if result:
             self.next_recording()
+            # Also reset the radio button to the same as what we are currently marking the recording as analaysed as (because that is the most likely rectangle to add)
+            self.actual_confirmed.set(self.marked_as_what_combobox.get())
         else:
             messagebox.showinfo("Oops", "Could not update database - is it locked?")
                     
@@ -1512,7 +1491,8 @@ class CreateTestDataPage(tk.Frame):
 #             time.sleep(0.05)
 #             time.sleep(0.0499) # line was moving fractionally slow
 #             time.sleep(0.049) # line was moving fractionally slow
-            time.sleep(0.0495) # line was moving fractionally slow
+#             time.sleep(0.0495) # line was moving fractionally slow
+            time.sleep(0.0492) # line was moving fractionally slow
         
     def stop_clip(self):
         self.playing = False 
@@ -1585,11 +1565,7 @@ class CreateTestDataPage(tk.Frame):
         horizonal_ref_line_freq_entry.grid(column=3, columnspan=1, row=1)  
         
         self.canvas = tk.Canvas(self, width=10, height=10)
-#         self.canvas = tk.Canvas(self, width=20, height=10)    
 
-#         self.canvas.config(height=test_data_canvas_width)
-#         self.canvas.config(width=test_data_canvas_height)
-        
         self.canvas.config(height=test_data_canvas_height)
         self.canvas.config(width=test_data_canvas_width)
         
@@ -1616,7 +1592,8 @@ class CreateTestDataPage(tk.Frame):
 
 
        
-        first_not_yet_analysed_recording_button = ttk.Button(self, text="First Recording - not yet analysed", command=lambda: self.reload_recordings_for_creating_test_data(self.marked_as_what2.get())) # https://effbot.org/tkinterbook/canvas.htm))
+#         first_not_yet_analysed_recording_button = ttk.Button(self, text="First Recording - not yet analysed", command=lambda: self.reload_recordings_for_creating_test_data(self.marked_as_what2.get())) # https://effbot.org/tkinterbook/canvas.htm))
+        first_not_yet_analysed_recording_button = ttk.Button(self, text="First Recording - not yet analysed", command=lambda: self.reload_recordings_for_creating_test_data(self.marked_as_what_combobox.get())) # https://effbot.org/tkinterbook/canvas.htm))
         first_not_yet_analysed_recording_button.grid(column=0, columnspan=1, row=100) 
         
         first_recording_button = ttk.Button(self, text="First Recording (includes already analysed)", command=lambda: self.reload_recordings_for_creating_test_data(None)) # https://effbot.org/tkinterbook/canvas.htm))
@@ -1642,17 +1619,9 @@ class CreateTestDataPage(tk.Frame):
         self.recording_index_out_of_total_of_recordings_value.set("Result ") 
                  
         next_recording_button = ttk.Button(self, text="Next Recording (Do NOT mark as Analysed)", command=lambda: self.next_recording()) # https://effbot.org/tkinterbook/canvas.htm))
-        next_recording_button.grid(column=4, columnspan=1, row=100)   
-        
-#         self.marked_as_what = StringVar(value='morepork_more-pork')      
-#         marked_as_what_entry = tk.Entry(self,  textvariable=self.marked_as_what, width=30)
-#         marked_as_what_entry.grid(column=5, columnspan=1, row=100)  
+        next_recording_button.grid(column=4, columnspan=1, row=100)           
 
-#         self.marked_as_what2 = StringVar(value='morepork_more-pork')      
-#         self.marked_as_what_combobox = ttk.Combobox(self,  values=['tim','bob','simon'], width=30)
-        self.marked_as_what_combobox = ttk.Combobox(self,  values=parameters.class_names.split(","), width=30)
-       
-            
+        self.marked_as_what_combobox = ttk.Combobox(self,  values=parameters.class_names.split(","), width=30)                   
         self.marked_as_what_combobox.grid(column=5, columnspan=1, row=100)  
         self.marked_as_what_combobox.current(0) 
         
@@ -1662,14 +1631,7 @@ class CreateTestDataPage(tk.Frame):
         
         self.auto_play = BooleanVar()
         auto_play_Checkbuttton = Checkbutton(self, text="Automatically play", variable=self.auto_play)
-        auto_play_Checkbuttton.grid(column=6, columnspan=1, row=100)  
-        
-#         self.recording_id_and_result_place_value2 = tk.StringVar()
-#         recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value2) 
-#         recording_id_label.grid(column=0, columnspan=1, row=200) 
-#         self.recording_id_and_result_place_value2.set("Recording Id") 
-                
-        # Add the radio buttons for selecting what the noise is
+        auto_play_Checkbuttton.grid(column=6, columnspan=1, row=100)          
         
         actual_label_confirmed = ttk.Label(self, text="SET Actual Confirmed", font=LARGE_FONT)
         actual_label_confirmed.grid(column=0, columnspan=1, row=201)
