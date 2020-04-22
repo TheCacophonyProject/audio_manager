@@ -1381,6 +1381,7 @@ class CreateTestDataPage(tk.Frame):
 
     def reload_recordings_for_creating_test_data(self,what_filter):
         self.retrieve_recordings_for_creating_test_data(what_filter)
+        self.current_recordings_index = 0
         self.change_spectrogram()        
         
         
