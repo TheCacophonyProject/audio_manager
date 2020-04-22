@@ -1386,6 +1386,7 @@ class CreateTestDataPage(tk.Frame):
         
     def display_spectrogram(self):
         recording_id = self.recordings[self.current_recordings_index][0]
+        recording_date_time = self.recordings[self.current_recordings_index][1]
         recording_device_super_name = self.recordings[self.current_recordings_index][4]
 
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))
@@ -1412,6 +1413,7 @@ class CreateTestDataPage(tk.Frame):
         self.draw_horizontal_frequency_reference_line()   
         
         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id) + " at location " + recording_device_super_name) 
+        self.recording_date_and_time_value.set("Date and Time: " + recording_date_time)
         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")                           
             
     def previous_recording(self):
@@ -1440,6 +1442,7 @@ class CreateTestDataPage(tk.Frame):
     def change_spectrogram(self):
         self.stop_clip()
         recording_id = self.recordings[self.current_recordings_index][0]
+        recording_date_time = self.recordings[self.current_recordings_index][1]
         recording_device_super_name = self.recordings[self.current_recordings_index][4]
 #         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id)) 
         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))  
@@ -1451,7 +1454,8 @@ class CreateTestDataPage(tk.Frame):
         self.draw_horizontal_frequency_reference_line()   
                 
 #         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id))
-        self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id) + " at location " + recording_device_super_name)  
+        self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id) + " at location " + recording_device_super_name) 
+        self.recording_date_and_time_value.set("Date and Time: " + recording_date_time) 
         self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
         
         if self.auto_play.get():
@@ -1492,7 +1496,7 @@ class CreateTestDataPage(tk.Frame):
 #             time.sleep(0.0499) # line was moving fractionally slow
 #             time.sleep(0.049) # line was moving fractionally slow
 #             time.sleep(0.0495) # line was moving fractionally slow
-            time.sleep(0.0492) # line was moving fractionally slow
+            time.sleep(0.049) # line was moving fractionally slow
         
     def stop_clip(self):
         self.playing = False 
@@ -1587,6 +1591,11 @@ class CreateTestDataPage(tk.Frame):
         recording_id_label = ttk.Label(self, textvariable=self.recording_id_and_result_place_value2) 
         recording_id_label.grid(column=6, columnspan=1, row=0) 
         self.recording_id_and_result_place_value2.set("Recording Id") 
+        
+        self.recording_date_and_time_value = tk.StringVar()
+        recording_date_and_time_label = ttk.Label(self, textvariable=self.recording_date_and_time_value) 
+        recording_date_and_time_label.grid(column=6, columnspan=1, row=1) 
+        self.recording_date_and_time_value.set("Date and Time: ") 
        
         self.retrieve_recordings_for_creating_test_data("morepork_more-pork")
 
