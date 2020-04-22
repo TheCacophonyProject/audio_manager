@@ -1598,7 +1598,8 @@ class CreateTestDataPage(tk.Frame):
         recording_date_and_time_label.grid(column=6, columnspan=1, row=1) 
         self.recording_date_and_time_value.set("Date and Time: ") 
        
-        self.retrieve_recordings_for_creating_test_data("morepork_more-pork")
+#         self.retrieve_recordings_for_creating_test_data("morepork_more-pork")
+        self.retrieve_recordings_for_creating_test_data(None)
 
 
        
