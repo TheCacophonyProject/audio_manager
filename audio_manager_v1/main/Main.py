@@ -1431,7 +1431,8 @@ class CreateTestDataPage(tk.Frame):
             self.change_spectrogram()        
            
     def next_recording(self):
-        if self.current_recordings_index < (len(self.recordings) - 2): 
+#         if self.current_recordings_index < (len(self.recordings) - 2): 
+        if self.current_recordings_index < (len(self.recordings) - 1): # Did have -2, but not sure why now!
             self.current_recordings_index = self.current_recordings_index + 1
             self.change_spectrogram() 
             
