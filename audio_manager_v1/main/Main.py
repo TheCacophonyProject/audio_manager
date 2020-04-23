@@ -1382,8 +1382,13 @@ class CreateTestDataPage(tk.Frame):
     def reload_recordings_for_creating_test_data(self,what_filter):
         self.retrieve_recordings_for_creating_test_data(what_filter)
         self.current_recordings_index = 0
-        self.change_spectrogram()        
+        self.change_spectrogram()
         
+    def load_test_verification_results(self):
+        self.config(bg="yellow")
+        self.recordings = functions.retrieve_recordings_for_evaluating_test_validation_data(self.retrieve_all_test_validation_recordings.get(), self.retrieve_recordings_with_model_predictions.get(), self.retrieve_recordings_with_manual_analysis.get(), self.model_must_predict_what_combobox.get(), self.probability_combobox.get())
+        self.current_recordings_index = 0
+        self.change_spectrogram()   
         
     def display_spectrogram(self):
         recording_id = self.recordings[self.current_recordings_index][0]
@@ -1410,6 +1415,9 @@ class CreateTestDataPage(tk.Frame):
         self.canvas.bind("<Button-3>", self.rightMousePressedcallback) 
         
         self.retrieve_test_data_from_database_and_add_rectangles_to_image()    
+        
+        if self.show_model_predictions.get():
+            self.display_model_predictions()
         
         self.draw_horizontal_frequency_reference_line()   
         
@@ -1442,25 +1450,37 @@ class CreateTestDataPage(tk.Frame):
         
     def change_spectrogram(self):
         self.stop_clip()
-        recording_id = self.recordings[self.current_recordings_index][0]
-        recording_date_time = self.recordings[self.current_recordings_index][1]
-        recording_device_super_name = self.recordings[self.current_recordings_index][4]
-#         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id)) 
-        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))  
-        self.canvas.configure(height=self.spectrogram_image.height())  
-        self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)  
-                             
-
-        self.retrieve_test_data_from_database_and_add_rectangles_to_image()  
-        self.draw_horizontal_frequency_reference_line()   
-                
-#         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id))
-        self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id) + " at location " + recording_device_super_name) 
-        self.recording_date_and_time_value.set("Date and Time: " + recording_date_time) 
-        self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
+        if len(self.recordings) < 1:
+            messagebox.showinfo("No Recordings", "Sorry, there are no recordings with the selected criteria")
+            self.recording_id_and_result_place_value2.set("Recording Id: ")
+            self.recording_index_out_of_total_of_recordings_value.set("Result ")            
+            self.canvas.delete("all")
+            
+        else:
         
-        if self.auto_play.get():
-            self.play_clip(0)           
+            recording_id = self.recordings[self.current_recordings_index][0]
+            recording_date_time = self.recordings[self.current_recordings_index][1]
+            recording_device_super_name = self.recordings[self.current_recordings_index][4]
+    #         self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id)) 
+            self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))  
+            self.canvas.configure(height=self.spectrogram_image.height())  
+            self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)  
+                                 
+    
+            self.retrieve_test_data_from_database_and_add_rectangles_to_image()  
+            
+            if self.show_model_predictions.get():
+                self.display_model_predictions()
+            
+            self.draw_horizontal_frequency_reference_line()   
+                    
+    #         self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id))
+            self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id) + " at location " + recording_device_super_name) 
+            self.recording_date_and_time_value.set("Date and Time: " + recording_date_time) 
+            self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")
+            
+            if self.auto_play.get():
+                self.play_clip(0)           
                 
     def confirm_actual(self):  
        
@@ -1526,7 +1546,39 @@ class CreateTestDataPage(tk.Frame):
         self.current_recordings_index = int(self.specific_recording_index.get())
         self.change_spectrogram()
         # Now change 
+     
+    def display_model_predictions(self):
+        recording_id = self.recordings[self.current_recordings_index][0]
+        duration_of_recording = self.recordings[self.current_recordings_index][3]
         
+        model_predictions = functions.get_model_predictions(recording_id) 
+        for model_prediction in model_predictions:
+            startTime = model_prediction[0]
+#             duration_of_prediction =  model_prediction[1] 
+            duration_of_prediction = 0.3
+            predictedByModel = model_prediction[2]
+            probability = model_prediction[3]
+            
+            predictionsToDisplay = self.model_must_predict_what_combobox.get()
+            
+            if predictedByModel == predictionsToDisplay:
+            
+                rectangle_bbox_x1 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(startTime, duration_of_recording, self.spectrogram_image.width())
+                rectangle_bbox_y1 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.min_freq.get()), self.spectrogram_image.height())  
+                rectangle_bbox_x2 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(startTime + duration_of_prediction, duration_of_recording, self.spectrogram_image.width())
+                rectangle_bbox_y2 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.max_freq.get()), self.spectrogram_image.height())
+                
+                fill_colour = functions.get_spectrogram_rectangle_selection_colour(predictedByModel)
+               
+                aRectangle_id = self.canvas.create_rectangle(rectangle_bbox_x1,rectangle_bbox_y1,rectangle_bbox_x2, rectangle_bbox_y2,fill=fill_colour, stipple="gray12")         
+            
+    def retrieve_all_test_recordings_checkbox_pressed(self): 
+            self.retrieve_recordings_with_model_predictions.set(False)             
+            self.retrieve_recordings_with_manual_analysis.set(False)        
+     
+    def retrieve_model_or_manual_analysis_recordings_checkbox_pressed(self): 
+        self.retrieve_all_test_validation_recordings.set(False)                
+           
     
     def __init__(self, parent, controller):
         # https://stackoverflow.com/questions/7727804/tkinter-using-scrollbars-on-a-canvas
@@ -1642,7 +1694,7 @@ class CreateTestDataPage(tk.Frame):
         
         self.auto_play = BooleanVar()
         auto_play_Checkbuttton = Checkbutton(self, text="Automatically play", variable=self.auto_play)
-        auto_play_Checkbuttton.grid(column=6, columnspan=1, row=100)          
+        auto_play_Checkbuttton.grid(column=6, columnspan=1, row=100) 
         
         actual_label_confirmed = ttk.Label(self, text="SET Actual Confirmed", font=LARGE_FONT)
         actual_label_confirmed.grid(column=0, columnspan=1, row=201)
@@ -1702,10 +1754,63 @@ class CreateTestDataPage(tk.Frame):
         actual_confirmed_radio_button_maybe_morepork_more_pork = ttk.Radiobutton(self,text='Maybe Morepork more-pork', variable=self.actual_confirmed, value='maybe_morepork_more-pork',command=lambda: self.confirm_actual())
         actual_confirmed_radio_button_maybe_morepork_more_pork.grid(column=2, columnspan=1, row=205)
         actual_confirmed_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.actual_confirmed, value='music',command=lambda: self.confirm_actual())
-        actual_confirmed_radio_button_music.grid(column=3, columnspan=1, row=205)     
+        actual_confirmed_radio_button_music.grid(column=3, columnspan=1, row=205)  
+        
+        test_validation_data_analysis_label = ttk.Label(self, text="Test validation data analysis", font=LARGE_FONT)
+        test_validation_data_analysis_label.grid(column=0, columnspan=1, row=300) 
+        
+        self.retrieve_all_test_validation_recordings = BooleanVar()
+        retrieve_all_test_validation_recordings_Checkbuttton = Checkbutton(self, text="Retrieve all test validation recordings (even if not tagged by model/human)", variable=self.retrieve_all_test_validation_recordings, command=lambda: self.retrieve_all_test_recordings_checkbox_pressed())
+        retrieve_all_test_validation_recordings_Checkbuttton.grid(column=0, columnspan=2, row=305)
+        self.retrieve_all_test_validation_recordings.set(False)
+        
+        
+        self.model_must_predict_what_combobox = ttk.Combobox(self,  values=parameters.class_names.split(","), width=30)                   
+        self.model_must_predict_what_combobox.grid(column=2, columnspan=1, row=301)  
+        self.model_must_predict_what_combobox.current(0)
+        
+        self.retrieve_recordings_with_model_predictions = BooleanVar()
+        retrieve_recordings_with_model_predictions_Checkbuttton = Checkbutton(self, text="Recordings must have a model prediction of these values", variable=self.retrieve_recordings_with_model_predictions, command=lambda: self.retrieve_model_or_manual_analysis_recordings_checkbox_pressed())
+        retrieve_recordings_with_model_predictions_Checkbuttton.grid(column=2, columnspan=2, row=305)
+        self.retrieve_recordings_with_model_predictions.set(True)
+        
+        self.show_model_predictions = BooleanVar()
+        show_model_predictions_Checkbuttton = Checkbutton(self, text="Show (these) model predictions", variable=self.show_model_predictions)
+        show_model_predictions_Checkbuttton.grid(column=2, columnspan=1, row=306)
+        self.show_model_predictions.set(True)
+        
+        probability_label = ttk.Label(self, text="Predicted probability > than")
+        probability_label.grid(column=3, columnspan=1, row=301)
+        
+        self.probability_combobox = ttk.Combobox(self,  values=["0","0.1", "0.2","0.3","0.4","0.5","0.6","0.7","0.8","0.9"], width=30)                   
+        self.probability_combobox.grid(column=3, columnspan=1, row=302)  
+        self.probability_combobox.current(5)
+        
+        self.retrieve_recordings_with_manual_analysis = BooleanVar()
+        retrieve_recordings_with_manual_analysis_Checkbuttton = Checkbutton(self, text="Recording must have manual analysis", variable=self.retrieve_recordings_with_manual_analysis, command=lambda: self.retrieve_model_or_manual_analysis_recordings_checkbox_pressed())
+        retrieve_recordings_with_manual_analysis_Checkbuttton.grid(column=4, columnspan=1, row=305)
+        self.retrieve_recordings_with_manual_analysis.set(True) 
+        
+        
+#         self.model_must_predict_what_combobox = ttk.Combobox(self,  values=parameters.class_names.split(","), width=30)                   
+#         self.model_must_predict_what_combobox.grid(column=4, columnspan=1, row=301)  
+#         self.model_must_predict_what_combobox.current(0) 
+        
+#         self.show_model_predictions = BooleanVar()
+#         show_model_predictions_Checkbuttton = Checkbutton(self, text="Show model predictions", variable=self.show_model_predictions)
+#         show_model_predictions_Checkbuttton.grid(column=4, columnspan=1, row=302)
+#         self.show_model_predictions.set(True)
+        
+#         self.show_manual_analysis = BooleanVar()
+#         show_manual_analysis_Checkbuttton = Checkbutton(self, text="Show manual analysis", variable=self.show_manual_analysis)
+#         show_manual_analysis_Checkbuttton.grid(column=5, columnspan=1, row=301)   
+        
+        load_results_button = ttk.Button(self, text="Load test/verification results (use radio button choices)", command=lambda: self.load_test_verification_results()) # https://effbot.org/tkinterbook/canvas.htm))
+        load_results_button.grid(column=0, columnspan=1, row=310) 
+               
                                  
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=300) 
+        back_to_home_button.grid(column=0, columnspan=1, row=400) 
         
         self.display_spectrogram()
 

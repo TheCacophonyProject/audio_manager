@@ -1269,24 +1269,7 @@ def apply_band_pass_filter(y, sr):
     y = highpass_filter_with_parameters(y=y, sr=sr, filter_stop_freq=600, filter_pass_freq=650 )
     y = apply_lowpass_filter(y, sr)    
     return y
-    
-# def create_onsets_in_local_db_using_existing_tag_type(existing_tag_type):
-#     # Get recording names that have already been tagged with existing_tag_type e.g somewhere in the recording a morepork tag has already been created
-#     recording_ids_with_tag_type = get_unique_recording_ids_that_have_been_tagged_with_this_tag_stored_locally(existing_tag_type)
-#     count = 0
-#     number_of_recordings = len(recording_ids_with_tag_type)
-#     total_onset_pairs_including_more_than_20 = 0
-#     total_onset_pairs_including_not_including_more_20 = 0
-#     for recording_id_with_tag_type in recording_ids_with_tag_type:
-#         count+=1
-#         print('Processing recording ', count, ' of ', number_of_recordings, ' recordings.')
-#         recording_filename = str(recording_id_with_tag_type[0]) + '.m4a'
-#         count_of_onset_pairs_including_more_than_20, count_of_onset_pairs_including_not_including_more_20 = create_onsets_in_local_db(recording_filename)
-#         total_onset_pairs_including_more_than_20 += count_of_onset_pairs_including_more_than_20
-#         total_onset_pairs_including_not_including_more_20 += count_of_onset_pairs_including_not_including_more_20
-#         print('total_onset_pairs_including_more_than_20:', total_onset_pairs_including_more_than_20)
-#         print('total_onset_pairs_including_not_including_more_20:', total_onset_pairs_including_not_including_more_20, '\n')
-        
+   
    
 def create_onsets_in_local_db_using_recordings_folder():
     
@@ -2982,12 +2965,50 @@ def retrieve_recordings_for_creating_test_data(what_filter):
     if what_filter is None:
         cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration, device_super_name from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recording_id ASC")
     else:
-        cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration, device_super_name from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' and recording_id NOT IN (SELECT recording_id FROM test_data_recording_analysis WHERE recording_id = recording_id and what = 'morepork_more-pork') order by recording_id ASC") 
+#         cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration, device_super_name from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' and recording_id NOT IN (SELECT recording_id FROM test_data_recording_analysis WHERE recording_id = recording_id and what = 'morepork_more-pork') order by recording_id ASC") 
+        cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration, device_super_name from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' and recording_id NOT IN (SELECT recording_id FROM test_data_recording_analysis WHERE recording_id = recording_id and what = '" + what_filter + "') order by recording_id ASC") 
                
     records = cur.fetchall()
                   
     return records
+
+def retrieve_recordings_for_evaluating_test_validation_data(include_all_test_validation_recordings, include_recordings_with_model_predictions, include_recordings_that_have_been_manually_analysed, model_must_predict_what, probability_cutoff):
+    
+    table_name = 'recordings'
+   
+    firstDate = recordings_for_creating_test_data_start_date 
+    lastDate = recordings_for_creating_test_data_end_date 
+    
+    probability_cutoff_float = float(probability_cutoff)
+    
+    sqlBuilding = "select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration, device_super_name from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "'"
+    
+    
+    if not include_all_test_validation_recordings:        
+    
+        if include_recordings_with_model_predictions:
+            if probability_cutoff_float == 0:
+                sqlBuilding += " AND recording_id IN (SELECT recording_id FROM model_run_result WHERE modelRunName = '" + model_run_name + "' AND predictedByModel = '" + model_must_predict_what + "')"
+            else:
+                sqlBuilding += " AND recording_id IN (SELECT recording_id FROM model_run_result WHERE modelRunName = '" + model_run_name + "' AND predictedByModel = '" + model_must_predict_what + "' AND probability > " + probability_cutoff + ")"
+           
+                
+        if include_recordings_that_have_been_manually_analysed:
+            sqlBuilding += " AND recording_id IN (SELECT recording_id FROM test_data)"
+            
+    
         
+    sqlBuilding += " ORDER BY recording_id ASC"    
+   
+    
+    print("The sql is: ", sqlBuilding)
+    cur = get_database_connection().cursor()
+    cur.execute(sqlBuilding)
+#     cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = '2019_12_11_1' ORDER BY recording_id DESC, startTime ASC")
+    rows = cur.fetchall()
+    return rows
+    
+   
 def mark_recording_as_analysed(recording_id, what):
     try: 
         
@@ -3033,6 +3054,15 @@ def get_spectrogram_rectangle_selection_colour(what):
 #     print("It was ", switcher.get(what, "blue"))
     return switcher.get(what, "red")
     
-
+def get_model_predictions(recording_id):
+    table_name = 'model_run_result'        
+    
+    cur = get_database_connection().cursor()
+    
+    cur.execute("select startTime, duration, predictedByModel, probability from " + table_name + " where recording_id = ? and modelRunName = ?", (recording_id, model_run_name) )
+   
+    records = cur.fetchall()
+                  
+    return records
 
 
