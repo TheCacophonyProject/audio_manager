@@ -145,7 +145,17 @@ print('boo')
 
 # functions.retrieve_missing_recording_information()
 
-functions.test_not_between_dates('2010-01-01','2020-03-11')
+# functions.test_not_between_dates('2010-01-01','2020-03-11')
+
+# functions.create_onsets_in_local_db_version_6(544235)
+
+# functions.test_create_onsets_in_local_db()
+
+# functions.create_features_version_2(1, float(0.7))
+
+# functions.copy_actual_confirmed_onset_5_to_onset_6()
+
+functions.create_features_for_all_onsets_version_2()
     
     
     

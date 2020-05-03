@@ -648,6 +648,29 @@ def get_onsets_stored_locally(onset_version):
     rows = cur.fetchall()
     return rows 
 
+# def get_onsets_stored_locally_for_recording_id(onset_version, recording_id):
+#     global version
+#     if onset_version:
+#         version_to_use = onset_version
+#     else:
+#         version_to_use = version
+#         
+#     cur = get_database_connection().cursor()
+#     cur.execute("SELECT version, recording_id, start_time_seconds, duration_seconds FROM onsets WHERE version = ? AND recording_id = ? ORDER BY recording_id", (version_to_use, recording_id)) 
+#     rows = cur.fetchall()
+#     return rows
+
+def get_onsets_stored_locally_for_recording_id(version_to_use, recording_id):
+#     global version
+    cur = get_database_connection().cursor()
+    if version_to_use:
+#         version_to_use = onset_version
+        cur.execute("SELECT version, recording_id, start_time_seconds, duration_seconds FROM onsets WHERE version = ? AND recording_id = ? ORDER BY recording_id", (version_to_use, recording_id)) 
+    else: 
+        cur.execute("SELECT version, recording_id, start_time_seconds, duration_seconds FROM onsets WHERE recording_id = ? ORDER BY recording_id", (recording_id,))
+    rows = cur.fetchall()
+    return rows
+
 def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, predicted_probability_filter, predicted_probability_filter_value_str, location_filter, actual_confirmed_other, predicted_other, used_to_create_model_filter, recording_id_filter_value):   
        
     if location_filter =='Not Used':
@@ -1286,7 +1309,8 @@ def create_onsets_in_local_db_using_recordings_folder():
     # It is possible that some recordings will not produce any onsets, so will also write to recording table that the recording has been processed.
     # Perhaps if I was starting again, I could drop the sub query (if I update the recordings db so show that the old ones have been processed.
 
-    cur.execute("SELECT recording_id, filename,  recordingDateTime FROM recordings WHERE processed_for_onsets IS NULL AND recording_id NOT IN (SELECT recording_id FROM onsets) ORDER BY recording_id DESC")
+#     cur.execute("SELECT recording_id, filename,  recordingDateTime FROM recordings WHERE processed_for_onsets IS NULL AND recording_id NOT IN (SELECT recording_id FROM onsets) ORDER BY recording_id DESC")
+    cur.execute("SELECT recording_id, filename,  recordingDateTime FROM recordings WHERE processed_for_onsets IS NOT ? ORDER BY recording_id aSC", (onset_version,))
     recordings_with_no_onsets = cur.fetchall()
     print('There are ', len(recordings_with_no_onsets), ' recordings with no onsets')     
       
@@ -1307,7 +1331,7 @@ def create_onsets_in_local_db_using_recordings_folder():
             
             # Update recordings table to show that this recording has been processed for onsets
 #             cur2 = get_database_connection().cursor()
-            cur.execute("UPDATE recordings SET processed_for_onsets = 1 WHERE recording_id = ?", (recording_id,))  
+            cur.execute("UPDATE recordings SET processed_for_onsets = ? WHERE recording_id = ?", (onset_version, recording_id,))  
             get_database_connection().commit()
             
             total_onset_pairs_including_more_than_40 += count_of_onset_pairs_including_more_than_40
@@ -1323,8 +1347,50 @@ def create_onsets_in_local_db_using_recordings_folder():
 
     
     
+# def create_onsets_in_local_db(filename): 
+#     try:
+#         recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+#         
+#         count_of_onset_pairs_including_more_than_40 = 0
+#         count_of_onset_pairs_including_not_including_more_40 = 0
+#         
+#         audio_in_path = recordings_folder_with_path + "/" + filename
+#         
+#         # Some recordings are not available
+#         if not os.path.isfile(audio_in_path):
+#             print("This recording is not available ", filename)
+#             # Update the db to say that it has been processed
+#             
+#             
+#             
+#         
+#         y, sr = librosa.load(audio_in_path)
+#         y = apply_band_pass_filter(y, sr)            
+#     
+#         onsets = find_paired_squawks_in_single_recordings(y, sr) # Its now time to call the pair_squawks onsets
+#         #print('paired_squawks_sec', paired_squawks_sec)
+#         number_of_onsets = len(onsets)
+#         if not number_of_onsets == 0:
+#             if number_of_onsets > 40:
+#                 count_of_onset_pairs_including_more_than_40 += number_of_onsets
+#             else:                
+#                 
+#                 count_of_onset_pairs_including_more_than_40 += number_of_onsets
+#                 count_of_onset_pairs_including_not_including_more_40 += number_of_onsets                        
+#            
+#                 recording_id = filename.split('.')[0]  
+# 
+#                 insert_onset_list_into_db(onset_version, recording_id, onsets)
+#                 
+#         return count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 
+# 
+#     except Exception:
+# #         print(e, '\n')
+#         pass
+    
 def create_onsets_in_local_db(filename): 
     try:
+#         filename = "168718.m4a"
         recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
         
         count_of_onset_pairs_including_more_than_40 = 0
@@ -1336,14 +1402,11 @@ def create_onsets_in_local_db(filename):
         if not os.path.isfile(audio_in_path):
             print("This recording is not available ", filename)
             # Update the db to say that it has been processed
-            
-            
-            
-        
+   
         y, sr = librosa.load(audio_in_path)
         y = apply_band_pass_filter(y, sr)            
     
-        onsets = find_paired_squawks_in_single_recordings(y, sr) # Its now time to call the pair_squawks onsets
+        onsets = find_squawk_location_secs_in_single_recording(y, sr) # Its now time to call the pair_squawks onsets
         #print('paired_squawks_sec', paired_squawks_sec)
         number_of_onsets = len(onsets)
         if not number_of_onsets == 0:
@@ -1356,28 +1419,54 @@ def create_onsets_in_local_db(filename):
            
                 recording_id = filename.split('.')[0]  
 
-                insert_onset_list_into_db(version, recording_id, onsets)
+                insert_onset_list_into_db(recording_id, onsets)
                 
         return count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 
 
     except Exception:
 #         print(e, '\n')
         pass
+    
+# def create_onsets_in_local_db_version_6(recording_id): 
+# #     24/4/20 Found that version 5 of onset detection (my modified version of Chris's code) missed lots of moreporks
+# #     Try other ways....
+#     try:
+#         version = onset_version
+#         recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+#         audio_in_path = recordings_folder_with_path + '/' + str(recording_id) + '.m4a'        
+#         
+#         y, sr = librosa.load(audio_in_path)
+#         y = apply_band_pass_filter(y, sr)            
+#     
+#         onset_frames = librosa.onset.onset_detect(y=y, sr=sr)
+#         onset_locations = librosa.frames_to_time(onset_frames, sr=sr)
+#         i = 0
+#         for onset_location in onset_locations:
+#             i+=1
+#             print(str(i) + " Onset found at: ", onset_location)
+# 
+#                 
+#                 
+#         
+# 
+#     except Exception as e:
+#         print(e, '\n')
+        
                 
-def insert_onset_list_into_db(version, recording_id, onsets):
+def insert_onset_list_into_db(recording_id, onsets):
     global squawk_duration_seconds
     prev_onset = -1
     for onset in onsets:
         if prev_onset == -1:
             print("onset " , onset)    
-            insert_onset_into_database(version, recording_id, onset, squawk_duration_seconds)
+            insert_onset_into_database(onset_version, recording_id, onset, squawk_duration_seconds)
             prev_onset =  onset
         else:
             if (onset - prev_onset) < (squawk_duration_seconds + 0.1):
                 print("Onset too close to previous, not inserting into database " , onset) 
             else:
                 prev_onset = onset 
-                insert_onset_into_database(version, recording_id, onset, squawk_duration_seconds)
+                insert_onset_into_database(onset_version, recording_id, onset, squawk_duration_seconds)
                 print("Inserting onset into database " , onset)
                 
 
@@ -1409,6 +1498,18 @@ def find_paired_squawks_in_single_recordings(y, sr):
         prev_squawk_sec = squawk_sec
         
     return paired_squawks_sec
+
+def find_squawk_location_secs_in_single_recording(y, sr):
+
+    squawks = FindSquawks(y, sr)
+    squawks_secs = []
+
+    for squawk in squawks:
+        squawk_start = squawk['start']
+        squawk_start_sec = squawk_start / sr
+        squawks_secs.append(round(squawk_start_sec, 1))
+        
+    return squawks_secs
 
 def FindSquawks(source, sampleRate):
     result = []
@@ -3008,6 +3109,25 @@ def retrieve_recordings_for_evaluating_test_validation_data(include_all_test_val
     rows = cur.fetchall()
     return rows
     
+def retrieve_recordings_except_test_validation_data(model_must_predict_what):   
+    table_name = 'recordings'
+   
+    firstDateOfTestValidationDataToExclude = recordings_for_creating_test_data_start_date 
+    lastDateOfTestValidationDataToExclude = recordings_for_creating_test_data_end_date 
+    
+    sqlBuilding = "select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration, device_super_name from " + table_name + " where nightRecording = 'true' AND (recordingDateTimeNZ < '" + firstDateOfTestValidationDataToExclude + "' OR recordingDateTimeNZ > '" + lastDateOfTestValidationDataToExclude + "')"
+    sqlBuilding += " AND recording_id IN (SELECT recording_id FROM model_run_result WHERE modelRunName = '" + model_run_name + "' AND predictedByModel = '" + model_must_predict_what + "')"
+    
+    sqlBuilding += " ORDER BY recording_id ASC" 
+    
+    print("sqlBuilding ", sqlBuilding)
+    
+    cur = get_database_connection().cursor()
+    cur.execute(sqlBuilding)
+    rows = cur.fetchall()
+    
+    return rows
+     
    
 def mark_recording_as_analysed(recording_id, what):
     try: 
@@ -3059,10 +3179,275 @@ def get_model_predictions(recording_id):
     
     cur = get_database_connection().cursor()
     
-    cur.execute("select startTime, duration, predictedByModel, probability from " + table_name + " where recording_id = ? and modelRunName = ?", (recording_id, model_run_name) )
+#     cur.execute("select startTime, duration, predictedByModel, probability from " + table_name + " where recording_id = ? and modelRunName = ?", (recording_id, model_run_name) )
+    cur.execute("select startTime, duration, predictedByModel, probability, actual_confirmed from " + table_name + " where recording_id = ? and modelRunName = ?", (recording_id, model_run_name) )
    
     records = cur.fetchall()
                   
     return records
 
 
+def create_features_for_all_onsets_version_2():
+    cur = get_database_connection().cursor()
+    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed FROM ONSETs WHERE actual_confirmed IS NOT NULL AND ID NOT IN (SELECT onset_id FROM features)" )
+    
+    records = cur.fetchall()
+    number_of_records = len(records)
+    
+    count = 0
+    
+    for record in records:
+        count+=1
+        print(count, " of ", number_of_records)
+        create_features_for_single_onset_version_2(record[0], record[1], record[2], record[3])
+            
+    
+    
+
+# def create_features_for_single_onset_version_2(onset_id, recording_id, start_time_seconds):
+# #  Should get recording id from onset table using onset_id
+# #     filename = "164136.m4a"
+#     filename = str(recording_id) + ".m4a"
+#     recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+#     
+#     start_time_seconds_float = float(start_time_seconds)
+#     
+#     audio_in_path = recordings_folder_with_path + "/" + filename
+#      
+#     if not os.path.isfile(audio_in_path):
+#         print("This recording is not available ", filename)
+#          
+#     try:
+#         y, sr = librosa.load(audio_in_path)
+#         y = apply_band_pass_filter(y, sr)        
+#                
+# #         start_time_seconds_float = float(0.7)            
+#         
+#         start_position_array = int(sr * start_time_seconds_float)              
+#                    
+#         end_position_array = start_position_array + int((sr * 1))                  
+#                     
+#         y_part = y[start_position_array:end_position_array]  
+# #         mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
+#         
+#         # https://medium.com/@sdoshi579/classification-of-music-into-different-genres-using-keras-82ab5339efe0
+# #         chroma_stft = librosa.feature.chroma_stft(y=y_part, sr=sr)
+# #         print("chroma_stft.shape ", chroma_stft.shape)
+# #         print("np.mean(chroma_stft) ", np.mean(chroma_stft))
+#         
+#         
+#         rms = librosa.feature.rms(y=y_part)
+# #         print("rms ", rms)
+# #         print("rms.shape ", rms.shape)
+#         
+#         spec_cent = librosa.feature.spectral_centroid(y=y_part, sr=sr)
+# #         print("spec_cent ", spec_cent)
+# #         print("spec_cent.shape ", spec_cent.shape)
+#         
+#         spec_bw = librosa.feature.spectral_bandwidth(y=y_part, sr=sr)
+# #         print("spec_bw ", spec_bw)
+# #         print("spec_bw.shape ", spec_bw.shape)
+#         
+#         rolloff = librosa.feature.spectral_rolloff(y=y_part, sr=sr)
+# #         print("rolloff) ", rolloff)
+# #         print("rolloff.shape ", rolloff.shape)
+#         
+#         zcr = librosa.feature.zero_crossing_rate(y_part)
+# #         print("zcr ", zcr)
+# #         print("zcr.shape ", zcr.shape)
+#         
+# #         mfcc = librosa.feature.mfcc(y=y_part, sr=sr, n_mfcc=32)
+# #         print("mfcc.shape ", mfcc.shape)
+# #         
+# #         melspectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr)
+# #         print("melspectrogram.shape ", melspectrogram.shape)
+#         
+#         number_of_frames = rms.shape[1]
+# #         print("Number of frames is ", number_of_frames)
+#         count = 0
+#         for frame_id in range(number_of_frames):
+#             count+=1
+# #             print(count, " of ", number_of_frames)
+# #             print("rms ", rms[0][i])
+# #             
+# #             table_name = 'features'        
+#     
+#             cur = get_database_connection().cursor()
+#             sql = ''' INSERT INTO features (onset_id, frame_id, rms, spectral_centroid, spectral_bandwidth, spectral_rolloff, zero_crossing_rate)
+#                       VALUES(?,?,?,?,?,?,?) '''
+#             cur.execute(sql, (onset_id, frame_id, rms[0][frame_id], spec_cent[0][frame_id], spec_bw[0][frame_id], rolloff[0][frame_id], zcr[0][frame_id]))
+#             get_database_connection().commit()   
+#     
+#             
+#         print("Finished onset_id ", onset_id)       
+#         
+# 
+#     except Exception as e:
+#         print(e)
+        
+def create_features_for_single_onset_version_2(onset_id, recording_id, start_time_seconds, actual_confirmed):
+#  Should get recording id from onset table using onset_id
+#     filename = "164136.m4a"
+    filename = str(recording_id) + ".m4a"
+    recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+    
+    start_time_seconds_float = float(start_time_seconds)
+    
+    audio_in_path = recordings_folder_with_path + "/" + filename
+     
+    if not os.path.isfile(audio_in_path):
+        print("This recording is not available ", filename)
+         
+    try:
+        y, sr = librosa.load(audio_in_path)
+        y = apply_band_pass_filter(y, sr)        
+               
+      
+        
+        start_position_array = int(sr * start_time_seconds_float)              
+                   
+        end_position_array = start_position_array + int((sr * 1.0))                  
+                    
+        y_part = y[start_position_array:end_position_array]  
+#         mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
+        
+        # https://medium.com/@sdoshi579/classification-of-music-into-different-genres-using-keras-82ab5339efe0
+#         chroma_stft = librosa.feature.chroma_stft(y=y_part, sr=sr)
+#         print("chroma_stft.shape ", chroma_stft.shape)
+#         print("np.mean(chroma_stft) ", np.mean(chroma_stft))
+        
+        
+        rms = librosa.feature.rms(y=y_part)
+#         print("rms ", rms)
+#         print("rms.shape ", rms.shape)
+        
+        spectral_centroid = librosa.feature.spectral_centroid(y=y_part, sr=sr)
+#         print("spec_cent ", spec_cent)
+#         print("spec_cent.shape ", spec_cent.shape)
+        
+        spectral_bandwidth = librosa.feature.spectral_bandwidth(y=y_part, sr=sr)
+#         print("spec_bw ", spec_bw)
+#         print("spec_bw.shape ", spec_bw.shape)
+        
+        spectral_rolloff = librosa.feature.spectral_rolloff(y=y_part, sr=sr)
+#         print("rolloff) ", rolloff)
+#         print("rolloff.shape ", rolloff.shape)
+        
+        zero_crossing_rate = librosa.feature.zero_crossing_rate(y_part)
+#         print("zcr ", zcr)
+#         print("zcr.shape ", zcr.shape)
+        
+#         mfcc = librosa.feature.mfcc(y=y_part, sr=sr, n_mfcc=32)
+#         print("mfcc.shape ", mfcc.shape)
+#         
+#         melspectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr)
+#         print("melspectrogram.shape ", melspectrogram.shape)
+        
+        number_of_frames = rms.shape[1]
+#         print("Number of frames is ", number_of_frames)
+#         count = 0
+#         for frame_id in range(number_of_frames):
+#             count+=1
+            
+            
+        sqlBuilding = "INSERT INTO features (onset_id, recording_id, start_time_seconds, actual_confirmed"
+        for i in range(number_of_frames):
+            sqlBuilding += ", rms" + str(i) 
+            
+        for i in range(number_of_frames):
+            sqlBuilding += ", spectral_centroid" + str(i)
+            
+        for i in range(number_of_frames):
+            sqlBuilding += ", spectral_bandwidth" + str(i)
+            
+        for i in range(number_of_frames):
+            sqlBuilding += ", spectral_rolloff" + str(i)
+            
+        for i in range(number_of_frames):
+            sqlBuilding += ", zero_crossing_rate" + str(i)
+        
+        
+        sqlBuilding += ")"
+        sqlBuilding += " VALUES("
+        
+        sqlBuilding += str(onset_id) + ","
+        sqlBuilding += str(recording_id) + ","
+        sqlBuilding += str(start_time_seconds) + ","
+        sqlBuilding += "'" + str(actual_confirmed) + "'"
+        
+        for i in range(number_of_frames):
+            sqlBuilding += "," + "'" + str(rms[0][i]) + "'"
+         
+        for i in range(number_of_frames):
+            sqlBuilding += "," + "'" + str(spectral_centroid[0][i]) + "'"
+            
+        for i in range(number_of_frames):
+            sqlBuilding += "," + "'" + str(spectral_bandwidth[0][i]) + "'"
+            
+        for i in range(number_of_frames):
+            sqlBuilding += "," + "'" + str(spectral_rolloff[0][i]) + "'"
+            
+        for i in range(number_of_frames):
+            sqlBuilding += "," + "'" + str(zero_crossing_rate[0][i]) + "'"
+            
+        sqlBuilding += ")"
+        
+        print(sqlBuilding)
+        
+        cur = get_database_connection().cursor()
+        cur.execute(sqlBuilding)
+        get_database_connection().commit()
+            
+#             print(count, " of ", number_of_frames)
+#             print("rms ", rms[0][i])
+#             
+#             table_name = 'features'        
+    
+#             cur = get_database_connection().cursor()
+# #             sqlBuilding = "INSERT INTO features (onset_id = '" + str(onset_id) + "', recording_id = '" + str(recording_id) + "', start_time_seconds = '" + str(start_time_seconds) + "', actual_confirmed = '" + actual_confirmed + "'"
+#             
+#             sqlBuilding = "INSERT INTO features (onset_id, recording_id, start_time_seconds, actual_confirmed"
+#             
+#             sqlBuilding += ")"
+#             
+#             sqlBuilding += " VALUES ("
+#             sqlBuilding += str(onset_id) + ", "
+#             sqlBuilding += str(recording_id) + ", "
+#             sqlBuilding += str(start_time_seconds) + ", "
+#             sqlBuilding += str(actual_confirmed)
+#             
+#             
+#            
+#             
+#            
+#             
+# #             for i in range(44):
+# #                 sqlBuilding += ", rms" + str(i) + " = '" + str(rms[0][i]) + "'"
+#                                                          
+#             sqlBuilding += ")"                                             
+#             
+#             print("sqlBuilding ", sqlBuilding)
+#             
+#            
+#             cur.execute(sqlBuilding)
+#             
+# #             cur.execute(sql, (onset_id, frame_id, rms[0][frame_id], spec_cent[0][frame_id], spec_bw[0][frame_id], rolloff[0][frame_id], zcr[0][frame_id]))
+#             get_database_connection().commit()   
+    
+            
+#         print("Finished onset_id ", onset_id)       
+        
+
+    except Exception as e:
+        print(e)
+      
+def copy_actual_confirmed_onset_5_to_onset_6():
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT actual_confirmed, recording_id, start_time_seconds from onsets WHERE version = 5 AND actual_confirmed IS NOT NULL")
+    records = cur.fetchall()
+    for record in records:
+        print(record)
+        cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE actual_confirmed IS NULL AND version = 6 AND recording_id = ? AND start_time_seconds = ?", (record[0], record[1], record[2]) )
+        get_database_connection().commit() 
+        
+    print("Finished")
