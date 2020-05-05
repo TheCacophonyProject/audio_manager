@@ -3188,56 +3188,104 @@ def get_model_predictions(recording_id):
 
 def create_features_for_all_version6_onsets_version_2():
     cur = get_database_connection().cursor()
+    
+    
+    
 
     # First do the onsets that have been confirmed
-    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NOT NULL AND ID NOT IN (SELECT onset_id FROM features)" )
+#     cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NOT NULL AND ID NOT IN (SELECT onset_id FROM features)" )
+    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NOT NULL AND NOT EXISTS (SELECT onset_id FROM features WHERE onsets.recording_id = features.recording_id AND onsets.start_time_seconds = features.start_time_seconds) ORDER BY recording_id DESC" )
     
     
     records = cur.fetchall()
-    number_of_records = len(records)
-    
-    count = 0
-    
-    for record in records:
-        count+=1
-        print(count, " of (confirmed) ", number_of_records)
-        create_features_for_single_onset_version_2(record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7])
+    process_onset_features(records, True)
+#     number_of_records = len(records)
+#     
+#     count = 0
+#     
+#     for record in records:
+#         count+=1
+#         print(count, " of (confirmed) ", number_of_records)
+#         create_features_for_single_onset_version_2(record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7])
          
     # Now to the rest of the onsets
-    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NULL AND ID NOT IN (SELECT onset_id FROM features)" )
+#     cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NULL AND ID NOT IN (SELECT onset_id FROM features)" )
+    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NULL AND NOT EXISTS (SELECT onset_id FROM features WHERE onsets.recording_id = features.recording_id AND onsets.start_time_seconds = features.start_time_seconds) ORDER BY recording_id DESC" )
+    
     records = cur.fetchall()
+    process_onset_features(records, False)
+#     number_of_records = len(records)
+#     
+#     count = 0
+#     
+#     previous_recording_id = -1 # Only going to read recording from file once - ie if it has changed since last row result
+#     y_filtered = None
+#     sr = None
+#     for record in records:
+#         count+=1
+#         print(count, " of (not confirmed) ", number_of_records)
+#         recording_id = record[1]
+#         if recording_id != previous_recording_id:
+#             print("recording_id to process changed from ", previous_recording_id, " to ", recording_id)
+#             sr, y_filtered = get_filtered_recording(recording_id)            
+#             
+#         create_features_for_single_onset_version_2(record[0], recording_id, record[2], record[3], record[4], record[5], record[6], record[7], sr, y_filtered)
+#         previous_recording_id = recording_id
+        
+def process_onset_features(records, confirmed):
     number_of_records = len(records)
     
     count = 0
     
+    previous_recording_id = -1 # Only going to read recording from file once - ie if it has changed since last row result
+    y_filtered = None
+    sr = None
     for record in records:
         count+=1
-        print(count, " of (not confirmed) ", number_of_records)
-        create_features_for_single_onset_version_2(record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7])
-         
+        if confirmed:
+            print(count, " of (confirmed) ", number_of_records)
+        else:
+            print(count, " of (not confirmed) ", number_of_records)
+            
+        recording_id = record[1]
+        if recording_id != previous_recording_id:
+            print("recording_id to process changed from ", previous_recording_id, " to ", recording_id)
+            sr, y_filtered = get_filtered_recording(recording_id)            
+            
+        create_features_for_single_onset_version_2(record[0], recording_id, record[2], record[3], record[4], record[5], record[6], record[7], sr, y_filtered)
+        previous_recording_id = recording_id
+    
+
+def get_filtered_recording(recording_id):
+    recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+    filename = str(recording_id) + ".m4a"
+    audio_in_path = recordings_folder_with_path + "/" + filename
+    y, sr = librosa.load(audio_in_path)
+    y_filtered = apply_band_pass_filter(y, sr)
+    return sr, y_filtered 
              
-def create_features_for_single_onset_version_2(onset_id, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime):
+def create_features_for_single_onset_version_2(onset_id, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime, sr, y_filtered):
 #  Should get recording id from onset table using onset_id
 #     filename = "164136.m4a"
-    filename = str(recording_id) + ".m4a"
-    recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
-    
+#     filename = str(recording_id) + ".m4a"
+#     recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+#     
     start_time_seconds_float = float(start_time_seconds)
     
-    audio_in_path = recordings_folder_with_path + "/" + filename
+#     audio_in_path = recordings_folder_with_path + "/" + filename
      
-    if not os.path.isfile(audio_in_path):
-        print("This recording is not available ", filename)
+#     if not os.path.isfile(audio_in_path):
+#         print("This recording is not available ", filename)
          
     try:
-        y, sr = librosa.load(audio_in_path)
-        y = apply_band_pass_filter(y, sr)  
+#         y, sr = librosa.load(audio_in_path)
+#         y = apply_band_pass_filter(y, sr)  
         
         start_position_array = int(sr * start_time_seconds_float)              
                    
         end_position_array = start_position_array + int((sr * 1.0))                  
                     
-        y_part = y[start_position_array:end_position_array]  
+        y_part = y_filtered[start_position_array:end_position_array]  
                 
         rms = librosa.feature.rms(y=y_part)
         
@@ -3247,18 +3295,11 @@ def create_features_for_single_onset_version_2(onset_id, recording_id, start_tim
         
         spectral_rolloff = librosa.feature.spectral_rolloff(y=y_part, sr=sr)
         
-        zero_crossing_rate = librosa.feature.zero_crossing_rate(y_part)
-        
-#         print("rms.shape ", rms.shape)
-#         print("spectral_centroid.shape ", spectral_centroid.shape)
-#         print("spectral_bandwidth.shape ", spectral_bandwidth.shape)
-#         print("spectral_rolloff.shape ", spectral_rolloff.shape)
-#         print("zero_crossing_rate.shape ", zero_crossing_rate.shape)
+        zero_crossing_rate = librosa.feature.zero_crossing_rate(y_part)  
         
         number_of_frames = rms.shape[1]
         
-        
-#         if number_of_frames < 40:
+
         print("number_of_frames ", number_of_frames)
 #             print("start_time_seconds_float ", start_time_seconds_float)
 #             count_of_short_frames += 1
