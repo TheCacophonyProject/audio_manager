@@ -3177,9 +3177,8 @@ def get_spectrogram_rectangle_selection_colour(what):
 def get_model_predictions(recording_id):
     table_name = 'model_run_result'        
     
-    cur = get_database_connection().cursor()
-    
-#     cur.execute("select startTime, duration, predictedByModel, probability from " + table_name + " where recording_id = ? and modelRunName = ?", (recording_id, model_run_name) )
+    cur = get_database_connection().cursor()    
+
     cur.execute("select startTime, duration, predictedByModel, probability, actual_confirmed from " + table_name + " where recording_id = ? and modelRunName = ?", (recording_id, model_run_name) )
    
     records = cur.fetchall()
@@ -3187,9 +3186,12 @@ def get_model_predictions(recording_id):
     return records
 
 
-def create_features_for_all_onsets_version_2():
+def create_features_for_all_version6_onsets_version_2():
     cur = get_database_connection().cursor()
-    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed FROM ONSETs WHERE actual_confirmed IS NOT NULL AND ID NOT IN (SELECT onset_id FROM features)" )
+
+    # First do the onsets that have been confirmed
+    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NOT NULL AND ID NOT IN (SELECT onset_id FROM features)" )
+    
     
     records = cur.fetchall()
     number_of_records = len(records)
@@ -3198,94 +3200,23 @@ def create_features_for_all_onsets_version_2():
     
     for record in records:
         count+=1
-        print(count, " of ", number_of_records)
-        create_features_for_single_onset_version_2(record[0], record[1], record[2], record[3])
-            
+        print(count, " of (confirmed) ", number_of_records)
+        create_features_for_single_onset_version_2(record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7])
+         
+    # Now to the rest of the onsets
+    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NULL AND ID NOT IN (SELECT onset_id FROM features)" )
+    records = cur.fetchall()
+    number_of_records = len(records)
     
+    count = 0
     
-
-# def create_features_for_single_onset_version_2(onset_id, recording_id, start_time_seconds):
-# #  Should get recording id from onset table using onset_id
-# #     filename = "164136.m4a"
-#     filename = str(recording_id) + ".m4a"
-#     recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
-#     
-#     start_time_seconds_float = float(start_time_seconds)
-#     
-#     audio_in_path = recordings_folder_with_path + "/" + filename
-#      
-#     if not os.path.isfile(audio_in_path):
-#         print("This recording is not available ", filename)
-#          
-#     try:
-#         y, sr = librosa.load(audio_in_path)
-#         y = apply_band_pass_filter(y, sr)        
-#                
-# #         start_time_seconds_float = float(0.7)            
-#         
-#         start_position_array = int(sr * start_time_seconds_float)              
-#                    
-#         end_position_array = start_position_array + int((sr * 1))                  
-#                     
-#         y_part = y[start_position_array:end_position_array]  
-# #         mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
-#         
-#         # https://medium.com/@sdoshi579/classification-of-music-into-different-genres-using-keras-82ab5339efe0
-# #         chroma_stft = librosa.feature.chroma_stft(y=y_part, sr=sr)
-# #         print("chroma_stft.shape ", chroma_stft.shape)
-# #         print("np.mean(chroma_stft) ", np.mean(chroma_stft))
-#         
-#         
-#         rms = librosa.feature.rms(y=y_part)
-# #         print("rms ", rms)
-# #         print("rms.shape ", rms.shape)
-#         
-#         spec_cent = librosa.feature.spectral_centroid(y=y_part, sr=sr)
-# #         print("spec_cent ", spec_cent)
-# #         print("spec_cent.shape ", spec_cent.shape)
-#         
-#         spec_bw = librosa.feature.spectral_bandwidth(y=y_part, sr=sr)
-# #         print("spec_bw ", spec_bw)
-# #         print("spec_bw.shape ", spec_bw.shape)
-#         
-#         rolloff = librosa.feature.spectral_rolloff(y=y_part, sr=sr)
-# #         print("rolloff) ", rolloff)
-# #         print("rolloff.shape ", rolloff.shape)
-#         
-#         zcr = librosa.feature.zero_crossing_rate(y_part)
-# #         print("zcr ", zcr)
-# #         print("zcr.shape ", zcr.shape)
-#         
-# #         mfcc = librosa.feature.mfcc(y=y_part, sr=sr, n_mfcc=32)
-# #         print("mfcc.shape ", mfcc.shape)
-# #         
-# #         melspectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr)
-# #         print("melspectrogram.shape ", melspectrogram.shape)
-#         
-#         number_of_frames = rms.shape[1]
-# #         print("Number of frames is ", number_of_frames)
-#         count = 0
-#         for frame_id in range(number_of_frames):
-#             count+=1
-# #             print(count, " of ", number_of_frames)
-# #             print("rms ", rms[0][i])
-# #             
-# #             table_name = 'features'        
-#     
-#             cur = get_database_connection().cursor()
-#             sql = ''' INSERT INTO features (onset_id, frame_id, rms, spectral_centroid, spectral_bandwidth, spectral_rolloff, zero_crossing_rate)
-#                       VALUES(?,?,?,?,?,?,?) '''
-#             cur.execute(sql, (onset_id, frame_id, rms[0][frame_id], spec_cent[0][frame_id], spec_bw[0][frame_id], rolloff[0][frame_id], zcr[0][frame_id]))
-#             get_database_connection().commit()   
-#     
-#             
-#         print("Finished onset_id ", onset_id)       
-#         
-# 
-#     except Exception as e:
-#         print(e)
-        
-def create_features_for_single_onset_version_2(onset_id, recording_id, start_time_seconds, actual_confirmed):
+    for record in records:
+        count+=1
+        print(count, " of (not confirmed) ", number_of_records)
+        create_features_for_single_onset_version_2(record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7])
+         
+             
+def create_features_for_single_onset_version_2(onset_id, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime):
 #  Should get recording id from onset table using onset_id
 #     filename = "164136.m4a"
     filename = str(recording_id) + ".m4a"
@@ -3300,57 +3231,51 @@ def create_features_for_single_onset_version_2(onset_id, recording_id, start_tim
          
     try:
         y, sr = librosa.load(audio_in_path)
-        y = apply_band_pass_filter(y, sr)        
-               
-      
+        y = apply_band_pass_filter(y, sr)  
         
         start_position_array = int(sr * start_time_seconds_float)              
                    
         end_position_array = start_position_array + int((sr * 1.0))                  
                     
         y_part = y[start_position_array:end_position_array]  
-#         mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
-        
-        # https://medium.com/@sdoshi579/classification-of-music-into-different-genres-using-keras-82ab5339efe0
-#         chroma_stft = librosa.feature.chroma_stft(y=y_part, sr=sr)
-#         print("chroma_stft.shape ", chroma_stft.shape)
-#         print("np.mean(chroma_stft) ", np.mean(chroma_stft))
-        
-        
+                
         rms = librosa.feature.rms(y=y_part)
-#         print("rms ", rms)
-#         print("rms.shape ", rms.shape)
         
         spectral_centroid = librosa.feature.spectral_centroid(y=y_part, sr=sr)
-#         print("spec_cent ", spec_cent)
-#         print("spec_cent.shape ", spec_cent.shape)
         
         spectral_bandwidth = librosa.feature.spectral_bandwidth(y=y_part, sr=sr)
-#         print("spec_bw ", spec_bw)
-#         print("spec_bw.shape ", spec_bw.shape)
         
         spectral_rolloff = librosa.feature.spectral_rolloff(y=y_part, sr=sr)
-#         print("rolloff) ", rolloff)
-#         print("rolloff.shape ", rolloff.shape)
         
         zero_crossing_rate = librosa.feature.zero_crossing_rate(y_part)
-#         print("zcr ", zcr)
-#         print("zcr.shape ", zcr.shape)
         
-#         mfcc = librosa.feature.mfcc(y=y_part, sr=sr, n_mfcc=32)
-#         print("mfcc.shape ", mfcc.shape)
-#         
-#         melspectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr)
-#         print("melspectrogram.shape ", melspectrogram.shape)
+#         print("rms.shape ", rms.shape)
+#         print("spectral_centroid.shape ", spectral_centroid.shape)
+#         print("spectral_bandwidth.shape ", spectral_bandwidth.shape)
+#         print("spectral_rolloff.shape ", spectral_rolloff.shape)
+#         print("zero_crossing_rate.shape ", zero_crossing_rate.shape)
         
         number_of_frames = rms.shape[1]
-#         print("Number of frames is ", number_of_frames)
-#         count = 0
-#         for frame_id in range(number_of_frames):
-#             count+=1
+        
+        
+#         if number_of_frames < 40:
+        print("number_of_frames ", number_of_frames)
+#             print("start_time_seconds_float ", start_time_seconds_float)
+#             count_of_short_frames += 1
+#         else:
+#             count_of_long_frames += 1
+#             
+#         print("count_of_long_frames ", count_of_long_frames)
+#         
+#         print("count_of_long_frames ", count_of_long_frames)
+        
+        
+        
+        
             
             
-        sqlBuilding = "INSERT INTO features (onset_id, recording_id, start_time_seconds, actual_confirmed"
+#         sqlBuilding = "INSERT INTO features (onset_id, recording_id, start_time_seconds, actual_confirmed"
+        sqlBuilding = "INSERT INTO features (onset_id, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime"
         for i in range(number_of_frames):
             sqlBuilding += ", rms" + str(i) 
             
@@ -3373,9 +3298,15 @@ def create_features_for_single_onset_version_2(onset_id, recording_id, start_tim
         sqlBuilding += str(onset_id) + ","
         sqlBuilding += str(recording_id) + ","
         sqlBuilding += str(start_time_seconds) + ","
-        sqlBuilding += "'" + str(actual_confirmed) + "'"
+        sqlBuilding += "'" + str(actual_confirmed) + "'" + ","
+        
+        sqlBuilding += "'" + str(device_super_name) + "'" + ","
+        sqlBuilding += "'" + str(device_name) + "'" + ","
+        sqlBuilding += str(duration_seconds) + ","
+        sqlBuilding += "'" + str(recordingDateTime) + "'"
         
         for i in range(number_of_frames):
+#             print("str(rms[0][i] ",i," ", str(rms[0][i]))
             sqlBuilding += "," + "'" + str(rms[0][i]) + "'"
          
         for i in range(number_of_frames):
@@ -3392,51 +3323,11 @@ def create_features_for_single_onset_version_2(onset_id, recording_id, start_tim
             
         sqlBuilding += ")"
         
-        print(sqlBuilding)
+#         print(sqlBuilding)
         
         cur = get_database_connection().cursor()
         cur.execute(sqlBuilding)
-        get_database_connection().commit()
-            
-#             print(count, " of ", number_of_frames)
-#             print("rms ", rms[0][i])
-#             
-#             table_name = 'features'        
-    
-#             cur = get_database_connection().cursor()
-# #             sqlBuilding = "INSERT INTO features (onset_id = '" + str(onset_id) + "', recording_id = '" + str(recording_id) + "', start_time_seconds = '" + str(start_time_seconds) + "', actual_confirmed = '" + actual_confirmed + "'"
-#             
-#             sqlBuilding = "INSERT INTO features (onset_id, recording_id, start_time_seconds, actual_confirmed"
-#             
-#             sqlBuilding += ")"
-#             
-#             sqlBuilding += " VALUES ("
-#             sqlBuilding += str(onset_id) + ", "
-#             sqlBuilding += str(recording_id) + ", "
-#             sqlBuilding += str(start_time_seconds) + ", "
-#             sqlBuilding += str(actual_confirmed)
-#             
-#             
-#            
-#             
-#            
-#             
-# #             for i in range(44):
-# #                 sqlBuilding += ", rms" + str(i) + " = '" + str(rms[0][i]) + "'"
-#                                                          
-#             sqlBuilding += ")"                                             
-#             
-#             print("sqlBuilding ", sqlBuilding)
-#             
-#            
-#             cur.execute(sqlBuilding)
-#             
-# #             cur.execute(sql, (onset_id, frame_id, rms[0][frame_id], spec_cent[0][frame_id], spec_bw[0][frame_id], rolloff[0][frame_id], zcr[0][frame_id]))
-#             get_database_connection().commit()   
-    
-            
-#         print("Finished onset_id ", onset_id)       
-        
+        get_database_connection().commit()        
 
     except Exception as e:
         print(e)

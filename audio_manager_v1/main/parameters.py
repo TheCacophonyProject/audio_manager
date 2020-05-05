@@ -1,5 +1,6 @@
 import sys
 
+
 # model_run_name='2019_11_28_1'
 # model_run_name='2019_12_03_1'
 # model_run_name='2019_12_05_1'
@@ -122,7 +123,10 @@ arff_path = '/home/tim/Work/Cacophony/opensmile_weka/TestAudioOutput'
 
 # db_file = "/home/tim/Work/Cacophony/eclipse-workspace/audio_manager_v1/audio_analysis_db2.db"
 # db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2.db"
-db_file = "/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db2.db"
+# db_file = "/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db2.db"
+db_file = "/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db3.db"
+# db_file = "/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db2.db"
+# db_file = "/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db4.db"
 
 # test_data_canvas_width = 500
 # test_data_canvas_height = 2000

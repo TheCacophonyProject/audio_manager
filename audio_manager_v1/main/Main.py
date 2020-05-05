@@ -1616,12 +1616,15 @@ class CreateTestDataPage(tk.Frame):
             
             x_pos_on_spectrogram = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(start_time_seconds, duration_of_recording, self.spectrogram_image.width())
             
-            fill = "yellow"
+            fill = "red"
+            dash=(4, 4)
             
             if this_onset_version == onset_version:
-                fill = "red"
+                fill = "blue"
+                dash=(10, 7)
                             
-            aLine = self.canvas.create_line(x_pos_on_spectrogram, 0, x_pos_on_spectrogram, self.spectrogram_image.height(), fill=fill, dash=(4, 4))
+#             aLine = self.canvas.create_line(x_pos_on_spectrogram, 0, x_pos_on_spectrogram, self.spectrogram_image.height(), fill=fill, dash=(4, 4))
+            aLine = self.canvas.create_line(x_pos_on_spectrogram, 0, x_pos_on_spectrogram, self.spectrogram_image.height(), fill=fill, dash=dash)
 
     
     def retrieve_all_test_recordings_checkbox_pressed(self): 
