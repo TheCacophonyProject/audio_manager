@@ -22,6 +22,7 @@ def check_python_version():
 class window_helper:
     cache = {}
  
+#     def construct_window(self, width, family, scale):
     def construct_window(width, family, scale):
         if family == 'bartlett':
             return numpy.bartlett(width) * scale
@@ -49,7 +50,8 @@ class window_helper:
  
         print('window family %s not supported' % family)
  
-    def get_window(key):
+    def get_window(key):   
+#     def get_window(self, key):   
         if not key in window_helper.cache:
             window_helper.cache[key] = window_helper.construct_window(*key)
  

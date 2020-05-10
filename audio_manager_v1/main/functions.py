@@ -2,6 +2,8 @@
 import main.parameters as parameters
 from main.parameters import *
 
+import main.noise_reduction as noise_reduction
+
 import sqlite3
 from sqlite3 import Error
 import requests
@@ -3505,6 +3507,7 @@ def find_squawks(source, sample_rate):
     return result
 
 def test_onset_version_7():
+    print(sys.version)
     
 #     test_array = np.array([[0,1],[1,2],[2,3]])
 #     test_array = np.array([0,1,2,9,8,7,6])
@@ -3535,6 +3538,8 @@ def test_onset_version_7():
 #         print(value)
 #     y = apply_band_pass_filter(y, sr)
     y = butter_bandpass_filter(y, 600, 1200, sr, order=6)
+    
+    y = noise_reduction.noise_reduce(y, sr)
     
 #     onsets = find_squawk_location_secs_in_single_recording(y, sr) # Its now time to call the pair_squawks onsets  
 #     

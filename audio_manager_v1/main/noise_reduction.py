@@ -7,7 +7,7 @@
 import numpy
 import scipy
 
-import common
+import main.common as common
 
 
 class spectrogram_helper:
@@ -52,7 +52,8 @@ class spectrogram_helper:
         return self.tolerance
 
 
-def noise_reduce_dct(source, sample_rate, options):
+# def noise_reduce_dct(source, sample_rate, options):
+def noise_reduce_dct(source, sample_rate):
     original_sample_count = source.shape[0]
     dct_width = 2048
 
@@ -105,7 +106,8 @@ def noise_reduce_dct(source, sample_rate, options):
         if common.rms(dct) < rms_cutoff:
             continue  # too soft
 
-        rt = scipy.fftpack.idct(dct) / (dct_width * 2)
+#         rt = scipy.fftpack.idct(dct) / (dct_width * 2)
+        rt = scipy.fft.idct(dct) / (dct_width * 2)
 
         block_index = index * stride
         result_pad[block_index + trim_width * 1:block_index + trim_width *
@@ -124,5 +126,12 @@ def noise_reduce_dct(source, sample_rate, options):
     return result
 
 
-def noise_reduce(source, sample_rate, options={}):
-    return noise_reduce_dct(source, sample_rate, options)
+# def noise_reduce(source, sample_rate, options={}):
+#     return noise_reduce_dct(source, sample_rate, options)
+
+def noise_reduce(source, sample_rate):
+    return noise_reduce_dct(source, sample_rate)
+
+
+
+
