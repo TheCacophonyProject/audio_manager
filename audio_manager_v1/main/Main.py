@@ -7,7 +7,7 @@ Modified 17 12 2019a
 '''
 from tkinter.messagebox import showinfo
 from threading import Thread
-from pylint.test import test_self
+# from pylint.test import test_self
 
 import time
 

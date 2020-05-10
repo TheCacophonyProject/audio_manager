@@ -17,6 +17,7 @@ from scipy import signal
 from scipy.signal import butter, lfilter, freqz
 import numpy as np
 from scipy.ndimage.filters import maximum_filter
+from scipy.signal import butter, lfilter
 # import pylab
 import matplotlib.pyplot as plt
 import librosa.display
@@ -891,16 +892,25 @@ def update_onsets_with_edge_histogram_features():
     number_of_onsets = len(onsetsWithNoEdgeHistogramData)
     count = 0
     print('Processing onsets with with No EdgeHistogram Data')
+    previous_recording_id = -1
+    y = None
+    sr = None
     for onsetWithNoEdgeHistogramData in onsetsWithNoEdgeHistogramData:
         count += 1        
         
         ID = onsetWithNoEdgeHistogramData[0]
         recording_id = onsetWithNoEdgeHistogramData[1]
+        
+        if recording_id != previous_recording_id:
+            print("recording_id changed from ", previous_recording_id, " to ", recording_id)
+            y, sr = get_recording_array(recording_id)
+            
+        
         start_time_seconds = onsetWithNoEdgeHistogramData[2]
         duration_seconds = onsetWithNoEdgeHistogramData[3]  
         
         print('Processing onset', count, ' of ', number_of_onsets)
-        create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds)
+        create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds, y, sr)
                 
         os.chdir(model_folder)  
         command = ['java', '--add-opens=java.base/java.lang=ALL-UNNAMED', '-jar', 'getEdgeHistogramFeatures.jar', 'shell=True']     
@@ -1099,9 +1109,20 @@ def update_onsets_with_edge_histogram_features():
                
             get_database_connection().commit()
             
+            previous_recording_id = recording_id
+            
         else:
             print(result.stderr)
            
+def get_recording_array(recording_id):
+    recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+    filename = str(recording_id) + ".m4a"
+    audio_in_path = recordings_folder_with_path + "/" + filename
+    y, sr = librosa.load(audio_in_path)    
+    return y, sr
+    
+    
+
 def classify_onsets_using_weka_model_helper(onset, model_folder):     
     print('onset', onset)
     recording_id = onset[0]
@@ -1518,6 +1539,7 @@ def FindSquawks(source, sampleRate):
     stopIndex = None
     smallTime = int(sampleRate*0.1)
     tolerance = 0.2
+    
     for index in range(source.shape[0]):
         if not startIndex:
             if abs(source[index]) > tolerance:
@@ -1762,7 +1784,7 @@ def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_i
         print(e, '\n')
         print('Error processing onset ', onset)
         
-def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds):
+def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds, y, sr):
 
     mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + weka_model_folder + '/' + single_spectrogram_for_classification_folder 
     if not os.path.exists(mel_spectrograms_out_folder_path):
@@ -1770,14 +1792,14 @@ def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_ti
  
     try:
         
-        audio_filename = str(recording_id) + '.m4a'
-        audio_in_path = base_folder + '/' + downloaded_recordings_folder + '/' +  audio_filename 
+#         audio_filename = str(recording_id) + '.m4a'
+#         audio_in_path = base_folder + '/' + downloaded_recordings_folder + '/' +  audio_filename 
         image_out_name = 'input_image.jpg'
 #         print('image_out_name', image_out_name)           
        
         image_out_path = mel_spectrograms_out_folder_path + '/' + image_out_name
         
-        y, sr = librosa.load(audio_in_path, sr=None)      
+#         y, sr = librosa.load(audio_in_path, sr=None)      
                
         start_time_seconds_float = float(start_time_seconds)            
         
@@ -1799,6 +1821,8 @@ def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_ti
     except Exception as e:
         print(e, '\n')
         print('Error processing onset ', onset)
+        
+
            
 def get_single_waveform_image(recording_id, start_time_seconds, duration_seconds):
 
@@ -3187,50 +3211,22 @@ def get_model_predictions(recording_id):
 
 
 def create_features_for_all_version6_onsets_version_2():
-    cur = get_database_connection().cursor()
-    
-    
-    
+    cur = get_database_connection().cursor()    
 
     # First do the onsets that have been confirmed
 #     cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NOT NULL AND ID NOT IN (SELECT onset_id FROM features)" )
     cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NOT NULL AND NOT EXISTS (SELECT onset_id FROM features WHERE onsets.recording_id = features.recording_id AND onsets.start_time_seconds = features.start_time_seconds) ORDER BY recording_id DESC" )
-    
-    
+        
     records = cur.fetchall()
     process_onset_features(records, True)
-#     number_of_records = len(records)
-#     
-#     count = 0
-#     
-#     for record in records:
-#         count+=1
-#         print(count, " of (confirmed) ", number_of_records)
-#         create_features_for_single_onset_version_2(record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7])
-         
+        
     # Now to the rest of the onsets
 #     cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NULL AND ID NOT IN (SELECT onset_id FROM features)" )
     cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NULL AND NOT EXISTS (SELECT onset_id FROM features WHERE onsets.recording_id = features.recording_id AND onsets.start_time_seconds = features.start_time_seconds) ORDER BY recording_id DESC" )
     
     records = cur.fetchall()
     process_onset_features(records, False)
-#     number_of_records = len(records)
-#     
-#     count = 0
-#     
-#     previous_recording_id = -1 # Only going to read recording from file once - ie if it has changed since last row result
-#     y_filtered = None
-#     sr = None
-#     for record in records:
-#         count+=1
-#         print(count, " of (not confirmed) ", number_of_records)
-#         recording_id = record[1]
-#         if recording_id != previous_recording_id:
-#             print("recording_id to process changed from ", previous_recording_id, " to ", recording_id)
-#             sr, y_filtered = get_filtered_recording(recording_id)            
-#             
-#         create_features_for_single_onset_version_2(record[0], recording_id, record[2], record[3], record[4], record[5], record[6], record[7], sr, y_filtered)
-#         previous_recording_id = recording_id
+
         
 def process_onset_features(records, confirmed):
     number_of_records = len(records)
@@ -3250,9 +3246,9 @@ def process_onset_features(records, confirmed):
         recording_id = record[1]
         if recording_id != previous_recording_id:
             print("recording_id to process changed from ", previous_recording_id, " to ", recording_id)
-            sr, y_filtered = get_filtered_recording(recording_id)            
+            y_filtered, sr  = get_filtered_recording(recording_id)            
             
-        create_features_for_single_onset_version_2(record[0], recording_id, record[2], record[3], record[4], record[5], record[6], record[7], sr, y_filtered)
+        create_features_for_single_onset_version_2(record[0], recording_id, record[2], record[3], record[4], record[5], record[6], record[7], y_filtered, sr)
         previous_recording_id = recording_id
     
 
@@ -3262,24 +3258,14 @@ def get_filtered_recording(recording_id):
     audio_in_path = recordings_folder_with_path + "/" + filename
     y, sr = librosa.load(audio_in_path)
     y_filtered = apply_band_pass_filter(y, sr)
-    return sr, y_filtered 
+#     return sr, y_filtered 
+    return y_filtered, sr
              
-def create_features_for_single_onset_version_2(onset_id, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime, sr, y_filtered):
-#  Should get recording id from onset table using onset_id
-#     filename = "164136.m4a"
-#     filename = str(recording_id) + ".m4a"
-#     recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+def create_features_for_single_onset_version_2(onset_id, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime, y_filtered, sr):
 #     
-    start_time_seconds_float = float(start_time_seconds)
-    
-#     audio_in_path = recordings_folder_with_path + "/" + filename
-     
-#     if not os.path.isfile(audio_in_path):
-#         print("This recording is not available ", filename)
+    start_time_seconds_float = float(start_time_seconds)   
          
     try:
-#         y, sr = librosa.load(audio_in_path)
-#         y = apply_band_pass_filter(y, sr)  
         
         start_position_array = int(sr * start_time_seconds_float)              
                    
@@ -3301,21 +3287,7 @@ def create_features_for_single_onset_version_2(onset_id, recording_id, start_tim
         
 
         print("number_of_frames ", number_of_frames)
-#             print("start_time_seconds_float ", start_time_seconds_float)
-#             count_of_short_frames += 1
-#         else:
-#             count_of_long_frames += 1
-#             
-#         print("count_of_long_frames ", count_of_long_frames)
-#         
-#         print("count_of_long_frames ", count_of_long_frames)
-        
-        
-        
-        
-            
-            
-#         sqlBuilding = "INSERT INTO features (onset_id, recording_id, start_time_seconds, actual_confirmed"
+
         sqlBuilding = "INSERT INTO features (onset_id, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime"
         for i in range(number_of_frames):
             sqlBuilding += ", rms" + str(i) 
@@ -3362,9 +3334,8 @@ def create_features_for_single_onset_version_2(onset_id, recording_id, start_tim
         for i in range(number_of_frames):
             sqlBuilding += "," + "'" + str(zero_crossing_rate[0][i]) + "'"
             
-        sqlBuilding += ")"
-        
-#         print(sqlBuilding)
+        sqlBuilding += ")"        
+
         
         cur = get_database_connection().cursor()
         cur.execute(sqlBuilding)
@@ -3373,13 +3344,210 @@ def create_features_for_single_onset_version_2(onset_id, recording_id, start_tim
     except Exception as e:
         print(e)
       
-def copy_actual_confirmed_onset_5_to_onset_6():
+# def copy_actual_confirmed_onset_5_to_onset_6():
+#     cur = get_database_connection().cursor()
+#     cur.execute("SELECT actual_confirmed, recording_id, start_time_seconds from onsets WHERE version = 5 AND actual_confirmed IS NOT NULL")
+#     records = cur.fetchall()
+#     for record in records:
+#         print(record)
+#         cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE actual_confirmed IS NULL AND version = 6 AND recording_id = ? AND start_time_seconds = ?", (record[0], record[1], record[2]) )
+#         get_database_connection().commit() 
+#         
+#     print("Finished")
+#     
+# def update_ver_6_onsets_with_ver_5():
+#     cur = get_database_connection().cursor()
+# #     cur.execute("SELECT * from onsets WHERE version = 5")
+# #     records_ver_5 = cur.fetchall()
+# #     print("Number of records is ", len(records_ver_5))
+# #     for record_ver_5 in records_ver_5:        
+# #         print(record_ver_5)
+# #         recording_id = record_ver_5[2]
+# #         print(recording_id)
+# #         
+# #         start_time_seconds = record_ver_5[3]
+# #         print(start_time_seconds)
+#         
+#         
+#     cur.execute("SELECT * from onsets WHERE version = 6 AND MPEG7_Edge_Histogram0 IS NULL")
+#     records_ver_6 = cur.fetchall()
+#     for record_ver_6 in records_ver_6:
+#         print(record_ver_6)
+#         recording_id_ver_6 = record_ver_6[2]
+#         print(recording_id_ver_6)
+#         start_time_seconds = record_ver_6[3]
+#         print(start_time_seconds)
+#         
+#         cur.execute("SELECT * from onsets WHERE version = 5 AND recording_id = ? AND start_time_seconds = start_time_seconds", (recording_id_ver_6,))
+#         records_ver_5 = cur.fetchall()
+#         print("Number of records is ", len(records_ver_5))
+#         for record_ver_5 in records_ver_5: 
+#             print(record_ver_5)
+#             cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE actual_confirmed IS NULL AND version = 6 AND recording_id = ? AND start_time_seconds = ?", (record[0], record[1], record[2]) )
+#             
+
+def march_test_data_analysis():
     cur = get_database_connection().cursor()
-    cur.execute("SELECT actual_confirmed, recording_id, start_time_seconds from onsets WHERE version = 5 AND actual_confirmed IS NOT NULL")
-    records = cur.fetchall()
-    for record in records:
-        print(record)
-        cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE actual_confirmed IS NULL AND version = 6 AND recording_id = ? AND start_time_seconds = ?", (record[0], record[1], record[2]) )
-        get_database_connection().commit() 
+    cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds from test_data WHERE what = 'morepork_more-pork'")
+    test_data_records = cur.fetchall()
+    number_of_test_data = len(test_data_records)
+    print("Number of records is ", number_of_test_data)
+    count_of_test_data_with_ver_5_onset = 0
+    count_of_test_data_with_ver_6_onset = 0
+    record_count = 0
+    for test_data_record in test_data_records:  
+        record_count +=1      
+        print("Processing ", record_count, " of ", number_of_test_data, ": ", test_data_record)
+        recording_id = test_data_record[0]
+#         print(recording_id)
+        test_data_start_time_seconds = test_data_record[1]
+#         print(test_data_start_time_seconds)
+        test_data_finish_time_seconds = test_data_record[2]
+#         print(test_data_finish_time_seconds)
         
-    print("Finished")
+        cur.execute("SELECT recording_id, start_time_seconds, version from onsets WHERE recording_id = ? AND start_time_seconds > ? AND start_time_seconds < ?", (recording_id, test_data_start_time_seconds, test_data_finish_time_seconds))
+        onset_records = cur.fetchall()
+        for onset_record in onset_records:  
+            recording_id = onset_record[0]
+            start_time_seconds = onset_record[1]
+            version = onset_record[2]
+            print("recording_id = ", recording_id, " start_time_seconds = ", start_time_seconds," version = ", version," test_data_start_time_seconds = ", test_data_start_time_seconds," test_data_finish_time_seconds = ", test_data_finish_time_seconds)
+            if version == '5':
+                count_of_test_data_with_ver_5_onset += 1
+            if version == '6':
+                count_of_test_data_with_ver_6_onset += 1
+       
+    print(count_of_test_data_with_ver_5_onset, " of the test data had a version 5 onset")
+    print(count_of_test_data_with_ver_6_onset, " of the test data had a version 6 onset")
+    
+
+def butter_bandpass(lowcut, highcut, fs, order=5):
+    nyq = 0.5 * fs
+    low = lowcut / nyq
+    high = highcut / nyq
+    b, a = butter(order, [low, high], btype='band')
+    return b, a
+
+
+def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
+    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
+
+
+def FindSquawksTim(source, sampleRate):
+    result = []
+    print("max(source) ", max(source))
+    source = source / max(source)    
+    print("max(source) ", max(source))
+    
+    startIndex = None
+    stopIndex = None
+    smallTime = int(sampleRate*0.1)
+#     smallTime = int(sampleRate*0.05)
+#     tolerance = 0.05
+    tolerance = rms(source) / 3
+    
+    for index in range(source.shape[0]):
+        print(index, " : ",int(index/sampleRate), " : ", startIndex, " : ", stopIndex, " : ", source[index])
+        if not startIndex:
+            if abs(source[index]) > tolerance:
+                startIndex = index
+                stopIndex = index
+            continue
+        if abs(source[index]) > tolerance:
+            stopIndex = index
+        elif index > stopIndex+smallTime:
+            duration = (stopIndex-startIndex)/sampleRate
+            if duration > 0.05:
+#             if duration > 0.01:
+                squawk = {'start': startIndex,
+                          'stop': stopIndex, 'duration': duration}
+                squawk['rms'] = rms(source[startIndex:stopIndex])
+                result.append(squawk)
+            startIndex = None
+    return result
+
+def paired_item(source):
+    source_iter = iter(source)
+    while True:
+        try:
+            yield next(source_iter).item(), next(source_iter).item()
+        except StopIteration:
+            return
+
+def merge_paired_short_time(udarray, small_time):
+    paired_iter = paired_item(udarray)
+    r = None
+    for s in paired_iter:
+        if not r:
+            r = s
+        elif s[0] < r[1] + small_time:
+            r = r[0], s[1]
+        else:
+            yield r
+            r = s
+    if r:
+        yield r
+
+def find_squawks(source, sample_rate):
+    result = []
+
+    source_pad = np.pad(source, 1, mode='constant')
+    tolerance = rms(source) / 3
+    t = (abs(source_pad) > tolerance)
+    s = np.where(np.diff(t))[0]
+    small_time = int(sample_rate * 0.1)
+    for begin_index, end_index in merge_paired_short_time(s, small_time):
+        if begin_index + 0.05 * sample_rate < end_index:
+            squawk = {'begin_i': begin_index, 'end_i': end_index}
+            result.append(squawk)
+    return result
+
+def test_onset_version_7():
+    
+#     test_array = np.array([[0,1],[1,2],[2,3]])
+#     test_array = np.array([0,1,2,9,8,7,6])
+#     print(test_array.shape)
+#     print("test_array ", test_array)
+#     max_source = max(test_array)
+#     
+#     print("max_source ", max_source)
+#     test_array_2 = test_array / max_source
+#     
+#     max_source_2 = max(test_array_2)    
+#     print("max_source_2 ", max_source_2)
+#     
+#     
+#     print("test_array_2 ", test_array_2)
+    
+    # Change filter to scipy butter to see if onset detection works better
+    filename = "544238.m4a"
+    recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+    audio_in_path = recordings_folder_with_path + "/" + filename
+
+    y, sr = librosa.load(audio_in_path)
+#     y = butter_bandpass_filter(y, 600, 1200, sr, order=6)
+    
+    print(y.shape)
+    
+#     for value in y: 
+#         print(value)
+#     y = apply_band_pass_filter(y, sr)
+    y = butter_bandpass_filter(y, 600, 1200, sr, order=6)
+    
+#     onsets = find_squawk_location_secs_in_single_recording(y, sr) # Its now time to call the pair_squawks onsets  
+#     
+#     for onset in onsets:
+#         print(onset)
+
+#     onset_frames = librosa.onset.onset_detect(y=y, sr=sr)
+    
+#     squawks = FindSquawksTim(y, sr)
+    squawks = find_squawks(y,sr)
+    print(squawks)
+#     print("onset_frames ", onset_frames)
+#     for onset_frame in onset_frames:
+#         print(onset_frame)
+#         print("onset_frame_sec ", onset_frame/sr)
+    
