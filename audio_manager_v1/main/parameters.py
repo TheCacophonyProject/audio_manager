@@ -86,7 +86,7 @@ list_of_tags_folder = 'list_of_tags'
 files_for_testing_folder = 'files_for_testing'
 tagged_recordings_folder = 'wavfiles'
 version = '5'
-onset_version = '6'
+onset_version = '7'
 initial_locatation_for_choosing_arff_file_dialog = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs/"
 
 squawk_duration_seconds = 0.8
@@ -122,9 +122,9 @@ arff_path = '/home/tim/Work/Cacophony/opensmile_weka/TestAudioOutput'
 
 
 # db_file = "/home/tim/Work/Cacophony/eclipse-workspace/audio_manager_v1/audio_analysis_db2.db"
-# db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2.db"
+db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2.db"
 # db_file = "/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db2.db"
-db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2_clone_test.db"
+# db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2_clone_test.db"
 # db_file = "/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db3.db"
 # db_file = "/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db2.db"
 # db_file = "/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db4.db"

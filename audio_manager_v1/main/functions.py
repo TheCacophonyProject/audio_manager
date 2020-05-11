@@ -2,7 +2,9 @@
 import main.parameters as parameters
 from main.parameters import *
 
-import main.noise_reduction as noise_reduction
+import scipy
+
+
 
 import sqlite3
 from sqlite3 import Error
@@ -1534,6 +1536,8 @@ def find_squawk_location_secs_in_single_recording(y, sr):
         
     return squawks_secs
 
+
+
 def FindSquawks(source, sampleRate):
     result = []
     source = source / max(source)
@@ -1560,9 +1564,10 @@ def FindSquawks(source, sampleRate):
             startIndex = None
     return result
 
+
 def rms(x):
-        # Root-Mean-Square
-    return np.sqrt(x.dot(x)/x.size)
+    """Root-Mean-Square."""
+    return np.sqrt(x.dot(x) / x.size)
 
 def create_focused_mel_spectrogram_jps_using_onset_pairs():
     mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + spectrograms_for_model_creation_folder 
@@ -3492,7 +3497,7 @@ def merge_paired_short_time(udarray, small_time):
     if r:
         yield r
 
-def find_squawks(source, sample_rate):
+def find_squawks2(source, sample_rate):
     result = []
 
     source_pad = np.pad(source, 1, mode='constant')
@@ -3505,6 +3510,190 @@ def find_squawks(source, sample_rate):
             squawk = {'begin_i': begin_index, 'end_i': end_index}
             result.append(squawk)
     return result
+
+
+
+class window_helper:
+    cache = {}
+  
+#     def construct_window(self, width, family, scale):
+    def construct_window(self,width, family, scale):
+        if family == 'bartlett':
+            return np.bartlett(width) * scale
+  
+        if family == 'blackman':
+            return np.blackman(width) * scale
+  
+        if family == 'hamming':
+            return np.hamming(width) * scale
+  
+        if family == 'hann':
+            import scipy.signal
+            return scipy.signal.hann(width) * scale
+  
+        if family == 'hanning':
+            return np.hanning(width) * scale
+  
+        if family == 'kaiser':
+            beta = 14
+            return np.kaiser(width, beta) * scale
+  
+        if family == 'tukey':
+            import scipy.signal
+            return scipy.signal.tukey(width) * scale
+  
+        print('window family %s not supported' % family)
+  
+#     def get_window(self, key):   
+# #     def get_window(self, key):   
+#         if not key in window_helper.cache:
+#             window_helper.cache[key] = window_helper.construct_window(*key)
+
+    def get_window(self, key):   
+    #     def get_window(self, key):   
+        if not key in self.cache:
+                self.cache[key] = self.construct_window(*key)
+                
+        return window_helper.cache[key]
+    
+def check_python_version():
+    if sys.version_info[0] < 3:
+        print('python version 2 not supported, try activate virtualenv or run setup.')
+        sys.exit()
+
+def get_window_const(width, family, scale=1.0):
+    check_python_version()
+    a_window_helper = window_helper()    
+    return a_window_helper.get_window((width, family, scale))
+    
+
+class spectrogram_helper:
+    def __init__(self, source_pad, spectrogram, stride, sample_rate):
+        self.spectrogram = spectrogram
+        (self.block_count, dct_width) = spectrogram.shape
+        self.stride = stride
+ 
+        window_c = get_window_const(dct_width, 'tukey')
+ 
+        for index in range(self.block_count):
+            block_index = index * stride
+            block = source_pad[block_index:block_index + dct_width] * window_c
+#             dct = scipy.fftpack.dct(block)
+            dct = scipy.fft.dct(block)
+            spectrogram[index] = dct
+ 
+        self.buckets = []
+        msw = 50 * sample_rate // stride
+        max_spec_width = min(msw, self.block_count)
+        division_count = max(int((self.block_count * 1.7) / max_spec_width), 1)
+        for i in range(division_count):
+            t0 = 0
+            if i:
+                t0 = (self.block_count - max_spec_width) * \
+                    i // (division_count - 1)
+            t1 = min(t0 + max_spec_width, self.block_count)
+            self.buckets.append((t0, t1))
+ 
+        self.currentBucket = -2
+ 
+    def get_tolerance(self, index):
+        qb = (index, index, index)
+        q = min(self.buckets, key=lambda x: abs(x[0] + x[1] - 2 * index))
+        if self.currentBucket != q:
+            self.currentBucket = q
+            (t0, t1) = q
+            bin_medians = np.median(abs(self.spectrogram[t0:t1, ]), axis=0)
+            self.tolerance = 4 * \
+                np.convolve(bin_medians, np.ones(8) / 8)[4:-3]
+ 
+        return self.tolerance
+
+def noise_reduce_dct(source, sample_rate):
+    original_sample_count = source.shape[0]
+    dct_width = 2048
+
+    trim_width = int(dct_width / 8)
+    stride = dct_width - trim_width * 3
+
+    block_count = (original_sample_count + stride - 1) // stride
+    source_pad = np.pad(source, (stride, stride * 2), 'reflect')
+
+    #print('Building spectrogram')
+    spectrogram = np.empty((block_count, dct_width))
+
+    sph = spectrogram_helper(source_pad, spectrogram, stride, sample_rate)
+
+    # anything below bass_cut_off_freq requires specialised techniques
+    bass_cut_off_freq = 100
+    bass_cut_off_band = bass_cut_off_freq * 2 * dct_width // sample_rate
+
+    spectrogram_trimmed = np.empty((block_count, dct_width))
+    rms_tab = np.empty(block_count)
+
+    for index in range(block_count):
+        dct = spectrogram[index]
+
+        mask = np.ones_like(dct)
+        mask[:bass_cut_off_band] *= 0
+
+        rms_tab[index] = rms(dct * mask)
+
+        tolerance = sph.get_tolerance(index)
+        for band in range(dct_width):
+            if abs(dct[band]) < tolerance[band]:
+                mask[band] *= 0.0
+
+        maskCon = 10 * np.convolve(mask, np.ones(8) / 8)[4:-3]
+
+        maskBin = np.where(maskCon > 0.1, 0, 1)
+        spectrogram_trimmed[index] = maskBin
+
+    rms_cutoff = np.median(rms_tab)
+
+    result_pad = np.zeros_like(source_pad)
+    for index in range(1, block_count - 1):
+        dct = spectrogram[index]
+
+        trim3 = spectrogram_trimmed[index - 1] * \
+            spectrogram_trimmed[index] * spectrogram_trimmed[index + 1]
+        dct *= (1 - trim3)
+
+        if rms(dct) < rms_cutoff:
+            continue  # too soft
+
+#         rt = scipy.fftpack.idct(dct) / (dct_width * 2)
+        rt = scipy.fft.idct(dct) / (dct_width * 2)
+
+        block_index = index * stride
+        result_pad[block_index + trim_width * 1:block_index + trim_width *
+                   2] += rt[trim_width * 1:trim_width * 2] * np.linspace(0, 1, trim_width)
+        result_pad[block_index +
+                   trim_width *
+                   2:block_index +
+                   trim_width *
+                   6] = rt[trim_width *
+                           2:trim_width *
+                           6]  # *numpy.linspace(1,1,stride8*4)
+        result_pad[block_index + trim_width * 6:block_index + trim_width *
+                   7] = rt[trim_width * 6:trim_width * 7] * np.linspace(1, 0, trim_width)
+
+    result = result_pad[stride:stride + original_sample_count]
+    return result
+
+def noise_reduce(source, sample_rate):
+    return noise_reduce_dct(source, sample_rate)
+
+def find_squawk_location_secs_in_single_recording2(y, sr):
+
+    squawks = find_squawks2(y, sr)
+    squawks_secs = []
+
+    for squawk in squawks:
+        squawk_start = squawk['begin_i']
+        squawk_start_sec = squawk_start / sr
+        squawks_secs.append(round(squawk_start_sec, 1))
+        
+    return squawks_secs
 
 def test_onset_version_7():
     print(sys.version)
@@ -3525,7 +3714,8 @@ def test_onset_version_7():
 #     print("test_array_2 ", test_array_2)
     
     # Change filter to scipy butter to see if onset detection works better
-    filename = "544238.m4a"
+    recording_id = "544238"
+    filename = recording_id + ".m4a"
     recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
     audio_in_path = recordings_folder_with_path + "/" + filename
 
@@ -3539,7 +3729,7 @@ def test_onset_version_7():
 #     y = apply_band_pass_filter(y, sr)
     y = butter_bandpass_filter(y, 600, 1200, sr, order=6)
     
-    y = noise_reduction.noise_reduce(y, sr)
+    y = noise_reduce(y, sr)
     
 #     onsets = find_squawk_location_secs_in_single_recording(y, sr) # Its now time to call the pair_squawks onsets  
 #     
@@ -3549,8 +3739,11 @@ def test_onset_version_7():
 #     onset_frames = librosa.onset.onset_detect(y=y, sr=sr)
     
 #     squawks = FindSquawksTim(y, sr)
-    squawks = find_squawks(y,sr)
+    squawks = find_squawk_location_secs_in_single_recording2(y,sr)
+#     print(len(squawks))
     print(squawks)
+    
+    insert_onset_list_into_db(recording_id, squawks)
 #     print("onset_frames ", onset_frames)
 #     for onset_frame in onset_frames:
 #         print(onset_frame)
