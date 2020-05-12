@@ -430,7 +430,7 @@ class CreateOnsetsPage(tk.Frame):
                
 
         
-        run_button = ttk.Button(self, text="Run", command=lambda: functions.create_onsets_in_local_db_using_recordings_folder())        
+        run_button = ttk.Button(self, text="Run", command=lambda: functions.create_onsets_in_local_db())        
         run_button.grid(column=0, columnspan=1, row=20) 
         
         instructions2_text = """
@@ -450,121 +450,7 @@ class CreateOnsetsPage(tk.Frame):
         back_to_home_button = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(HomePage))                            
         back_to_home_button.grid(column=0, columnspan=1, row=40)                  
 
-# class CreateSpectrogramsPage(tk.Frame):    
-#     
-#     def __init__(self, parent, controller):
-#         tk.Frame.__init__(self, parent)
-#         self.clip_folder = StringVar(value='')       
-#              
-#         title_label = ttk.Label(self, text="Create Spectrograms using ONSETs", font=LARGE_FONT)
-#         title_label.grid(column=0, columnspan=1, row=0)    
-#         
-#         onset_instructions = "Use this page to run the create spectrogram function that will create spectrograms in the spectrogram folder"
-#         msg = tk.Message(self, text = onset_instructions)
-#         msg.config(bg='lightgreen', font=('times', 17), width=1000)
-#         msg.grid(column=0, columnspan=2, row=1)  
-#                 
-#         run_button = ttk.Button(self, text="Run", command=lambda: functions.create_focused_mel_spectrogram_jps_using_onset_pairs())
-#         run_button.grid(column=0, columnspan=1, row=2) 
-#         
-#         spectrogram_folder_instructions = "The spectrograms will be created in the folder: " + base_folder + '/' + run_folder + " This can be changed in the python parameters file"
-#         folder_msg = tk.Message(self, text = spectrogram_folder_instructions)
-#         folder_msg.config(width=600)
-#         folder_msg.grid(column=1, columnspan=1, row=2)    
-# 
-#         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-#         back_to_home_button.grid(column=0, columnspan=1, row=3)                  
 
-# class CreateTagsFromOnsetsPage(tk.Frame):  
-#     
-#     def __init__(self, parent, controller):
-#         tk.Frame.__init__(self, parent)
-#         self.current_onset_array_pos = 0
-#                      
-#         title_label = ttk.Label(self, text="Create Tags From Onsets", font=LARGE_FONT)
-#         title_label.grid(column=0, columnspan=1, row=0)    
-#         
-#         onset_instructions = "Use this page to create Tags from onsets"
-#         
-#         msg = tk.Message(self, text = onset_instructions)
-#         msg.config(bg='lightgreen', font=('times', 16), width=1200)
-#         msg.grid(column=0, columnspan=6, row=1)   
-#         
-#         onset_version_label = ttk.Label(self, text="The version of the onset (field in onset table") 
-#         onset_version_label.grid(column=0, columnspan=1, row=2)       
-#         onset_version = StringVar(value='5')
-#         onset_version_entry = tk.Entry(self,  textvariable=onset_version, width=30)
-#         onset_version_entry.grid(column=1, columnspan=1,row=2)
-#         
-#         recording_id_label = ttk.Label(self, text="Recording Id") 
-#         recording_id_label.grid(column=0, columnspan=1, row=3)            
-#         self.recording_id = StringVar(value='0000000')
-#         self.recording_id_entry = tk.Entry(self,  textvariable=self.recording_id, width=30).grid(column=1, columnspan=1, row=3)
-#         
-#         start_time_label = ttk.Label(self, text="Start Time")
-#         start_time_label.grid(column=2, columnspan=1, row=3)        
-#         self.start_time = StringVar(value='0.0')
-#         self.start_time_entry = tk.Entry(self,  textvariable=self.start_time, width=30).grid(column=3, columnspan=1,row=3)
-#         
-#         load_onsets_button = ttk.Button(self, text="Load Onsets",command=lambda: get_onsets())
-#         load_onsets_button.grid(column=0, columnspan=1, row=4)                        
-# 
-#         self.spectrogram_label = ttk.Label(self, image=None)
-#         self.spectrogram_label.grid(column=0, columnspan=1, row=5)
-#         
-#         self.waveform_label = ttk.Label(self, image=None)
-#         self.waveform_label.grid(column=1, columnspan=1, row=5)
-#         
-#         previous_button = ttk.Button(self, text="Previous", command=lambda: previous_onset())
-#         previous_button.grid(column=0, columnspan=1, row=6)
-#                             
-#         play_button = ttk.Button(self, text="Play", command=lambda: functions.play_clip(str(self.current_onset_recording_id), float(self.current_onset_start_time),self.current_onset_duration))
-#         play_button.grid(column=1, columnspan=1, row=6)
-#                             
-#         next_button = ttk.Button(self, text="Next", command=lambda: next_onset())
-#         next_button.grid(column=2, columnspan=1, row=6)                           
-#                              
-#         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-#         back_to_home_button.grid(column=0, columnspan=1, row=7)    
-#                             
-#         def get_onsets():            
-#             self.onsets = functions.get_onsets_stored_locally(onset_version.get())            
-#             load_current_onset() 
-#             
-#         def next_onset():
-#             if self.current_onset_array_pos < (len(self.onsets)) -1:                        
-#                 self.current_onset_array_pos +=1
-#                 load_current_onset()
-#                
-#         def previous_onset():
-#             if self.current_onset_array_pos > 0:
-#                 self.current_onset_array_pos -=1
-#                 load_current_onset()
-#                 
-#         def play_clip():
-#             functions.play_clip(str(self.current_onset_recording_id), float(self.current_onset_start_time),self.current_onset_duration)
-#                      
-#         def display_images():
-#             self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram(self.current_onset_recording_id, self.current_onset_start_time, self.current_onset_duration)
-#             self.waveform_image = functions.get_single_waveform_image(self.current_onset_recording_id, self.current_onset_start_time, self.current_onset_duration)            
-#             
-#             self.spectrogram_label.config(image=self.spectrogram_image)
-#             self.waveform_label.config(image=self.waveform_image)
-#             
-#         def load_current_onset():
-#             
-#             current_onset = self.onsets[self.current_onset_array_pos]
-#              
-#             self.current_onset_recording_id = current_onset[1]      
-#             self.recording_id.set(self.current_onset_recording_id)
-#              
-#             self.current_onset_start_time = current_onset[2]
-#             self.start_time.set(self.current_onset_start_time)
-#             
-#             self.current_onset_duration = current_onset[3] 
-#                         
-#             threading.Thread(target=play_clip(), args=(1,)).start()
-#             threading.Thread(target=display_images(), args=(1,)).start()      
             
 class EvaluateWekaModelRunResultPage(tk.Frame):    
     
