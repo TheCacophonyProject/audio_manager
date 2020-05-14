@@ -3019,17 +3019,17 @@ def get_model_predictions(recording_id):
     return records
 
 
-def create_features_for_all_version6_onsets_version_2():
+def create_features_for_onsets():
     cur = get_database_connection().cursor()    
 
     # First do the onsets that have been confirmed
-    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NOT NULL AND NOT EXISTS (SELECT onset_id FROM features WHERE onsets.recording_id = features.recording_id AND onsets.start_time_seconds = features.start_time_seconds) ORDER BY recording_id DESC" )
+    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = ? AND actual_confirmed IS NOT NULL AND NOT EXISTS (SELECT onset_id FROM features WHERE onsets.recording_id = features.recording_id AND onsets.start_time_seconds = features.start_time_seconds) ORDER BY recording_id DESC", (str(onset_version)) )
         
     records = cur.fetchall()
     process_onset_features(records, True)
         
     # Now to the rest of the onsets
-    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = 6 AND actual_confirmed IS NULL AND NOT EXISTS (SELECT onset_id FROM features WHERE onsets.recording_id = features.recording_id AND onsets.start_time_seconds = features.start_time_seconds) ORDER BY recording_id DESC" )
+    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = ? AND actual_confirmed IS NULL AND NOT EXISTS (SELECT onset_id FROM features WHERE onsets.recording_id = features.recording_id AND onsets.start_time_seconds = features.start_time_seconds) ORDER BY recording_id DESC", (str(onset_version)))
     
     records = cur.fetchall()
     process_onset_features(records, False)
@@ -3449,4 +3449,53 @@ def test_onset_version_7():
     print(squawks)    
     insert_onset_list_into_db(recording_id, squawks)
 
+def calculate_prediction_accuracy_rates():
+    probability_cutoff_for_tag_creation = 0.7
+    
+    first_test_data_recording_id = 537910
+    last_test_data_recording_id = 563200
+    
+    # First calculate True Positives
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT recording_id, startTime, duration, predictedByModel from model_run_result WHERE predictedByModel = 'morepork_more-pork' AND modelRunName = ? AND probability > ? AND recording_id > ? AND recording_id < ? ORDER BY recording_id DESC", (model_run_name, probability_cutoff_for_tag_creation, first_test_data_recording_id, last_test_data_recording_id))
+    model_predictions = cur.fetchall()
+    number_of_predictions = len(model_predictions)
+    print("There are ", number_of_predictions, " predictions")
+    number_of_true_positves = 0
+    number_of_false_positves = 0
+    for model_prediction in model_predictions:
+#         print(model_prediction)
+        recording_id = model_prediction[0]
+        prediction_startTime = model_prediction[1]
+        duration = model_prediction[2]
+        prediction_endTime = prediction_startTime + duration
+        print("recording_id ",recording_id, "prediction_startTime ", prediction_startTime, "prediction_endTime ", prediction_endTime)
+        
+#         cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds FROM test_data WHERE recording_id = ? AND (what = 'morepork_more-pork' OR what = 'maybe_morepork_more-pork') AND ((start_time_seconds > ? AND start_time_seconds < ?) OR (finish_time_seconds > ? AND finish_time_seconds < ?))", (recording_id, startTime, endTime,  startTime, endTime))
+        cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds FROM test_data WHERE recording_id = ? AND ((? >= start_time_seconds AND ? <= finish_time_seconds) OR (? >= start_time_seconds AND ? <= finish_time_seconds))", (recording_id, prediction_startTime, prediction_startTime, prediction_endTime, prediction_endTime))
+        row = cur.fetchone()
+#         rows = cur.fetchall()
+#         for row in rows:
+#             start_time_seconds = row[1]
+#             finish_time_seconds = row[2]            
+#             
+#             print(recording_id, " Prediction: startTime", prediction_startTime, "endTime ", prediction_endTime, " -- test_data: start_time_seconds ", start_time_seconds, " finish_time_seconds ", finish_time_seconds  )
+            
+        
+        
+        if row == None:            
+            number_of_false_positves += 1
+        else:
+            number_of_true_positves += 1
+#             recording_id = row[0]
+#             start_time_seconds = row[1]
+#             finish_time_seconds = row[2]
+#             print(recording_id, " Prediction: startTime", prediction_startTime, "endTime ", prediction_endTime, " -- test_data: start_time_seconds ",start_time_seconds, " finish_time_seconds ", finish_time_seconds  )
+            
+    print("number_of_false_positves is ", number_of_false_positves)
+    print("number_of_true_positves is ", number_of_true_positves)
+        
+        
+        
+    
     

@@ -31,7 +31,8 @@ public class ClassifyOnsetsDirectFromAudio {
 		try {
 			Connection conn = null;
 			
-			String url = "jdbc:sqlite:/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db3.db";
+//			String url = "jdbc:sqlite:/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db3.db";
+			String url = "jdbc:sqlite:/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2.db";
 			// create a connection to the database
 
 			conn = DriverManager.getConnection(url);
@@ -66,7 +67,7 @@ public class ClassifyOnsetsDirectFromAudio {
 //			sql += "FROM features WHERE rms0 IS NOT NULL AND actual_confirmed = 'morepork_more-pork'";
 //			sql += "FROM features WHERE rms43 IS NOT NULL AND actual_confirmed = 'morepork_more-pork'"; // If rms43 is null, then there isn't a full call/clip so ignore
 			sql += "FROM features WHERE rms43 IS NOT NULL "; // If rms43 is null, then there isn't a full call/clip so ignore
-			
+						
 			sql += "AND NOT EXISTS ( ";
 			// Don't reclassify onsets that have already been classified for this modelRunName
 			sql += "SELECT ID FROM model_run_result WHERE modelRunName = ? AND model_run_result.recording_id = features.recording_id AND model_run_result.startTime = features.start_time_seconds AND model_run_result.duration = features.duration_seconds) ";
@@ -173,10 +174,13 @@ public class ClassifyOnsetsDirectFromAudio {
 			// loop through the result set
 			int processedSoFar = 0;
 			while (rs.next()) {
-				System.out.println("Processed " + processedSoFar + " of " + size);
-				processedSoFar++;
+				
 
 				int recording_id = rs.getInt("recording_id");
+				
+				System.out.println(recording_id + " Processed " + processedSoFar + " of " + size);
+				processedSoFar++;
+				
 				double start_time_seconds = rs.getDouble("start_time_seconds");
 				double duration_seconds = rs.getDouble("duration_seconds");
 				String device_super_name = rs.getString("device_super_name");

@@ -444,8 +444,14 @@ class CreateOnsetsPage(tk.Frame):
         instructions2_text_label = ttk.Label(self, text=instructions2_text)                                                    
         instructions2_text_label.grid(column=0, columnspan=1, row=25) 
         
-        update_button = ttk.Button(self, text="Update Onsets with Edge Histogram Features", command=lambda: functions.update_onsets_with_edge_histogram_features()())        
-        update_button.grid(column=0, columnspan=1, row=30)        
+        fetures_directly_from_audio_button = ttk.Button(self, text="Create Features (directly from audio)", command=lambda: functions.create_features_for_onsets())        
+        fetures_directly_from_audio_button.grid(column=0, columnspan=1, row=30) 
+        
+        edge_histogram_update_button = ttk.Button(self, text="OLD - DO NOT USE - Update Onsets with Edge Histogram Features", command=lambda: functions.update_onsets_with_edge_histogram_features()())        
+        edge_histogram_update_button.grid(column=1, columnspan=1, row=30)          
+        
+        
+        
 
         back_to_home_button = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(HomePage))                            
         back_to_home_button.grid(column=0, columnspan=1, row=40)                  
@@ -1465,11 +1471,13 @@ class CreateTestDataPage(tk.Frame):
             predictionsToDisplay = self.model_must_predict_what_combobox.get()
             
             if predictedByModel == predictionsToDisplay:
+                
+                twenty_percent_of_spectrogram_height = self.spectrogram_image.height() * 0.10
             
                 rectangle_bbox_x1 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(startTime, duration_of_recording, self.spectrogram_image.width())
-                rectangle_bbox_y1 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.min_freq.get()), self.spectrogram_image.height())  
+                rectangle_bbox_y1 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.min_freq.get()) + twenty_percent_of_spectrogram_height, self.spectrogram_image.height())  
                 rectangle_bbox_x2 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(startTime + duration_of_prediction, duration_of_recording, self.spectrogram_image.width())
-                rectangle_bbox_y2 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.max_freq.get()), self.spectrogram_image.height())
+                rectangle_bbox_y2 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.max_freq.get()) - twenty_percent_of_spectrogram_height, self.spectrogram_image.height())
                 
                 fill_colour = functions.get_spectrogram_rectangle_selection_colour(predictedByModel)
                
@@ -1477,13 +1485,13 @@ class CreateTestDataPage(tk.Frame):
                 
             if actual_confirmed:
                 # Going to draw a slightly shorter/wider rectangle
-                ten_percent_of_spectrogram_height = self.spectrogram_image.height() * 0.10
+                thirty_percent_of_spectrogram_height = self.spectrogram_image.height() * 0.30
                 duration_of_prediction = 0.6
                 
                 rectangle2_bbox_x1 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(startTime, duration_of_recording, self.spectrogram_image.width())
-                rectangle2_bbox_y1 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.min_freq.get()) + ten_percent_of_spectrogram_height, self.spectrogram_image.height())  
+                rectangle2_bbox_y1 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.min_freq.get()) + thirty_percent_of_spectrogram_height, self.spectrogram_image.height())  
                 rectangle2_bbox_x2 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(startTime + duration_of_prediction, duration_of_recording, self.spectrogram_image.width())
-                rectangle2_bbox_y2 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.max_freq.get()) - ten_percent_of_spectrogram_height, self.spectrogram_image.height())
+                rectangle2_bbox_y2 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.max_freq.get()) - thirty_percent_of_spectrogram_height, self.spectrogram_image.height())
                 
                 fill_colour2 = functions.get_spectrogram_rectangle_selection_colour(predictedByModel)
                    

@@ -156,10 +156,13 @@ print('boo')
 # functions.copy_actual_confirmed_onset_5_to_onset_6()
 
 # functions.create_features_for_all_version6_onsets_version_2()
+# functions.create_features_for_onsets()
 
-functions.march_test_data_analysis()
+# functions.march_test_data_analysis()
 
 # functions.test_onset_version_7()
+
+functions.calculate_prediction_accuracy_rates()
     
     
     
