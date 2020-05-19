@@ -3496,6 +3496,164 @@ def calculate_prediction_accuracy_rates():
     print("number_of_true_positves is ", number_of_true_positves)
         
         
+def do_rectangle_times_overlap(rectangle_1_start, rectangle_1_finish, rectangle_2_start, rectangle_2_finish):
+    rectangle_1_width = rectangle_1_finish - rectangle_1_start
+    rectangle_2_width = rectangle_2_finish - rectangle_2_start
+    
+    if rectangle_1_width >= rectangle_2_width:
+        # Determine in rectangle 2 start OR finish within rectangle 1 start AND finish
+        if (rectangle_2_start >= rectangle_1_start) and (rectangle_2_start <= rectangle_1_finish):
+            return True
+        if (rectangle_2_finish >= rectangle_1_start) and (rectangle_2_finish <= rectangle_1_finish):
+            return True
+    else:
+        # rectangle_2_width > rectangle_1_width
+        if (rectangle_1_start >= rectangle_2_start) and (rectangle_1_start <= rectangle_2_finish):
+            return True
+        if (rectangle_1_finish >= rectangle_2_start) and (rectangle_1_finish <= rectangle_2_finish):
+            return True
+        
+    return False
+    
+    
+
+def update_model_run_result_actual_confirmed_from_test_data():
+    # This is going to look at all the (morepork) model predictions and see if there is a corresponding actual morepork in the test data
+    # So if a morepork prediction was made, then there is a morepork in the test data, then we have a true positive.
+    # but if a morepork prediction was made, and there is NO corresponding morepork in the test data, then we have a false positive
+    first_test_data_recording_id = 537910
+    last_test_data_recording_id = 563200
+    
+    # First calculate True Positives
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT ID, recording_id, startTime, duration, predictedByModel from model_run_result WHERE predictedByModel = 'morepork_more-pork' AND modelRunName = ? AND recording_id > ? AND recording_id < ? ORDER BY recording_id ASC", (model_run_name, first_test_data_recording_id, last_test_data_recording_id))
+#     cur.execute("SELECT recording_id, startTime, duration, predictedByModel from model_run_result WHERE predictedByModel = 'morepork_more-pork' AND modelRunName = ? AND recording_id = 538472", (model_run_name,))
+   
+    model_predictions = cur.fetchall()
+    number_of_predictions = len(model_predictions)
+    print("There are ", number_of_predictions, " predictions")
+    
+    total_of_true_positives = 0
+    total_of_false_positives = 0
+    
+    for model_prediction in model_predictions:
+        test_data_found_for_prediction = False
+#         print(model_prediction)
+        model_run_result_ID = model_prediction[0]
+        recording_id = model_prediction[1]
+        prediction_startTime = model_prediction[2]
+        duration = model_prediction[3]
+        prediction_endTime = prediction_startTime + duration
+        predictedByModel = model_prediction[4]
+        
+        print("recording_id ",recording_id, "predictedByModel ", predictedByModel, " prediction_startTime ", prediction_startTime, "prediction_endTime ", prediction_endTime)
+        
+#         cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds FROM test_data WHERE recording_id = ? AND (what = 'morepork_more-pork' OR what = 'maybe_morepork_more-pork') AND ((start_time_seconds > ? AND start_time_seconds < ?) OR (finish_time_seconds > ? AND finish_time_seconds < ?))", (recording_id, startTime, endTime,  startTime, endTime))
+        cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds, what FROM test_data WHERE recording_id = ? AND (what = 'morepork_more-pork' OR what = 'maybe_morepork_more-pork') ORDER BY start_time_seconds ASC", (recording_id,))
+        test_data_rows = cur.fetchall() 
+        for test_data_row in  test_data_rows: 
+                     
+            test_data_recording_id = test_data_row[0]            
+            test_data_start_time_seconds =  test_data_row[1]
+            test_data_finish_time_seconds = test_data_row[2]
+            test_data_what = test_data_row[3]
+            print("recording_id ",recording_id, " test_data_start_time_seconds ", test_data_start_time_seconds, "test_data_finish_time_seconds ", test_data_finish_time_seconds, "test_data_what ", test_data_what)  
+            
+            if do_rectangle_times_overlap(prediction_startTime, prediction_endTime, test_data_start_time_seconds, test_data_finish_time_seconds):
+                print("Overlap ", test_data_what)
+                test_data_found_for_prediction = True
+                break
+                
+        if test_data_found_for_prediction:
+            total_of_true_positives += 1  
+            sql = ''' UPDATE model_run_result
+                SET true_positive = 1, actual_confirmed = ?               
+                WHERE ID = ?'''        
+            cur.execute(sql, (test_data_what, model_run_result_ID))        
+            get_database_connection().commit() 
+            
+        else:
+            total_of_false_positives += 1
+            sql = ''' UPDATE model_run_result
+                SET false_positive = 1             
+                WHERE ID = ?'''        
+            cur.execute(sql, (model_run_result_ID,))        
+            get_database_connection().commit()
+            
+    print("total_of_true_positives is ", total_of_true_positives)
+    print("total_of_false_positives is ", total_of_false_positives)
+    
+def update_test_data_analyis():
+    # This is going to look at all the (morepork) test_data and see if the model made a prediction for each of them (and what prediction)
+    # So if the test data has an actual morepork, and the model predicts a morepork, we have a true positive
+    # But if the test data has an actual morepork and the model does NOT have a morepork, then we have false negative
+     
+    first_test_data_recording_id = 537910
+    last_test_data_recording_id = 563200
+    total_of_true_positives = 0
+    total_of_false_negatives = 0
+    
+    
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT ID, recording_id, start_time_seconds, finish_time_seconds, what FROM test_data WHERE what = 'morepork_more-pork' ORDER BY recording_id, start_time_seconds ASC")
+    test_data_rows = cur.fetchall() 
+    number_of_test_data_rows = len(test_data_rows)
+    count = 0    
+    for test_data_row in  test_data_rows:
+        count+=1
+        prediction_found_for_test_data = False
+        test_data_ID = test_data_row[0]           
+        test_data_recording_id = test_data_row[1]            
+        test_data_start_time_seconds =  test_data_row[2]
+        test_data_finish_time_seconds = test_data_row[3]
+        test_data_what = test_data_row[4]
+        print(count, " of ",number_of_test_data_rows, ": recording_id ",test_data_recording_id, " test_data_start_time_seconds ", test_data_start_time_seconds, "test_data_finish_time_seconds ", test_data_finish_time_seconds, "test_data_what ", test_data_what)  
+                 
+        # For each of the test data, look to see there is a prediction
+        cur.execute("SELECT ID, recording_id, startTime, duration, predictedByModel, probability from model_run_result WHERE predictedByModel = 'morepork_more-pork' AND modelRunName = ? AND recording_id = ? ORDER BY recording_id ASC", (model_run_name, test_data_recording_id))
+        model_predictions = cur.fetchall()
+        number_of_predictions = len(model_predictions)
+        for model_prediction in model_predictions:
+            model_run_result_ID = model_prediction[0]
+            recording_id = model_prediction[1]
+            prediction_startTime = model_prediction[2]
+            duration = model_prediction[3]
+            prediction_endTime = prediction_startTime + duration
+            predictedByModel = model_prediction[4]
+            probability = model_prediction[5]
+            
+            print("recording_id ",recording_id, "predictedByModel ", predictedByModel, " prediction_startTime ", prediction_startTime, "prediction_endTime ", prediction_endTime)
+            
+            # Now determine if a prediction overlaps with a test_data
+            if do_rectangle_times_overlap(prediction_startTime, prediction_endTime, test_data_start_time_seconds, test_data_finish_time_seconds):
+                print("Overlap ", test_data_what)
+                prediction_found_for_test_data = True
+                break
+            
+        if prediction_found_for_test_data:
+            total_of_true_positives += 1  
+            true_positive = 1
+            false_negative = 0
+        else:
+            total_of_false_negatives += 1  
+            true_positive = 0
+            false_negative = 1
+            
+                      
+        # Now store or updata database with this information 
+        # https://www.sqlitetutorial.net/sqlite-replace-statement/    
+        # Relies on a unique index in the table on columns modelRunResultRunName and test_data_id       
+        
+        sql = ''' REPLACE INTO test_data_analysis(modelRunResultRunName, recording_id, test_data_id, test_data_start_time_seconds, test_data_finish_time, test_data_what, predictedByModel, probability, true_positive, false_negative)
+              VALUES(?,?,?,?,?,?,?,?,?,?) '''
+        cur = get_database_connection().cursor()
+        cur.execute(sql, (model_run_name, recording_id, test_data_ID, test_data_start_time_seconds, test_data_finish_time_seconds, test_data_what, predictedByModel, probability, true_positive, false_negative))           
+        get_database_connection().commit() 
+        
+       
+        
+    print("total_of_true_positives is ", total_of_true_positives)
+    print("total_of_false_negatives is ", total_of_false_negatives)
         
     
     

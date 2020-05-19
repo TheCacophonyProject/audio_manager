@@ -162,7 +162,11 @@ print('boo')
 
 # functions.test_onset_version_7()
 
-functions.calculate_prediction_accuracy_rates()
+# functions.calculate_prediction_accuracy_rates()
+
+# functions.update_model_run_result_actual_confirmed_from_test_data()
+
+functions.update_test_data_analyis()
     
     
     
