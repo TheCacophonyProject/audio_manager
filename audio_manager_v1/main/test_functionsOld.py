@@ -149,39 +149,7 @@ print('boo')
 
 # functions.create_onsets_in_local_db_version_6(544235)
 
-# functions.test_create_onsets_in_local_db()
-
-# functions.create_features_version_2(1, float(0.7))
-
-# functions.copy_actual_confirmed_onset_5_to_onset_6()
-
-# functions.create_features_for_all_version6_onsets_version_2()
-# functions.create_features_for_onsets()
-
-# functions.march_test_data_analysis()
-
-# functions.test_onset_version_7()
-
-# functions.calculate_prediction_accuracy_rates()
-
-# functions.update_model_run_result_actual_confirmed_from_test_data()
-
-# functions.update_test_data_analyis()
+functions.test_create_onsets_in_local_db()
     
-# functions.update_model_run_result_analysis()
-
-# functions.update_model_run_result_actual_confirmed_from_test_data()
-
-# functions.test_data_analysis_using_version_7_onsets_with_spectrogram_based_prediction()
-
-# functions.create_spectrogram_images_for_tensorflow()
-
-# functions.call_split_data()
-
-
-
-# functions.tensorflow_hello_world()
-
-functions.run_tensorflow()
-
+    
     

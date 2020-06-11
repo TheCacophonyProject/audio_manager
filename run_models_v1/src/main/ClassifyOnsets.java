@@ -31,7 +31,8 @@ public class ClassifyOnsets {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
-		String modelRunName = "2020_02_08_1"; // Change this to same as parameters.modelRunName in python code
+//		String modelRunName = "2020_02_08_1"; // Change this to same as parameters.modelRunName in python code
+		String modelRunName = "2020_06_05_1"; // Change this to same as parameters.modelRunName in python code
 		
 		
 		
@@ -98,6 +99,10 @@ public class ClassifyOnsets {
 					"FROM onsets " +
 
 					"WHERE MPEG7_Edge_Histogram0 IS NOT NULL " +
+					
+					"AND version = 7 " +
+					
+					"AND recording_id >= 537910 AND recording_id <= 563200 " +  // Just do the test data
 					
 					"AND NOT EXISTS ( " +
 						// Don't reclassify onsets that have already been classified for this modelRunName

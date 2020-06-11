@@ -1,6 +1,5 @@
 import sys
 
-
 # model_run_name='2019_11_28_1'
 # model_run_name='2019_12_03_1'
 # model_run_name='2019_12_05_1'
@@ -13,9 +12,7 @@ import sys
 # model_run_name='2020_01_28_1'
 # model_run_name='2020_01_28_2'
 # model_run_name='2020_02_01_1'
-# model_run_name='2020_02_08_1' # this is the latest model for using edge histogram / spectrogram
-# model_run_name='2020_05_04_1' # This is the latest model for features directly from librosa
-model_run_name='2020_06_05_1' # This is a copy of 2020_02_08_1 - the latest edge histogram / spectrogram.  Copied here to use for assessing the version 7 onsets. The model is exactly the same as that in 2020_02_08_1
+model_run_name='2020_02_08_1'
 
 
 model_version = '000002' # update this to be the same as the name of the model stored in the model_run_result folder. Cacophony API says: version (hex coded, e.g. 0x0110 would be v1.10)
@@ -26,9 +23,6 @@ predictedByModel_tag_to_create = 'morepork_more-pork'
 
 recordings_for_creating_test_data_start_date = '2020-03-01'
 recordings_for_creating_test_data_end_date = '2020-04-01' # Note, this will be interpreted as the first second of the day, so won't include results for this day.
-
-first_test_data_recording_id = 537910
-last_test_data_recording_id = 563200
 
 #### Cacophony Server Configuration
 server_endpoint = 'https://api.cacophony.org.nz' # Production
@@ -54,8 +48,6 @@ devices_endpoint = '/api/v1/devices'
 #downloaded_recordings_folder = '/home/tim/Work/Cacophony/downloaded_recordings/all_recordings'
 
 base_folder = '/home/tim/Work/Cacophony'
-
-
 downloaded_recordings_folder = 'downloaded_recordings/all_recordings' # All the recordings
 # downloaded_recordings_folder = 'downloaded_recordings/temp_for_testing' # Use this if doing a test
 #run_folder = 'Analysis_5' # Change this when doing a new analyis
@@ -93,7 +85,7 @@ list_of_tags_folder = 'list_of_tags'
 files_for_testing_folder = 'files_for_testing'
 tagged_recordings_folder = 'wavfiles'
 version = '5'
-onset_version = '7'
+onset_version = '6'
 initial_locatation_for_choosing_arff_file_dialog = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs/"
 
 squawk_duration_seconds = 0.8
@@ -128,15 +120,8 @@ search_path = '/home/tim/Work/Cacophony/opensmile_weka/TestAudioInput'
 arff_path = '/home/tim/Work/Cacophony/opensmile_weka/TestAudioOutput'
 
 
-db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2.db"
-
 # db_file = "/home/tim/Work/Cacophony/eclipse-workspace/audio_manager_v1/audio_analysis_db2.db"
-# db_file = "/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db2.db"
-# db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2_clone_test.db"
-# db_file = "/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db3.db"
-# db_file = "/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db2.db"
-# db_file = "/home/tim/Work/Cacophony/Audio_Analysis/temp/audio_analysis_db4.db"
-# db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2_a.db"
+db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2.db"
 
 # test_data_canvas_width = 500
 # test_data_canvas_height = 2000
@@ -147,11 +132,3 @@ test_data_canvas_height = 1000
 test_data_canvas_width = 2455
 
 conn = None
-
-
-# tensorflow_run_name = '2020_06_08_1'
-# tensorflow_run_name = '2020_06_10_1'
-# tensorflow_run_folder = base_folder + '/Audio_Analysis/audio_classifier_runs/tensorflow_runs' + '/' + tensorflow_run_name
-tensorflow_spectrogram_images = base_folder + '/Audio_Analysis/audio_classifier_runs/tensorflow_runs/images_morepork_other'
-
-

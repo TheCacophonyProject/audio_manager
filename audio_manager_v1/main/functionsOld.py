@@ -2,10 +2,6 @@
 import main.parameters as parameters
 from main.parameters import *
 
-import scipy
-
-
-
 import sqlite3
 from sqlite3 import Error
 import requests
@@ -21,7 +17,6 @@ from scipy import signal
 from scipy.signal import butter, lfilter, freqz
 import numpy as np
 from scipy.ndimage.filters import maximum_filter
-from scipy.signal import butter, lfilter
 # import pylab
 import matplotlib.pyplot as plt
 import librosa.display
@@ -38,22 +33,6 @@ from datetime import datetime
 import time
 from pytz import timezone
 from pytz import all_timezones
-
-import tensorflow as tf
-
-
-import zipfile
-import random
-
-from tensorflow.keras.optimizers import RMSprop
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras import regularizers
-
-from shutil import copyfile
-
-# from google.colab import files
-from keras.preprocessing import image
 
 
 # db_file = "/home/tim/Work/Cacophony/eclipse-workspace/audio_manager_v1/audio_analysis_db2.db"
@@ -904,8 +883,7 @@ def update_onsets_with_edge_histogram_features():
         return  
     
     cur = get_database_connection().cursor()
-#     cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds  FROM onsets WHERE MPEG7_Edge_Histogram0 IS NULL ORDER BY recording_id DESC")
-    cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds FROM onsets WHERE recording_id >= ? AND recording_id <= ? AND VERSION = 7 AND MPEG7_Edge_Histogram0 IS NULL ORDER BY recording_id DESC", (first_test_data_recording_id, last_test_data_recording_id))
+    cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds  FROM onsets WHERE MPEG7_Edge_Histogram0 IS NULL ORDER BY recording_id DESC")
 #     cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds  FROM onsets WHERE MPEG7_Edge_Histogram0 IS NULL AND device_super_name = 'chow' ORDER BY recording_id DESC")
 
    
@@ -913,25 +891,16 @@ def update_onsets_with_edge_histogram_features():
     number_of_onsets = len(onsetsWithNoEdgeHistogramData)
     count = 0
     print('Processing onsets with with No EdgeHistogram Data')
-    previous_recording_id = -1
-    y = None
-    sr = None
     for onsetWithNoEdgeHistogramData in onsetsWithNoEdgeHistogramData:
         count += 1        
         
         ID = onsetWithNoEdgeHistogramData[0]
         recording_id = onsetWithNoEdgeHistogramData[1]
-        
-        if recording_id != previous_recording_id:
-            print("recording_id changed from ", previous_recording_id, " to ", recording_id)
-            y, sr = get_recording_array(recording_id)
-            
-        
         start_time_seconds = onsetWithNoEdgeHistogramData[2]
         duration_seconds = onsetWithNoEdgeHistogramData[3]  
         
         print('Processing onset', count, ' of ', number_of_onsets)
-        create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds, y, sr)
+        create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds)
                 
         os.chdir(model_folder)  
         command = ['java', '--add-opens=java.base/java.lang=ALL-UNNAMED', '-jar', 'getEdgeHistogramFeatures.jar', 'shell=True']     
@@ -1130,20 +1099,9 @@ def update_onsets_with_edge_histogram_features():
                
             get_database_connection().commit()
             
-            previous_recording_id = recording_id
-            
         else:
             print(result.stderr)
            
-def get_recording_array(recording_id):
-    recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
-    filename = str(recording_id) + ".m4a"
-    audio_in_path = recordings_folder_with_path + "/" + filename
-    y, sr = librosa.load(audio_in_path)    
-    return y, sr
-    
-    
-
 def classify_onsets_using_weka_model_helper(onset, model_folder):     
     print('onset', onset)
     recording_id = onset[0]
@@ -1336,18 +1294,28 @@ def apply_band_pass_filter(y, sr):
     return y
    
    
-def create_onsets_in_local_db():
+def create_onsets_in_local_db_using_recordings_folder():
     
-    cur = get_database_connection().cursor()  
-
-    total_onset_pairs_including_more_than_40 = 0
-    total_onset_pairs_including_not_including_more_40 = 0    
-       
     # First need to find out what recordings have previously been used to create onsets - as we don't want to repeat
-    cur.execute("SELECT recording_id, filename,  recordingDateTime FROM recordings WHERE processed_for_onsets IS NOT ? ORDER BY recording_id DESC", (onset_version,))
-    recordings_with_no_onsets = cur.fetchall()
-    print('There are ', len(recordings_with_no_onsets), ' recordings with no ', onset_version, ' onsets')     
     
+    cur = get_database_connection().cursor()
+  
+#     recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+#     total_number_of_files = len(os.listdir(recordings_folder_with_path))
+    total_onset_pairs_including_more_than_40 = 0
+    total_onset_pairs_including_not_including_more_40 = 0
+    
+    # https://stackoverflow.com/questions/2686254/how-to-select-all-records-from-one-table-that-do-not-exist-in-another-table
+    # It is possible that some recordings will not produce any onsets, so will also write to recording table that the recording has been processed.
+    # Perhaps if I was starting again, I could drop the sub query (if I update the recordings db so show that the old ones have been processed.
+
+#     cur.execute("SELECT recording_id, filename,  recordingDateTime FROM recordings WHERE processed_for_onsets IS NULL AND recording_id NOT IN (SELECT recording_id FROM onsets) ORDER BY recording_id DESC")
+    cur.execute("SELECT recording_id, filename,  recordingDateTime FROM recordings WHERE processed_for_onsets IS NOT ? ORDER BY recording_id aSC", (onset_version,))
+    recordings_with_no_onsets = cur.fetchall()
+    print('There are ', len(recordings_with_no_onsets), ' recordings with no onsets')     
+      
+    
+
     count = 0
     number_of_recordings_with_no_onsets = len(recordings_with_no_onsets)
     for recording_with_no_onsets in recordings_with_no_onsets: 
@@ -1359,9 +1327,10 @@ def create_onsets_in_local_db():
             
             print('Processing ',count, ' of ', number_of_recordings_with_no_onsets)
             print('Recording id is ', recording_with_no_onsets) 
-            count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 = create_onsets_in_local_db_for_recording(filename)
+            count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 = create_onsets_in_local_db(filename)
             
             # Update recordings table to show that this recording has been processed for onsets
+#             cur2 = get_database_connection().cursor()
             cur.execute("UPDATE recordings SET processed_for_onsets = ? WHERE recording_id = ?", (onset_version, recording_id,))  
             get_database_connection().commit()
             
@@ -1373,12 +1342,55 @@ def create_onsets_in_local_db():
 #             print(e, '\n')
             print('Error processing file ', recording_id, '\n')
             cur.execute("UPDATE recordings SET processed_for_onsets = -1 WHERE recording_id = ?", (recording_id,))  
-            get_database_connection().commit()    
+            get_database_connection().commit()
+    
 
-     
-def create_onsets_in_local_db_for_recording(filename): 
+    
+    
+# def create_onsets_in_local_db(filename): 
+#     try:
+#         recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+#         
+#         count_of_onset_pairs_including_more_than_40 = 0
+#         count_of_onset_pairs_including_not_including_more_40 = 0
+#         
+#         audio_in_path = recordings_folder_with_path + "/" + filename
+#         
+#         # Some recordings are not available
+#         if not os.path.isfile(audio_in_path):
+#             print("This recording is not available ", filename)
+#             # Update the db to say that it has been processed
+#             
+#             
+#             
+#         
+#         y, sr = librosa.load(audio_in_path)
+#         y = apply_band_pass_filter(y, sr)            
+#     
+#         onsets = find_paired_squawks_in_single_recordings(y, sr) # Its now time to call the pair_squawks onsets
+#         #print('paired_squawks_sec', paired_squawks_sec)
+#         number_of_onsets = len(onsets)
+#         if not number_of_onsets == 0:
+#             if number_of_onsets > 40:
+#                 count_of_onset_pairs_including_more_than_40 += number_of_onsets
+#             else:                
+#                 
+#                 count_of_onset_pairs_including_more_than_40 += number_of_onsets
+#                 count_of_onset_pairs_including_not_including_more_40 += number_of_onsets                        
+#            
+#                 recording_id = filename.split('.')[0]  
+# 
+#                 insert_onset_list_into_db(onset_version, recording_id, onsets)
+#                 
+#         return count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 
+# 
+#     except Exception:
+# #         print(e, '\n')
+#         pass
+    
+def create_onsets_in_local_db(filename): 
     try:
-
+#         filename = "168718.m4a"
         recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
         
         count_of_onset_pairs_including_more_than_40 = 0
@@ -1392,11 +1404,10 @@ def create_onsets_in_local_db_for_recording(filename):
             # Update the db to say that it has been processed
    
         y, sr = librosa.load(audio_in_path)
-        y_filtered = butter_bandpass_filter(y, 600, 1200, sr, order=6)    
-        y_filtered_and_noise_reduced = noise_reduce(y_filtered, sr)
+        y = apply_band_pass_filter(y, sr)            
     
-        onsets = find_squawk_location_secs_in_single_recording(y_filtered_and_noise_reduced,sr)          
-    
+        onsets = find_squawk_location_secs_in_single_recording(y, sr) # Its now time to call the pair_squawks onsets
+        #print('paired_squawks_sec', paired_squawks_sec)
         number_of_onsets = len(onsets)
         if not number_of_onsets == 0:
             if number_of_onsets > 40:
@@ -1407,13 +1418,41 @@ def create_onsets_in_local_db_for_recording(filename):
                 count_of_onset_pairs_including_not_including_more_40 += number_of_onsets                        
            
                 recording_id = filename.split('.')[0]  
+
                 insert_onset_list_into_db(recording_id, onsets)
                 
         return count_of_onset_pairs_including_more_than_40, count_of_onset_pairs_including_not_including_more_40 
 
     except Exception:
+#         print(e, '\n')
         pass
-                    
+    
+# def create_onsets_in_local_db_version_6(recording_id): 
+# #     24/4/20 Found that version 5 of onset detection (my modified version of Chris's code) missed lots of moreporks
+# #     Try other ways....
+#     try:
+#         version = onset_version
+#         recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
+#         audio_in_path = recordings_folder_with_path + '/' + str(recording_id) + '.m4a'        
+#         
+#         y, sr = librosa.load(audio_in_path)
+#         y = apply_band_pass_filter(y, sr)            
+#     
+#         onset_frames = librosa.onset.onset_detect(y=y, sr=sr)
+#         onset_locations = librosa.frames_to_time(onset_frames, sr=sr)
+#         i = 0
+#         for onset_location in onset_locations:
+#             i+=1
+#             print(str(i) + " Onset found at: ", onset_location)
+# 
+#                 
+#                 
+#         
+# 
+#     except Exception as e:
+#         print(e, '\n')
+        
+                
 def insert_onset_list_into_db(recording_id, onsets):
     global squawk_duration_seconds
     prev_onset = -1
@@ -1429,6 +1468,36 @@ def insert_onset_list_into_db(recording_id, onsets):
                 prev_onset = onset 
                 insert_onset_into_database(onset_version, recording_id, onset, squawk_duration_seconds)
                 print("Inserting onset into database " , onset)
+                
+
+    
+
+def find_paired_squawks_in_single_recordings(y, sr):
+
+    squawks = FindSquawks(y, sr)
+    squawks_secs = []
+
+    for squawk in squawks:
+        squawk_start = squawk['start']
+        squawk_start_sec = squawk_start / sr
+        squawks_secs.append(round(squawk_start_sec, 1))
+      
+    paired_squawks_sec = []
+    prev_squawk_sec = None
+    
+    for squawk_sec in enumerate(squawks_secs):      
+        if prev_squawk_sec == None:
+            prev_squawk_sec = squawk_sec
+            continue     
+        
+        time_between_squawks = squawk_sec[1] - prev_squawk_sec[1]
+        
+        if time_between_squawks < 0.8: # sr is one second, so hoping this is the second part of more pork
+            paired_squawks_sec.append(prev_squawk_sec[1])
+        
+        prev_squawk_sec = squawk_sec
+        
+    return paired_squawks_sec
 
 def find_squawk_location_secs_in_single_recording(y, sr):
 
@@ -1442,8 +1511,6 @@ def find_squawk_location_secs_in_single_recording(y, sr):
         
     return squawks_secs
 
-
-
 def FindSquawks(source, sampleRate):
     result = []
     source = source / max(source)
@@ -1451,7 +1518,6 @@ def FindSquawks(source, sampleRate):
     stopIndex = None
     smallTime = int(sampleRate*0.1)
     tolerance = 0.2
-    
     for index in range(source.shape[0]):
         if not startIndex:
             if abs(source[index]) > tolerance:
@@ -1470,10 +1536,9 @@ def FindSquawks(source, sampleRate):
             startIndex = None
     return result
 
-
 def rms(x):
-    """Root-Mean-Square."""
-    return np.sqrt(x.dot(x) / x.size)
+        # Root-Mean-Square
+    return np.sqrt(x.dot(x)/x.size)
 
 def create_focused_mel_spectrogram_jps_using_onset_pairs():
     mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + spectrograms_for_model_creation_folder 
@@ -1668,7 +1733,20 @@ def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_i
        
         image_out_path = temp_display_images_folder_path + '/' + image_out_name
         
-        y, sr = librosa.load(audio_in_path, sr=None) 
+        y, sr = librosa.load(audio_in_path, sr=None)     
+# #         mel_spectrogram = librosa.feature.melspectrogram(y, sr=sr, n_mels=32, fmin=min_freq,fmax=max_freq) 
+#         D = np.abs(librosa.stft(y))
+#         
+#         plt.axis('off') # no axis                
+#         plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge   
+#         
+# #         librosa.display.specshow(librosa.amplitude_to_db(D,ref=np.max),  cmap='binary', y_axis='linear', x_axis='time')
+#         librosa.display.specshow(D,  cmap='binary', y_axis='linear', x_axis='time')
+#         
+# #         https://github.com/librosa/librosa/issues/331
+# #         plt.ylim([min_freq,max_freq])
+#         plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+#         plt.close()
 
         mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=min_freq,fmax=max_freq)
          
@@ -1684,20 +1762,22 @@ def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_i
         print(e, '\n')
         print('Error processing onset ', onset)
         
-def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds, y, sr):
+def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_time_seconds, duration_seconds):
 
     mel_spectrograms_out_folder_path = base_folder + '/' + run_folder + '/' + weka_model_folder + '/' + single_spectrogram_for_classification_folder 
     if not os.path.exists(mel_spectrograms_out_folder_path):
         os.makedirs(mel_spectrograms_out_folder_path)  
  
-    try:        
-
+    try:
+        
+        audio_filename = str(recording_id) + '.m4a'
+        audio_in_path = base_folder + '/' + downloaded_recordings_folder + '/' +  audio_filename 
         image_out_name = 'input_image.jpg'
-         
+#         print('image_out_name', image_out_name)           
        
         image_out_path = mel_spectrograms_out_folder_path + '/' + image_out_name
         
-#         y, sr = librosa.load(audio_in_path, sr=None)      
+        y, sr = librosa.load(audio_in_path, sr=None)      
                
         start_time_seconds_float = float(start_time_seconds)            
         
@@ -1712,14 +1792,13 @@ def create_single_focused_mel_spectrogram_for_model_input(recording_id, start_ti
         plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
         librosa.display.specshow(mel_spectrogram, cmap='binary') #https://matplotlib.org/examples/color/colormaps_reference.html
         plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
-        plt.close()       
-
+        plt.close()
+        
+#         return get_image(image_out_path)
         
     except Exception as e:
         print(e, '\n')
         print('Error processing onset ', onset)
-        
-
            
 def get_single_waveform_image(recording_id, start_time_seconds, duration_seconds):
 
@@ -1808,6 +1887,8 @@ def get_unique_locations(table_name):
         
     return unique_locations  
 
+
+
     
 def create_arff_file_for_weka_image_filter_input(test_arff):
     
@@ -1818,13 +1899,16 @@ def create_arff_file_for_weka_image_filter_input(test_arff):
         f= open(run_folder_path + '/' + arff_file_for_weka_model_testing,"w+")
     else:        
         spectrograms_folder_path = run_folder_path + '/' + spectrograms_for_model_creation_folder 
-        f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+")     
+        f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+") 
+    
    
+#     f= open(run_folder_path + '/' + arff_file_for_weka_model_creation,"w+")
     f.write('@relation ' + relation_name + '\r\n')
     f.write('@attribute filename string' + '\r\n')
     # Add in the device super names attribute
     # Get list of unique 
     cur = get_database_connection().cursor()    
+#     cur.execute("select distinct device_super_name from model_run_result where modelRunName = ?", (model_run_name,))    
     cur.execute("select distinct device_super_name from recordings") # This means that any device has had recordings downloaded will be included in arff file header. Previously I was using model_run_result, which wouldn't have new names.   
     device_super_names = cur.fetchall()
     numberOfSuperNames = len(device_super_names)
@@ -2194,7 +2278,16 @@ def create_arff_file_for_weka(test_arff, firstDate, lastDate):
                 confirmedOnset[81] + '\r\n')        # This is confirmed sound/class type   
         f_csv_file_for_keeping_track_of_onsets_used_to_create_model.write(parameters.model_run_name + "," + str(confirmedOnset[82]) + "," + str(confirmedOnset[83]) + '\r\n') 
      
-           
+   
+#     for filename in os.listdir(spectrograms_folder_path):
+#         filename_parts = filename.split('$')
+#         deviceSuperName = filename_parts[0]
+#         class_type = filename_parts[1]
+#         print('image', filename)
+#         print('class_type', class_type)
+# #         f.write(filename +',' + class_type + '\r\n')deviceSuperName
+#         f.write(filename +',' + deviceSuperName +',' + class_type + '\r\n')
+        
     f.close()
     f_csv_file_for_keeping_track_of_onsets_used_to_create_model.close();
           
@@ -2231,6 +2324,8 @@ def get_single_recording_info_from_local_db(recording_id):
     date_time_obj = datetime.strptime(recordingDateTime, "%Y-%m-%dT%H:%M:%S.000Z")    
     date_time_obj_Zulu = timezone('Zulu').localize(date_time_obj)
 
+#     fmt = "%Y-%m-%d %H:%M:%S %Z%z"
+#     fmt = "%Y-%m-%d %H:%M:%S"
     fmt = "%Y-%m-%d %H:%M"
     
     date_time_obj_NZ = date_time_obj_Zulu.astimezone(timezone('Pacific/Auckland'))
@@ -2360,7 +2455,8 @@ def create_local_tags_from_model_run_result():
     # This will create tags on the local db for using the latest model_run_result
     # Only model_run_results with a probablility >= probability_cutoff_for_tag_creation will used
     cur = get_database_connection().cursor()
-
+#     cur.execute("SELECT modelRunName, recording_id, startTime, duration, predictedByModel, probability, actual_confirmed, device_super_name, device_name FROM model_run_result WHERE probability >= ? AND modelRunName = ? AND predictedByModel = ?", (probability_cutoff_for_tag_creation, model_run_name, predictedByModel_tag_to_create)) 
+    
     sql = '''
         SELECT model_run_result.modelRunName, model_run_result.recording_id, model_run_result.startTime, model_run_result.duration, model_run_result.predictedByModel, model_run_result.probability, model_run_result.actual_confirmed, model_run_result.device_super_name, model_run_result.device_name 
         FROM model_run_result 
@@ -2369,7 +2465,7 @@ def create_local_tags_from_model_run_result():
                                                                                             WHERE tags.recording_Id = model_run_result.recording_id AND tags.startTime = model_run_result.startTime AND tags.what = model_run_result.predictedByModel AND tags.modelRunName = model_run_result.modelRunName AND tags.version = ?)
         '''
      
-
+#     cur.execute(sql, (probability_cutoff_for_tag_creation, model_run_name, predictedByModel_tag_to_create))
     cur.execute(sql, (probability_cutoff_for_tag_creation, model_run_name, predictedByModel_tag_to_create, model_version))  
    
     model_run_results = cur.fetchall()
@@ -2388,7 +2484,19 @@ def create_local_tags_from_model_run_result():
             probability = model_run_result[5] # probability
             actual_confirmed = model_run_result[6]
             device_super_name = model_run_result[7]
-            device_name = model_run_result[8]    
+            device_name = model_run_result[8]
+            
+#             cur2 = get_database_connection().cursor()
+#             sql2 = '''
+#                 SELECT ID FROM tags
+#                 WHERE recording_Id = ? AND startTime = ? AND what = ? AND modelRunName = ? AND version = ?
+#                 '''
+#             cur2.execute(sql2, (recording_id, startTime, predictedByModel, modelRunName, model_version))
+#             
+#             tags_count = cur2.fetchall()
+#             if len(tags_count) > 0:
+#                 print("There is already a tag for ", recording_id, " ", startTime, " ", predictedByModel, " ", model_version, " ", modelRunName )
+#                 continue
               
             automatic = 'True'
             created_locally = 1 # 1 is true as using integer in db
@@ -2401,13 +2509,15 @@ def create_local_tags_from_model_run_result():
             # If actual_confirmed is NOT NULL, then only create a tag if actual_confirmed == predictedByModel
             if actual_confirmed:
                 if actual_confirmed != predictedByModel:
+#                     print(actual_confirmed, ' ', predictedByModel)
                     print("The model predicted ", predictedByModel, " but the actual_confirmed is ", actual_confirmed, " so a tag will NOT be created")
-
+#                     print('actual_confirmed != predictedByModel')
                     continue # Don't create tag if actual_confirmed is not the same as predicted (I'm not tempted to upload actual_confirmed, as this would make model look better than it is)
                 else:
                     count_of_tags_created +=1
                     print('Inserting tag ', count_of_tags_created, ' for: ', recording_id, ' ', predictedByModel)
-                    confirmed_by_human = 1                 
+                    confirmed_by_human = 1
+                 
             
             cur1 = get_database_connection().cursor()
            
@@ -2573,7 +2683,8 @@ def update_model_run_results_with_onsets_used_to_create_model(model_run_name, cs
             # now update model_run_result
             cur = get_database_connection().cursor()                
             cur.execute("UPDATE model_run_result SET used_to_create_model = 1 WHERE modelRunName = ? AND recording_id = ? AND startTime = ?", (model_run_name, recording_id, start_time))  
-                                    
+            
+                        
             get_database_connection().commit()  
                 
             line = fp.readline()
@@ -2657,6 +2768,9 @@ def add_device_names_to_arff():
 
 def create_input_arff_file_for_single_onset_prediction(output_filename_path, device_super_name_for_this_onset):
     
+#     arff_filename_path = model_folder + '/' + weka_input_arff_filename 
+    
+#     output_filename_path = parameters.base_folder + '/' + parameters.run_folder + '/weka_model/input.arff'
     f_output_filename_path=open(output_filename_path,'w+')
     f_output_filename_path.write('@relation morepork_more-pork_vs\n')
     f_output_filename_path.write('@attribute filename string\n')
@@ -2685,9 +2799,13 @@ def create_input_arff_file_for_single_onset_prediction(output_filename_path, dev
     
     f_output_filename_path.write('@attribute class {' + class_names +'}' + '\r\n')
     f_output_filename_path.write('@data' + '\r\n')  
-    f_output_filename_path.write('input_image.jpg,' + device_super_name_for_this_onset + ',unknown' + '\r\n')       
+#     f_output_filename_path.write('input_image.jpg,unknown' + '\r\n')
+    f_output_filename_path.write('input_image.jpg,' + device_super_name_for_this_onset + ',unknown' + '\r\n')    
+   
     
     f_output_filename_path.close()
+
+
 
 
 def update_onsets_with_datetime():
@@ -2715,7 +2833,7 @@ def update_onsets_with_datetime():
         count+=1
         get_database_connection().commit() 
     
-
+#     get_database_connection().commit()    
              
         
 def find_suitable_probability_cutoff():
@@ -2815,9 +2933,23 @@ def get_recording_position_in_seconds(x_mouse_pos, x_scroll_bar_minimum, x_scrol
     print("x clicked at ", recording_pos_seconds, ' seconds')
     return round(recording_pos_seconds,1)
 
+# def get_recording_position_in_hertz(y_mouse_pos, y_scroll_bar_minimum, y_scroll_bar_maximum, canvas_height, recording_maximum_freq):
+#     recording_pos_hertz = recording_maximum_freq - ((((y_mouse_pos/canvas_height) * (y_scroll_bar_maximum - y_scroll_bar_minimum)) + y_scroll_bar_minimum) * recording_maximum_freq)
+#     
+#     return int(recording_pos_hertz)
+
+# def get_recording_position_in_hertz(y_mouse_pos, y_scroll_bar_minimum, y_scroll_bar_maximum, canvas_height, recording_minimum_freq, recording_maximum_freq):
+#     recording_pos_hertz = recording_maximum_freq - ((((y_mouse_pos/canvas_height) * (y_scroll_bar_maximum - y_scroll_bar_minimum)) + y_scroll_bar_minimum) * (recording_maximum_freq - recording_minimum_freq))    
+#     return int(recording_pos_hertz)
+
 def get_recording_position_in_hertz(y_mouse_pos, canvas_height, recording_minimum_freq, recording_maximum_freq):
     recording_pos_hertz = recording_maximum_freq - ((y_mouse_pos/canvas_height) * (recording_maximum_freq - recording_minimum_freq))
-    return int(recording_pos_hertz)    
+    return int(recording_pos_hertz)
+    
+# def spectrogram_clicked_at(x_mouse_pos, x_scroll_bar_minimum, x_scroll_bar_maximum, canvas_width):
+#     x_position_percent = (((x_mouse_pos/canvas_width) * (x_scroll_bar_maximum - x_scroll_bar_minimum)) + x_scroll_bar_minimum)
+# #     print("x_position_percent ", x_position_percent)
+#     return x_position_percent
 
 def get_spectrogram_clicked_at_y_percent(y_mouse_pos,canvas_height):
     return y_mouse_pos/canvas_height
@@ -2876,7 +3008,8 @@ def convert_x_or_y_postion_percent_to_x_or_y_spectrogram_image_postion(spectrogr
 def save_spectrogram_selection(selection_to_save):
     print("selection_to_save ", selection_to_save)
     
-def insert_test_data_into_database(recording_id, start_time_seconds, finish_time_seconds, lower_freq_hertz, upper_freq_hertz, what ):    
+def insert_test_data_into_database(recording_id, start_time_seconds, finish_time_seconds, lower_freq_hertz, upper_freq_hertz, what ):
+    
     
     cur1 = get_database_connection().cursor()
     cur1.execute("SELECT device_super_name, device_name, recordingDateTime, recordingDateTimeNZ FROM recordings WHERE recording_id = ?", (recording_id,)) 
@@ -2920,11 +3053,20 @@ def retrieve_recordings_for_creating_test_data(what_filter):
     lastDate = recordings_for_creating_test_data_end_date 
     
     cur = get_database_connection().cursor()
-    # https://stackoverflow.com/questions/8187288/sql-select-between-dates
+    # https://stackoverflow.com/questions/8187288/sql-select-between-dates    
+#     cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")      
+    
+#     if what_filter is None:
+#         cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recordingDateTime ASC")
+#     else:
+#         cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' and recording_id NOT IN (SELECT recording_id FROM test_data_recording_analysis WHERE recording_id = recording_id and what = 'morepork_more-pork') order by recordingDateTime ASC") 
+#                
+#     records = cur.fetchall()
 
     if what_filter is None:
         cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration, device_super_name from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' order by recording_id ASC")
     else:
+#         cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration, device_super_name from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' and recording_id NOT IN (SELECT recording_id FROM test_data_recording_analysis WHERE recording_id = recording_id and what = 'morepork_more-pork') order by recording_id ASC") 
         cur.execute("select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration, device_super_name from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' and recording_id NOT IN (SELECT recording_id FROM test_data_recording_analysis WHERE recording_id = recording_id and what = '" + what_filter + "') order by recording_id ASC") 
                
     records = cur.fetchall()
@@ -2941,7 +3083,8 @@ def retrieve_recordings_for_evaluating_test_validation_data(include_all_test_val
     probability_cutoff_float = float(probability_cutoff)
     
     sqlBuilding = "select recording_id, datetime(recordingDateTime,'localtime') as recordingDateTimeNZ, device_name, duration, device_super_name from " + table_name + " where nightRecording = 'true' and recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "'"
-        
+    
+    
     if not include_all_test_validation_recordings:        
     
         if include_recordings_with_model_predictions:
@@ -2952,14 +3095,17 @@ def retrieve_recordings_for_evaluating_test_validation_data(include_all_test_val
            
                 
         if include_recordings_that_have_been_manually_analysed:
-            sqlBuilding += " AND recording_id IN (SELECT recording_id FROM test_data)"       
+            sqlBuilding += " AND recording_id IN (SELECT recording_id FROM test_data)"
             
+    
+        
     sqlBuilding += " ORDER BY recording_id ASC"    
-       
+   
+    
     print("The sql is: ", sqlBuilding)
     cur = get_database_connection().cursor()
     cur.execute(sqlBuilding)
-
+#     cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = '2019_12_11_1' ORDER BY recording_id DESC, startTime ASC")
     rows = cur.fetchall()
     return rows
     
@@ -2980,7 +3126,8 @@ def retrieve_recordings_except_test_validation_data(model_must_predict_what):
     cur.execute(sqlBuilding)
     rows = cur.fetchall()
     
-    return rows     
+    return rows
+     
    
 def mark_recording_as_analysed(recording_id, what):
     try: 
@@ -3015,20 +3162,24 @@ def has_this_recording_been_analysed_for_this(recording_id, what_to_filter_on):
         print(e, '\n')
 
 def get_spectrogram_rectangle_selection_colour(what):
+#     what = "morepork_more-pork"
     # http://www.science.smith.edu/dftwiki/index.php/Color_Charts_for_TKinter
     switcher = {
         "morepork_more-pork": "green",
         "maybe_morepork_more-pork":"yellow",
         "morepork_more-pork_part":"blue",
-        "cow": "dark orange"        
+        "cow": "dark orange"
+        
     }
+#     print("It was ", switcher.get(what, "blue"))
     return switcher.get(what, "red")
     
 def get_model_predictions(recording_id):
     table_name = 'model_run_result'        
     
-    cur = get_database_connection().cursor()    
-
+    cur = get_database_connection().cursor()
+    
+#     cur.execute("select startTime, duration, predictedByModel, probability from " + table_name + " where recording_id = ? and modelRunName = ?", (recording_id, model_run_name) )
     cur.execute("select startTime, duration, predictedByModel, probability, actual_confirmed from " + table_name + " where recording_id = ? and modelRunName = ?", (recording_id, model_run_name) )
    
     records = cur.fetchall()
@@ -3036,1320 +3187,3 @@ def get_model_predictions(recording_id):
     return records
 
 
-def create_features_for_onsets():
-    cur = get_database_connection().cursor()    
-
-    # First do the onsets that have been confirmed
-    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = ? AND actual_confirmed IS NOT NULL AND NOT EXISTS (SELECT onset_id FROM features WHERE onsets.recording_id = features.recording_id AND onsets.start_time_seconds = features.start_time_seconds) ORDER BY recording_id DESC", (str(onset_version)) )
-        
-    records = cur.fetchall()
-    process_onset_features(records, True)
-        
-    # Now to the rest of the onsets
-    cur.execute("select ID, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime FROM ONSETs WHERE version = ? AND actual_confirmed IS NULL AND NOT EXISTS (SELECT onset_id FROM features WHERE onsets.recording_id = features.recording_id AND onsets.start_time_seconds = features.start_time_seconds) ORDER BY recording_id DESC", (str(onset_version)))
-    
-    records = cur.fetchall()
-    process_onset_features(records, False)
-
-        
-def process_onset_features(records, confirmed):
-    number_of_records = len(records)
-    
-    count = 0
-    
-    previous_recording_id = -1 # Only going to read recording from file once - ie if it has changed since last row result
-    y_filtered = None
-    sr = None
-    for record in records:
-        count+=1
-        if confirmed:
-            print(count, " of (confirmed) ", number_of_records)
-        else:
-            print(count, " of (not confirmed) ", number_of_records)
-            
-        recording_id = record[1]
-        if recording_id != previous_recording_id:
-            print("recording_id to process changed from ", previous_recording_id, " to ", recording_id)
-            y_filtered, sr  = get_filtered_recording(recording_id)            
-            
-        create_features_for_single_onset_version_2(record[0], recording_id, record[2], record[3], record[4], record[5], record[6], record[7], y_filtered, sr)
-        previous_recording_id = recording_id
-    
-
-def get_filtered_recording(recording_id):
-    recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
-    filename = str(recording_id) + ".m4a"
-    audio_in_path = recordings_folder_with_path + "/" + filename
-    y, sr = librosa.load(audio_in_path)
-    y_filtered = apply_band_pass_filter(y, sr)
-    return y_filtered, sr
-             
-def create_features_for_single_onset_version_2(onset_id, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime, y_filtered, sr):
-    
-    start_time_seconds_float = float(start_time_seconds)   
-         
-    try:
-        
-        start_position_array = int(sr * start_time_seconds_float)              
-                   
-        end_position_array = start_position_array + int((sr * 1.0))                  
-                    
-        y_part = y_filtered[start_position_array:end_position_array]  
-                
-        rms = librosa.feature.rms(y=y_part)
-        
-        spectral_centroid = librosa.feature.spectral_centroid(y=y_part, sr=sr)
-        
-        spectral_bandwidth = librosa.feature.spectral_bandwidth(y=y_part, sr=sr)
-        
-        spectral_rolloff = librosa.feature.spectral_rolloff(y=y_part, sr=sr)
-        
-        zero_crossing_rate = librosa.feature.zero_crossing_rate(y_part)  
-        
-        number_of_frames = rms.shape[1]
-        
-
-        print("number_of_frames ", number_of_frames)
-
-        sqlBuilding = "INSERT INTO features (onset_id, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime"
-        for i in range(number_of_frames):
-            sqlBuilding += ", rms" + str(i) 
-            
-        for i in range(number_of_frames):
-            sqlBuilding += ", spectral_centroid" + str(i)
-            
-        for i in range(number_of_frames):
-            sqlBuilding += ", spectral_bandwidth" + str(i)
-            
-        for i in range(number_of_frames):
-            sqlBuilding += ", spectral_rolloff" + str(i)
-            
-        for i in range(number_of_frames):
-            sqlBuilding += ", zero_crossing_rate" + str(i)
-        
-        
-        sqlBuilding += ")"
-        sqlBuilding += " VALUES("
-        
-        sqlBuilding += str(onset_id) + ","
-        sqlBuilding += str(recording_id) + ","
-        sqlBuilding += str(start_time_seconds) + ","
-        sqlBuilding += "'" + str(actual_confirmed) + "'" + ","
-        
-        sqlBuilding += "'" + str(device_super_name) + "'" + ","
-        sqlBuilding += "'" + str(device_name) + "'" + ","
-        sqlBuilding += str(duration_seconds) + ","
-        sqlBuilding += "'" + str(recordingDateTime) + "'"
-        
-        for i in range(number_of_frames):
-            sqlBuilding += "," + "'" + str(rms[0][i]) + "'"
-         
-        for i in range(number_of_frames):
-            sqlBuilding += "," + "'" + str(spectral_centroid[0][i]) + "'"
-            
-        for i in range(number_of_frames):
-            sqlBuilding += "," + "'" + str(spectral_bandwidth[0][i]) + "'"
-            
-        for i in range(number_of_frames):
-            sqlBuilding += "," + "'" + str(spectral_rolloff[0][i]) + "'"
-            
-        for i in range(number_of_frames):
-            sqlBuilding += "," + "'" + str(zero_crossing_rate[0][i]) + "'"
-            
-        sqlBuilding += ")"        
-
-        
-        cur = get_database_connection().cursor()
-        cur.execute(sqlBuilding)
-        get_database_connection().commit()        
-
-    except Exception as e:
-        print(e)
-      
-# def copy_actual_confirmed_onset_5_to_onset_6():
-#     cur = get_database_connection().cursor()
-#     cur.execute("SELECT actual_confirmed, recording_id, start_time_seconds from onsets WHERE version = 5 AND actual_confirmed IS NOT NULL")
-#     records = cur.fetchall()
-#     for record in records:
-#         print(record)
-#         cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE actual_confirmed IS NULL AND version = 6 AND recording_id = ? AND start_time_seconds = ?", (record[0], record[1], record[2]) )
-#         get_database_connection().commit() 
-#         
-#     print("Finished")
-#     
-# def update_ver_6_onsets_with_ver_5():
-#     cur = get_database_connection().cursor()
-# #     cur.execute("SELECT * from onsets WHERE version = 5")
-# #     records_ver_5 = cur.fetchall()
-# #     print("Number of records is ", len(records_ver_5))
-# #     for record_ver_5 in records_ver_5:        
-# #         print(record_ver_5)
-# #         recording_id = record_ver_5[2]
-# #         print(recording_id)
-# #         
-# #         start_time_seconds = record_ver_5[3]
-# #         print(start_time_seconds)
-#         
-#         
-#     cur.execute("SELECT * from onsets WHERE version = 6 AND MPEG7_Edge_Histogram0 IS NULL")
-#     records_ver_6 = cur.fetchall()
-#     for record_ver_6 in records_ver_6:
-#         print(record_ver_6)
-#         recording_id_ver_6 = record_ver_6[2]
-#         print(recording_id_ver_6)
-#         start_time_seconds = record_ver_6[3]
-#         print(start_time_seconds)
-#         
-#         cur.execute("SELECT * from onsets WHERE version = 5 AND recording_id = ? AND start_time_seconds = start_time_seconds", (recording_id_ver_6,))
-#         records_ver_5 = cur.fetchall()
-#         print("Number of records is ", len(records_ver_5))
-#         for record_ver_5 in records_ver_5: 
-#             print(record_ver_5)
-#             cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE actual_confirmed IS NULL AND version = 6 AND recording_id = ? AND start_time_seconds = ?", (record[0], record[1], record[2]) )
-#             
-
-def march_test_data_analysis():
-    cur = get_database_connection().cursor()
-    cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds from test_data WHERE what = 'morepork_more-pork'")
-    test_data_records = cur.fetchall()
-    number_of_test_data = len(test_data_records)
-    print("Number of records is ", number_of_test_data)
-    count_of_test_data_with_ver_5_onset = 0
-    count_of_test_data_with_ver_6_onset = 0
-    count_of_test_data_with_ver_7_onset = 0
-    record_count = 0
-    for test_data_record in test_data_records:  
-        record_count +=1      
-        print("Processing ", record_count, " of ", number_of_test_data, ": ", test_data_record)
-        recording_id = test_data_record[0]
-#         print(recording_id)
-        test_data_start_time_seconds = test_data_record[1]
-#         print(test_data_start_time_seconds)
-        test_data_finish_time_seconds = test_data_record[2]
-#         print(test_data_finish_time_seconds)
-        
-        cur.execute("SELECT recording_id, start_time_seconds, version from onsets WHERE recording_id = ? AND start_time_seconds > ? AND start_time_seconds < ?", (recording_id, test_data_start_time_seconds, test_data_finish_time_seconds))
-        onset_records = cur.fetchall()
-        for onset_record in onset_records:  
-            recording_id = onset_record[0]
-            start_time_seconds = onset_record[1]
-            version = onset_record[2]
-            print("recording_id = ", recording_id, " start_time_seconds = ", start_time_seconds," version = ", version," test_data_start_time_seconds = ", test_data_start_time_seconds," test_data_finish_time_seconds = ", test_data_finish_time_seconds)
-            if version == '5':
-                count_of_test_data_with_ver_5_onset += 1
-            if version == '6':
-                count_of_test_data_with_ver_6_onset += 1
-            if version == '7':
-                count_of_test_data_with_ver_7_onset += 1
-       
-    print(count_of_test_data_with_ver_5_onset, " of the test data had a version 5 onset")
-    print(count_of_test_data_with_ver_6_onset, " of the test data had a version 6 onset")
-    print(count_of_test_data_with_ver_7_onset, " of the test data had a version 7 onset")
-    
-
-def butter_bandpass(lowcut, highcut, fs, order=5):
-    nyq = 0.5 * fs
-    low = lowcut / nyq
-    high = highcut / nyq
-    b, a = butter(order, [low, high], btype='band')
-    return b, a
-
-
-def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
-    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
-    y = lfilter(b, a, data)
-    return y
-
-
-
-
-def paired_item(source):
-    source_iter = iter(source)
-    while True:
-        try:
-            yield next(source_iter).item(), next(source_iter).item()
-        except StopIteration:
-            return
-
-def merge_paired_short_time(udarray, small_time):
-    paired_iter = paired_item(udarray)
-    r = None
-    for s in paired_iter:
-        if not r:
-            r = s
-        elif s[0] < r[1] + small_time:
-            r = r[0], s[1]
-        else:
-            yield r
-            r = s
-    if r:
-        yield r
-
-
-
-class window_helper:
-    cache = {}
-  
-#     def construct_window(self, width, family, scale):
-    def construct_window(self,width, family, scale):
-        if family == 'bartlett':
-            return np.bartlett(width) * scale
-  
-        if family == 'blackman':
-            return np.blackman(width) * scale
-  
-        if family == 'hamming':
-            return np.hamming(width) * scale
-  
-        if family == 'hann':
-            import scipy.signal
-            return scipy.signal.hann(width) * scale
-  
-        if family == 'hanning':
-            return np.hanning(width) * scale
-  
-        if family == 'kaiser':
-            beta = 14
-            return np.kaiser(width, beta) * scale
-  
-        if family == 'tukey':
-            import scipy.signal
-            return scipy.signal.tukey(width) * scale
-  
-        print('window family %s not supported' % family)
-  
-
-    def get_window(self, key):      
-        if not key in self.cache:
-                self.cache[key] = self.construct_window(*key)                
-        return window_helper.cache[key]
-    
-def check_python_version():
-    if sys.version_info[0] < 3:
-        print('python version 2 not supported, try activate virtualenv or run setup.')
-        sys.exit()
-
-def get_window_const(width, family, scale=1.0):
-    check_python_version()
-    a_window_helper = window_helper()    
-    return a_window_helper.get_window((width, family, scale))
-    
-
-class spectrogram_helper:
-    def __init__(self, source_pad, spectrogram, stride, sample_rate):
-        self.spectrogram = spectrogram
-        (self.block_count, dct_width) = spectrogram.shape
-        self.stride = stride
- 
-        window_c = get_window_const(dct_width, 'tukey')
- 
-        for index in range(self.block_count):
-            block_index = index * stride
-            block = source_pad[block_index:block_index + dct_width] * window_c
-            dct = scipy.fft.dct(block)
-            spectrogram[index] = dct
- 
-        self.buckets = []
-        msw = 50 * sample_rate // stride
-        max_spec_width = min(msw, self.block_count)
-        division_count = max(int((self.block_count * 1.7) / max_spec_width), 1)
-        for i in range(division_count):
-            t0 = 0
-            if i:
-                t0 = (self.block_count - max_spec_width) * \
-                    i // (division_count - 1)
-            t1 = min(t0 + max_spec_width, self.block_count)
-            self.buckets.append((t0, t1))
- 
-        self.currentBucket = -2
- 
-    def get_tolerance(self, index):
-        qb = (index, index, index)
-        q = min(self.buckets, key=lambda x: abs(x[0] + x[1] - 2 * index))
-        if self.currentBucket != q:
-            self.currentBucket = q
-            (t0, t1) = q
-            bin_medians = np.median(abs(self.spectrogram[t0:t1, ]), axis=0)
-            self.tolerance = 4 * \
-                np.convolve(bin_medians, np.ones(8) / 8)[4:-3]
- 
-        return self.tolerance
-
-def noise_reduce_dct(source, sample_rate):
-    original_sample_count = source.shape[0]
-    dct_width = 2048
-
-    trim_width = int(dct_width / 8)
-    stride = dct_width - trim_width * 3
-
-    block_count = (original_sample_count + stride - 1) // stride
-    source_pad = np.pad(source, (stride, stride * 2), 'reflect')
-
-    #print('Building spectrogram')
-    spectrogram = np.empty((block_count, dct_width))
-
-    sph = spectrogram_helper(source_pad, spectrogram, stride, sample_rate)
-
-    # anything below bass_cut_off_freq requires specialised techniques
-    bass_cut_off_freq = 100
-    bass_cut_off_band = bass_cut_off_freq * 2 * dct_width // sample_rate
-
-    spectrogram_trimmed = np.empty((block_count, dct_width))
-    rms_tab = np.empty(block_count)
-
-    for index in range(block_count):
-        dct = spectrogram[index]
-
-        mask = np.ones_like(dct)
-        mask[:bass_cut_off_band] *= 0
-
-        rms_tab[index] = rms(dct * mask)
-
-        tolerance = sph.get_tolerance(index)
-        for band in range(dct_width):
-            if abs(dct[band]) < tolerance[band]:
-                mask[band] *= 0.0
-
-        maskCon = 10 * np.convolve(mask, np.ones(8) / 8)[4:-3]
-
-        maskBin = np.where(maskCon > 0.1, 0, 1)
-        spectrogram_trimmed[index] = maskBin
-
-    rms_cutoff = np.median(rms_tab)
-
-    result_pad = np.zeros_like(source_pad)
-    for index in range(1, block_count - 1):
-        dct = spectrogram[index]
-
-        trim3 = spectrogram_trimmed[index - 1] * \
-            spectrogram_trimmed[index] * spectrogram_trimmed[index + 1]
-        dct *= (1 - trim3)
-
-        if rms(dct) < rms_cutoff:
-            continue  # too soft
-
-#         rt = scipy.fftpack.idct(dct) / (dct_width * 2)
-        rt = scipy.fft.idct(dct) / (dct_width * 2)
-
-        block_index = index * stride
-        result_pad[block_index + trim_width * 1:block_index + trim_width *
-                   2] += rt[trim_width * 1:trim_width * 2] * np.linspace(0, 1, trim_width)
-        result_pad[block_index +
-                   trim_width *
-                   2:block_index +
-                   trim_width *
-                   6] = rt[trim_width *
-                           2:trim_width *
-                           6]  # *numpy.linspace(1,1,stride8*4)
-        result_pad[block_index + trim_width * 6:block_index + trim_width *
-                   7] = rt[trim_width * 6:trim_width * 7] * np.linspace(1, 0, trim_width)
-
-    result = result_pad[stride:stride + original_sample_count]
-    return result
-
-def noise_reduce(source, sample_rate):
-    return noise_reduce_dct(source, sample_rate)
-
-def test_onset_version_7():
-    print(sys.version)        
-    
-    recording_id = "544238"
-    filename = recording_id + ".m4a"
-    recordings_folder_with_path = base_folder + '/' + downloaded_recordings_folder
-    audio_in_path = recordings_folder_with_path + "/" + filename
-
-    y, sr = librosa.load(audio_in_path)
-    y = butter_bandpass_filter(y, 600, 1200, sr, order=6)    
-    y = noise_reduce(y, sr)    
-
-    squawks = find_squawk_location_secs_in_single_recording(y,sr)
-    print(squawks)    
-    insert_onset_list_into_db(recording_id, squawks)
-
-def calculate_prediction_accuracy_rates():
-    probability_cutoff_for_tag_creation = 0.7
-    
-    first_test_data_recording_id = 537910
-    last_test_data_recording_id = 563200
-    
-    # First calculate True Positives
-    cur = get_database_connection().cursor()
-    cur.execute("SELECT recording_id, startTime, duration, predictedByModel from model_run_result WHERE predictedByModel = 'morepork_more-pork' AND modelRunName = ? AND probability > ? AND recording_id > ? AND recording_id < ? ORDER BY recording_id DESC", (model_run_name, probability_cutoff_for_tag_creation, first_test_data_recording_id, last_test_data_recording_id))
-    model_predictions = cur.fetchall()
-    number_of_predictions = len(model_predictions)
-    print("There are ", number_of_predictions, " predictions")
-    number_of_true_positves = 0
-    number_of_false_positves = 0
-    for model_prediction in model_predictions:
-#         print(model_prediction)
-        recording_id = model_prediction[0]
-        prediction_startTime = model_prediction[1]
-        duration = model_prediction[2]
-        prediction_endTime = prediction_startTime + duration
-        print("recording_id ",recording_id, "prediction_startTime ", prediction_startTime, "prediction_endTime ", prediction_endTime)
-        
-#         cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds FROM test_data WHERE recording_id = ? AND (what = 'morepork_more-pork' OR what = 'maybe_morepork_more-pork') AND ((start_time_seconds > ? AND start_time_seconds < ?) OR (finish_time_seconds > ? AND finish_time_seconds < ?))", (recording_id, startTime, endTime,  startTime, endTime))
-        cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds FROM test_data WHERE recording_id = ? AND ((? >= start_time_seconds AND ? <= finish_time_seconds) OR (? >= start_time_seconds AND ? <= finish_time_seconds))", (recording_id, prediction_startTime, prediction_startTime, prediction_endTime, prediction_endTime))
-        row = cur.fetchone()
-#         rows = cur.fetchall()
-#         for row in rows:
-#             start_time_seconds = row[1]
-#             finish_time_seconds = row[2]            
-#             
-#             print(recording_id, " Prediction: startTime", prediction_startTime, "endTime ", prediction_endTime, " -- test_data: start_time_seconds ", start_time_seconds, " finish_time_seconds ", finish_time_seconds  )
-            
-        
-        
-        if row == None:            
-            number_of_false_positves += 1
-        else:
-            number_of_true_positves += 1
-#             recording_id = row[0]
-#             start_time_seconds = row[1]
-#             finish_time_seconds = row[2]
-#             print(recording_id, " Prediction: startTime", prediction_startTime, "endTime ", prediction_endTime, " -- test_data: start_time_seconds ",start_time_seconds, " finish_time_seconds ", finish_time_seconds  )
-            
-    print("number_of_false_positves is ", number_of_false_positves)
-    print("number_of_true_positves is ", number_of_true_positves)
-        
-        
-def do_rectangle_times_overlap(rectangle_1_start, rectangle_1_finish, rectangle_2_start, rectangle_2_finish):
-    rectangle_1_width = rectangle_1_finish - rectangle_1_start
-    rectangle_2_width = rectangle_2_finish - rectangle_2_start
-    
-    if rectangle_1_width >= rectangle_2_width:
-        # Determine in rectangle 2 start OR finish within rectangle 1 start AND finish
-        if (rectangle_2_start >= rectangle_1_start) and (rectangle_2_start <= rectangle_1_finish):
-            return True
-        if (rectangle_2_finish >= rectangle_1_start) and (rectangle_2_finish <= rectangle_1_finish):
-            return True
-    else:
-        # rectangle_2_width > rectangle_1_width
-        if (rectangle_1_start >= rectangle_2_start) and (rectangle_1_start <= rectangle_2_finish):
-            return True
-        if (rectangle_1_finish >= rectangle_2_start) and (rectangle_1_finish <= rectangle_2_finish):
-            return True
-        
-    return False
-    
-    
-
-# def update_model_run_result_actual_confirmed_from_test_data():
-#     # This is going to look at all the (morepork) model predictions and see if there is a corresponding actual morepork in the test data
-#     # So if a morepork prediction was made, then there is a morepork in the test data, then we have a true positive.
-#     # but if a morepork prediction was made, and there is NO corresponding morepork in the test data, then we have a false positive
-#     first_test_data_recording_id = 537910
-#     last_test_data_recording_id = 563200
-#     
-#   
-#     cur = get_database_connection().cursor()
-#     cur.execute("SELECT ID, recording_id, startTime, duration, predictedByModel from model_run_result WHERE predictedByModel = 'morepork_more-pork' AND modelRunName = ? AND recording_id > ? AND recording_id < ? ORDER BY recording_id ASC", (model_run_name, first_test_data_recording_id, last_test_data_recording_id))
-# 
-#     model_predictions = cur.fetchall()
-#     number_of_predictions = len(model_predictions)
-#     print("There are ", number_of_predictions, " predictions")
-#     
-#     total_of_true_positives = 0
-#     total_of_false_positives = 0
-#     
-#     for model_prediction in model_predictions:
-#         test_data_found_for_prediction = False
-# #         print(model_prediction)
-#         model_run_result_ID = model_prediction[0]
-#         recording_id = model_prediction[1]
-#         prediction_startTime = model_prediction[2]
-#         duration = model_prediction[3]
-#         prediction_endTime = prediction_startTime + duration
-#         predictedByModel = model_prediction[4]
-#         
-#         print("recording_id ",recording_id, "predictedByModel ", predictedByModel, " prediction_startTime ", prediction_startTime, "prediction_endTime ", prediction_endTime)
-#         
-# #         cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds FROM test_data WHERE recording_id = ? AND (what = 'morepork_more-pork' OR what = 'maybe_morepork_more-pork') AND ((start_time_seconds > ? AND start_time_seconds < ?) OR (finish_time_seconds > ? AND finish_time_seconds < ?))", (recording_id, startTime, endTime,  startTime, endTime))
-#         cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds, what FROM test_data WHERE recording_id = ? AND (what = 'morepork_more-pork' OR what = 'maybe_morepork_more-pork') ORDER BY start_time_seconds ASC", (recording_id,))
-#         test_data_rows = cur.fetchall() 
-#         for test_data_row in  test_data_rows: 
-#                      
-#             test_data_recording_id = test_data_row[0]            
-#             test_data_start_time_seconds =  test_data_row[1]
-#             test_data_finish_time_seconds = test_data_row[2]
-#             test_data_what = test_data_row[3]
-#             print("recording_id ",recording_id, " test_data_start_time_seconds ", test_data_start_time_seconds, "test_data_finish_time_seconds ", test_data_finish_time_seconds, "test_data_what ", test_data_what)  
-#             
-#             if do_rectangle_times_overlap(prediction_startTime, prediction_endTime, test_data_start_time_seconds, test_data_finish_time_seconds):
-#                 print("Overlap ", test_data_what)
-#                 test_data_found_for_prediction = True
-#                 break
-#                 
-#         if test_data_found_for_prediction:
-#             total_of_true_positives += 1  
-#             sql = ''' UPDATE model_run_result
-#                 SET true_positive = 1, actual_confirmed = ?               
-#                 WHERE ID = ?'''        
-#             cur.execute(sql, (test_data_what, model_run_result_ID))        
-#             get_database_connection().commit() 
-#             
-#         else:
-#             total_of_false_positives += 1
-#             sql = ''' UPDATE model_run_result
-#                 SET false_positive = 1             
-#                 WHERE ID = ?'''        
-#             cur.execute(sql, (model_run_result_ID,))        
-#             get_database_connection().commit()
-#             
-#     print("total_of_true_positives is ", total_of_true_positives)
-#     print("total_of_false_positives is ", total_of_false_positives)
-    
-def update_model_run_result_analysis():
-    # This is going to look at all the model predictions (which indirectly means all onsets) and see if and what the corresponding test_data is
-    # If model predicts a morepork, and test data has either a morepork, or maybe_morepork, then it is a True Positive
-    # If a morepork prediction was made, and there is NO corresponding morepork in the test data, then we have a False Positive
-    # If a non morepork prediction was made, and either there is no entry in the test_data, or the test_data has an entry which is NOT morepork, then it is a True Negative
-    
-    
-    
-    
-    # So if a morepork prediction was made, then there is a morepork in the test data, then we have a true positive.
-    # but if a morepork prediction was made, and there is NO corresponding morepork in the test data, then we have a false positive
-    first_test_data_recording_id = 537910
-    last_test_data_recording_id = 563200
-    
-  
-    cur = get_database_connection().cursor()
-#     cur.execute("SELECT ID, recording_id, startTime, duration, predictedByModel from model_run_result WHERE predictedByModel = 'morepork_more-pork' AND modelRunName = ? AND recording_id > ? AND recording_id < ? ORDER BY recording_id ASC", (model_run_name, first_test_data_recording_id, last_test_data_recording_id))
-    cur.execute("SELECT ID, recording_id, startTime, duration, predictedByModel, probability from model_run_result WHERE modelRunName = ? AND recording_id > ? AND recording_id < ? ORDER BY recording_id ASC", (model_run_name, first_test_data_recording_id, last_test_data_recording_id))
-
-    model_predictions = cur.fetchall()
-    number_of_predictions = len(model_predictions)
-    print("There are ", number_of_predictions, " predictions")
-    
-    total_of_true_positives = 0
-    total_of_false_positives = 0
-    total_of_true_negatives = 0
-   
-    count = 0
-    for model_prediction in model_predictions:
-        count+=1
-        print(count, " of ", number_of_predictions)
-        
-        true_positive = 0 
-        false_positive = 0
-        true_negative = 0
-#         false_negative = 0
-        test_data_found_for_prediction = False
-#         print(model_prediction)
-        model_run_result_ID = model_prediction[0]
-        recording_id = model_prediction[1]
-        prediction_startTime = model_prediction[2]
-        prediction_duration = model_prediction[3]
-        prediction_endTime = prediction_startTime + prediction_duration
-        predictedByModel = model_prediction[4]
-        probability = model_prediction[5]
-        
-        #print("recording_id ",recording_id, "predictedByModel ", predictedByModel, " prediction_startTime ", prediction_startTime, "prediction_endTime ", prediction_endTime)
-        
-#         cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds FROM test_data WHERE recording_id = ? AND (what = 'morepork_more-pork' OR what = 'maybe_morepork_more-pork') AND ((start_time_seconds > ? AND start_time_seconds < ?) OR (finish_time_seconds > ? AND finish_time_seconds < ?))", (recording_id, startTime, endTime,  startTime, endTime))
-        cur.execute("SELECT ID, recording_id, start_time_seconds, finish_time_seconds, what FROM test_data WHERE recording_id = ? AND (what = 'morepork_more-pork' OR what = 'maybe_morepork_more-pork') ORDER BY start_time_seconds ASC", (recording_id,))
-        test_data_rows = cur.fetchall() 
-        
-        for test_data_row in  test_data_rows: 
-            test_data_ID = test_data_row[0]         
-            test_data_recording_id = test_data_row[1]            
-            test_data_start_time_seconds =  test_data_row[2]
-            test_data_finish_time_seconds = test_data_row[3]
-            test_data_what = test_data_row[4]
-#             print("recording_id ",recording_id, " test_data_start_time_seconds ", test_data_start_time_seconds, "test_data_finish_time_seconds ", test_data_finish_time_seconds, "test_data_what ", test_data_what)  
-            
-            if do_rectangle_times_overlap(prediction_startTime, prediction_endTime, test_data_start_time_seconds, test_data_finish_time_seconds):
-                print("Overlap ", test_data_what)
-                test_data_found_for_prediction = True
-                break
-            
-        if test_data_found_for_prediction:
-            # As there is test data for this prediction, we need to check what the prediction is against the test data
-            if predictedByModel == 'morepork_more-pork':                
-                if (test_data_what == 'morepork_more-pork' or test_data_what == 'maybe_morepork_more-pork'):
-                    # Predicted morepork, and test_data says it really is
-                    total_of_true_positives +=1
-                    true_positive = 1 
-                    false_positive = 0
-                    true_negative = 0
-                    print("Count of true positives ", total_of_true_positives)
-                else:
-                    # Predicted morepork, and test_data says it isn't
-                    total_of_false_positives +=1
-                    true_positive = 0 
-                    false_positive = 1
-                    true_negative = 0
-                    print("Count of false positives ", total_of_false_positives)
-                    
-                    
-            else:
-                # The prediction was NOT morepork, so need to check if the test data that was found agrees
-                # If test_data says it was a morepork then this is a false negative
-                # but if the test data said it wasn't a morepork, then this is a True Negative
-                if test_data_what == 'morepork_more-pork':
-                    true_positive = 0 
-                    false_positive = 0
-                    true_negative = 0
-                    print("A false negative, but not counting these as it won't find them all - Need to query the test_data table and find test_data with no and incorrect predictions")
-                else:
-                    # The prediction was NOT a morepork, and the test_data at this location was also NOT a morepork, so a True Negative
-                    total_of_true_negatives +=1
-                    true_positive = 0 
-                    false_positive = 0
-                    true_negative = 1
-                    print("Count of true negatives ", total_of_true_negatives)
-                    
-            cur = get_database_connection().cursor()
-                           
-            sql = ''' REPLACE INTO model_run_result_analysis (modelRunName, recording_id, prediction_startTime, prediction_duration, predictedByModel, probability, test_data_ID, test_data_what, test_data_start_time_seconds, test_data_finish_time_seconds, true_positive, false_positive, true_negative)
-              VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) '''   
-            cur.execute(sql, (model_run_name, recording_id, prediction_startTime, prediction_duration, predictedByModel, probability, test_data_ID, test_data_what, test_data_finish_time_seconds, test_data_finish_time_seconds, true_positive, false_positive, true_negative))  
-            get_database_connection().commit() 
-                    
-        else:
-            # No test data was found for this prediction
-            # If prediction was morepork, then it is a false positive
-            # but if the prediction was not morepork, then it is a true negative
-            if predictedByModel == 'morepork_more-pork':
-                # If prediction was morepork, then it is a false positive
-                total_of_false_positives +=1
-                true_positive = 0 
-                false_positive = 1
-                true_negative = 0
-            else:
-                # but if the prediction was not morepork, then it is a true negative
-                total_of_true_negatives +=1
-                true_positive = 0 
-                false_positive = 0
-                true_negative = 1
-                
-                            
-           
-            cur = get_database_connection().cursor()
-                    
-            sql = ''' REPLACE INTO model_run_result_analysis (modelRunName, recording_id, prediction_startTime, prediction_duration, predictedByModel, probability,true_positive, false_positive, true_negative)
-              VALUES(?,?,?,?,?,?,?,?,?) '''
-            cur.execute(sql, (model_run_name, recording_id, prediction_startTime, prediction_duration, predictedByModel, probability, true_positive, false_positive, true_negative)) 
-            get_database_connection().commit()
-        
-         
-        
-
-    print("total_of_true_positives is ", total_of_true_positives)
-    print("total_of_false_positives is ", total_of_false_positives)
-    print("total_of_true_negatives is ", total_of_true_negatives)
-    
-def update_test_data_analyis():
-    # This is going to look at all the (morepork) test_data and see if the model made a prediction for each of them (and what prediction)
-    # So if the test data has an actual morepork, and the model predicts a morepork, we have a true positive
-    # But if the test data has an actual morepork and the model does NOT have a morepork, then we have false negative
-     
-#     first_test_data_recording_id = 537910
-#     last_test_data_recording_id = 563200
-    total_of_true_positives = 0
-    total_of_false_negatives = 0
-    
-    
-    cur = get_database_connection().cursor()
-    cur.execute("SELECT ID, recording_id, start_time_seconds, finish_time_seconds, what FROM test_data WHERE what = 'morepork_more-pork' ORDER BY recording_id, start_time_seconds ASC")
-    test_data_rows = cur.fetchall() 
-    number_of_test_data_rows = len(test_data_rows)
-    count = 0    
-    for test_data_row in  test_data_rows:
-        count+=1
-        prediction_found_for_test_data = False
-        test_data_ID = test_data_row[0]           
-        test_data_recording_id = test_data_row[1]            
-        test_data_start_time_seconds =  test_data_row[2]
-        test_data_finish_time_seconds = test_data_row[3]
-        test_data_what = test_data_row[4]
-        print(count, " of ",number_of_test_data_rows, ": recording_id ",test_data_recording_id, " test_data_start_time_seconds ", test_data_start_time_seconds, "test_data_finish_time_seconds ", test_data_finish_time_seconds, "test_data_what ", test_data_what)  
-                 
-        # For each of the test data, look to see there is a prediction
-        cur.execute("SELECT ID, recording_id, startTime, duration, predictedByModel, probability from model_run_result WHERE predictedByModel = 'morepork_more-pork' AND modelRunName = ? AND recording_id = ? ORDER BY recording_id ASC", (model_run_name, test_data_recording_id))
-        model_predictions = cur.fetchall()
-        number_of_predictions = len(model_predictions)
-        for model_prediction in model_predictions:
-            model_run_result_ID = model_prediction[0]
-            recording_id = model_prediction[1]
-            prediction_startTime = model_prediction[2]
-            duration = model_prediction[3]
-            prediction_endTime = prediction_startTime + duration
-            predictedByModel = model_prediction[4]
-            probability = model_prediction[5]
-            
-            print("recording_id ",recording_id, "predictedByModel ", predictedByModel, " prediction_startTime ", prediction_startTime, "prediction_endTime ", prediction_endTime)
-            
-            # Now determine if a prediction overlaps with a test_data
-            if do_rectangle_times_overlap(prediction_startTime, prediction_endTime, test_data_start_time_seconds, test_data_finish_time_seconds):
-                print("Overlap ", test_data_what)
-                prediction_found_for_test_data = True
-                break
-            
-        if prediction_found_for_test_data:
-            total_of_true_positives += 1  
-            true_positive = 1
-            false_negative = 0
-        else:
-            total_of_false_negatives += 1  
-            true_positive = 0
-            false_negative = 1
-            
-                      
-        # Now store or updata database with this information 
-        # https://www.sqlitetutorial.net/sqlite-replace-statement/    
-        # Relies on a unique index in the table on columns modelRunResultRunName and test_data_id       
-        
-        sql = ''' REPLACE INTO test_data_analysis(modelRunResultRunName, recording_id, test_data_id, test_data_start_time_seconds, test_data_finish_time, test_data_what, predictedByModel, probability, true_positive, false_negative)
-              VALUES(?,?,?,?,?,?,?,?,?,?) '''
-        cur = get_database_connection().cursor()
-        cur.execute(sql, (model_run_name, recording_id, test_data_ID, test_data_start_time_seconds, test_data_finish_time_seconds, test_data_what, predictedByModel, probability, true_positive, false_negative))           
-        get_database_connection().commit() 
-        
-       
-        
-    print("total_of_true_positives is ", total_of_true_positives)
-    print("total_of_false_negatives is ", total_of_false_negatives)
-        
-def test111():
-    a = True
-    b = True
-    
-    if a == True and b == True:
-        if a == True or b == True:
-            print("yipee")
-            
-def update_model_run_result_actual_confirmed_from_test_data():
-    model_run_name = '2020_06_05_1'
-    cur = get_database_connection().cursor()
-    cur.execute("SELECT ID, recording_id, startTime, duration, predictedByModel from model_run_result WHERE modelRunName = ? ORDER BY recording_id ASC", (model_run_name,))
-
-    model_run_results = cur.fetchall()
-    number_of_model_run_results = len(model_run_results)
-    print("There are ", number_of_model_run_results, " predictions")
-    
-    count = 0
-    count_of_predictions_with_overlapping_test_data = 0
-    count_of_morepork_predictions_with_overlapping_morepork_test_data = 0
-    count_of_true_positives = 0
-    count_of_false_positives = 0
-    for model_run_result in model_run_results:
-        count+=1
-        print(count, " of ", number_of_model_run_results)
-        
-        
-        model_run_result_ID = model_run_result[0]
-        recording_id = model_run_result[1]
-        prediction_startTime = model_run_result[2]
-        prediction_duration = model_run_result[3]
-        prediction_endTime = prediction_startTime + prediction_duration
-        predictedByModel = model_run_result[4]
-        
-    
-        # Find if there is a test_data value for this onset/prediction
-        cur.execute("SELECT ID, what, start_time_seconds, finish_time_seconds from test_data WHERE recording_id = ?", (recording_id,))
-        test_data_rows = cur.fetchall()
-        test_data_found = False
-        for test_data_row in test_data_rows:
-            results_id = test_data_row[0]
-            what = test_data_row[1]
-            test_data_start_time_seconds = test_data_row[2]
-            test_data_finish_time_seconds = test_data_row[3]
-            
-            if do_rectangle_times_overlap(prediction_startTime, prediction_endTime, test_data_start_time_seconds, test_data_finish_time_seconds):                      
-                print("Predicted: ",predictedByModel, " what: ", what )
-                test_data_found = True
-                break
-            
-        if test_data_found:
-            count_of_predictions_with_overlapping_test_data+=1
-            if predictedByModel == "morepork_more-pork" and what == "morepork_more-pork":
-                print("True Positive") 
-                count_of_true_positives+=1
-            else:
-                count_of_false_positives+=1
-        else:
-            # Still need to check if this is a false positive
-            if predictedByModel == "morepork_more-pork":
-                # Predicted morepork, but no morepork test data exists
-                count_of_false_positives+=1
-                what = "no_test_data"
-        table = "model_run_result"        
-        sql = ''' UPDATE ''' + table + ''' 
-                    SET actual_confirmed = ?               
-                    WHERE ID = ?'''
-            
-        cur.execute(sql, (what, model_run_result_ID))        
-        get_database_connection().commit() 
-            
-    print("count_of_predictions_with_overlapping_test_data ", count_of_predictions_with_overlapping_test_data)
-    
-    print("count_of_true_positives ", count_of_true_positives)
-    print("count_of_false_positives ", count_of_false_positives)
-   
-            
-def test_data_analysis_using_version_7_onsets_with_spectrogram_based_prediction():
-    modelRunName = "2020_06_05_1"
-    
-    cur = get_database_connection().cursor()
-    cur.execute("SELECT ID, recording_id, start_time_seconds, finish_time_seconds, what FROM test_data WHERE what = 'morepork_more-pork' ORDER BY recording_id, start_time_seconds ASC")
-    test_data_rows = cur.fetchall() 
-    count_of_test_data_rows = len(test_data_rows)
-    print("count_of_test_data_rows ", count_of_test_data_rows)
-    count = 0
-    for test_data_row in test_data_rows:
-        count+=1
-        print(count, " of ", count_of_test_data_rows)
-        test_data_id = test_data_row[0]
-        recording_id = test_data_row[1]
-        test_data_start_time_seconds = test_data_row[2]
-        test_data_finish_time_seconds = test_data_row[3]
-        test_data_what = test_data_row[4]        
-        
-        cur.execute("SELECT ID, recording_id, startTime, duration, predictedByModel, probability from model_run_result WHERE modelRunName = ? AND recording_id = ?", (modelRunName, recording_id))
-        model_run_result_rows = cur.fetchall() 
-        model_run_result_predictedByModel = ""
-        
-        for model_run_result_row in model_run_result_rows:
-            model_run_result_id = model_run_result_row[0]
-            
-            model_run_result_startTime = model_run_result_row[2]
-            model_run_result_duration = model_run_result_row[3]            
-            model_run_result_finish_time = model_run_result_startTime + model_run_result_duration
-            model_run_result_predictedByModel = model_run_result_row[4]  
-            model_run_result_probability =   model_run_result_row[5]  
-            
-            if do_rectangle_times_overlap(model_run_result_startTime, model_run_result_finish_time, test_data_start_time_seconds, test_data_finish_time_seconds):                      
-                print("model_run_result_predictedByModel: ",model_run_result_predictedByModel, " test_data_what: ", test_data_what )
-                model_run_result_found = True
-                break
-        
-        if model_run_result_found:
-            print("model_run_result_predictedByModel ", model_run_result_predictedByModel)
-        else:
-            print("No prediction found")
-            model_run_result_predictedByModel = "no_prediction_found"
-            
-            
-        
-        cur = get_database_connection().cursor()
-                    
-        sql = ''' REPLACE INTO model_run_result_analysis (modelRunName, recording_id, prediction_startTime, prediction_duration, predictedByModel, probability)
-          VALUES(?,?,?,?,?,?) '''
-        cur.execute(sql, (modelRunName, recording_id, model_run_result_startTime, model_run_result_duration, model_run_result_predictedByModel, model_run_result_probability )) 
-        get_database_connection().commit()
-
-      
-
-def create_single_focused_mel_spectrogram(recording_id, start_time_seconds, duration_seconds, actual_confirmed):
-    spectrogram_folder_path = tensorflow_spectrogram_images + '/' + actual_confirmed
-    print(spectrogram_folder_path)
-    if not os.path.exists(spectrogram_folder_path):
-        os.makedirs(spectrogram_folder_path) 
-
-      
-
-    try:
-        
-        audio_filename = str(recording_id) + '.m4a'
-        audio_in_path = base_folder + '/' + downloaded_recordings_folder + '/' +  audio_filename 
-        image_out_name = str(recording_id) + '$' + str(start_time_seconds) + '$' + actual_confirmed +'.jpg'
-        print('image_out_name', image_out_name)           
-       
-        image_out_path = spectrogram_folder_path + '/' + image_out_name
-        
-        y, sr = librosa.load(audio_in_path, sr=None)      
-               
-        start_time_seconds_float = float(start_time_seconds)            
-        
-        start_position_array = int(sr * start_time_seconds_float)              
-                   
-        end_position_array = start_position_array + int((sr * duration_seconds))                  
-                    
-        y_part = y[start_position_array:end_position_array]  
-        mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
-        
-        plt.axis('off') # no axis
-        plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
-        librosa.display.specshow(mel_spectrogram, cmap='binary') #https://matplotlib.org/examples/color/colormaps_reference.html
-        plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
-        plt.close()
-        
-#         return get_image(image_out_path)
-        
-    except Exception as e:
-        print(e, '\n')
-        print('Error processing onset ', onset)
-
-def create_spectrogram_images_for_tensorflow():
-    
-
-    cur = get_database_connection().cursor()
-    cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds, actual_confirmed from onsets WHERE version = 5 AND actual_confirmed IS NOT NULL AND (recording_id < ? OR recording_id > ?)", (first_test_data_recording_id, last_test_data_recording_id))
-    confirmed_onsets = cur.fetchall() 
-    count_of_confirmed_onsets = len(confirmed_onsets)
-    print("count_of_confirmed_onsets ", count_of_confirmed_onsets)
-    count = 0
-    for confired_onset in confirmed_onsets:
-        count+=1
-        print(count, ' of ', count_of_confirmed_onsets)
-        recording_id = confired_onset[1]
-        start_time_seconds = confired_onset[2]
-        duration_seconds = confired_onset[3]
-        actual_confirmed = confired_onset[4]    
-        
-        create_single_focused_mel_spectrogram(recording_id, start_time_seconds, duration_seconds, actual_confirmed)
-            
-        
-def split_data(SOURCE, TRAINING, TESTING, SPLIT_SIZE):
-    files = []
-    for filename in os.listdir(SOURCE):
-        file = SOURCE + filename
-        if os.path.getsize(file) > 0:
-            files.append(filename)
-        else:
-            print(filename + " is zero length, so ignoring.")
-
-    training_length = int(len(files) * SPLIT_SIZE)
-    testing_length = int(len(files) - training_length)
-    shuffled_set = random.sample(files, len(files))
-    training_set = shuffled_set[0:training_length]
-    testing_set = shuffled_set[-testing_length:]
-
-    for filename in training_set:
-        this_file = SOURCE + filename
-        destination = TRAINING + filename
-        copyfile(this_file, destination)
-        
-#     print(TRAINING, ' has ', str(len(TRAINING)) + ' files.')
-
-    for filename in testing_set:
-        this_file = SOURCE + filename
-        destination = TESTING + filename
-        copyfile(this_file, destination)        
-    
-#     print(TESTING, ' has ', str(len(TESTING)) + ' files.\n')
-
-def call_split_data():    
-    
-    split_size = .9
-    all_image_input_directories = os.listdir(tensorflow_spectrogram_images)
-    for input_directory in all_image_input_directories:
-        
-#         training_input_directory_path = tensorflow_run_folder + '/training/' + input_directory + '/' 
-        training_input_directory_path = tensorflow_spectrogram_images + '/training/' + input_directory + '/'             
-        if not os.path.exists(training_input_directory_path):
-            os.makedirs(training_input_directory_path) 
-            
-#         testing_input_directory_path = tensorflow_run_folder + '/validation/' + input_directory + '/'
-        testing_input_directory_path = tensorflow_spectrogram_images + '/validation/' + input_directory + '/'                      
-        if not os.path.exists(testing_input_directory_path):
-            os.makedirs(testing_input_directory_path) 
-            
-        source_dir = tensorflow_spectrogram_images + '/' + input_directory + '/'
-        
-        split_data(source_dir, training_input_directory_path, testing_input_directory_path, split_size)
-        
-#         list = os.listdir(training_input_directory_path) # dir is your directory path
-#         number_files = len(list)
-        print(training_input_directory_path, ' has ', len(os.listdir(training_input_directory_path)), 'files')
-        print(testing_input_directory_path, ' has ', len(os.listdir(testing_input_directory_path)), 'files')
-        
-         
-
-def build_model1():  # used for      tensorflow_run_name = '2020_06_08_1'
-    
-    learning_rate = 1e-4
-    # https://www.tensorflow.org/api_docs/python/tf/keras/activations
-    model = tf.keras.models.Sequential([
-
-    # https://machinelearningmastery.com/rectified-linear-activation-function-for-deep-learning-neural-networks/
-    tf.keras.layers.Conv2D(16, (3, 3), activation='relu', input_shape=(320, 240, 3)),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(32, (3, 3), activation='relu'),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(512, activation='relu'),
-    tf.keras.layers.Dense(25, activation='softmax')
-    ])
-
-#     model.compile(optimizer=Adam(learning_rate),loss='sparse_categorical_crossentropy',  metrics=['accuracy'])
-#     model.compile(loss='categorical_crossentropy', optimizer='rmsprop',  metrics=['accuracy'])
-    model.compile(optimizer=Adam(learning_rate), loss='categorical_crossentropy',  metrics=['accuracy'])
-    
-    return model
-
-def build_model2():  # used for      tensorflow_run_name = '2020_06_08_1'
-    
-#     learning_rate = 1e-4
-    learning_rate = 1e-4
-    # https://www.tensorflow.org/api_docs/python/tf/keras/activations
-    model = tf.keras.models.Sequential([
-
-    # https://machinelearningmastery.com/rectified-linear-activation-function-for-deep-learning-neural-networks/
-    tf.keras.layers.Conv2D(16, (3, 3), activation='relu', input_shape=(320, 240, 3)),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(32, (3, 3), activation='relu'),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(512, activation='relu'),
-#     tf.keras.layers.Dense(25, activation='softmax')
-    tf.keras.layers.Dense(1, activation='sigmoid')
-    ])
-
-#     model.compile(optimizer=Adam(learning_rate),loss='sparse_categorical_crossentropy',  metrics=['accuracy'])
-#     model.compile(loss='categorical_crossentropy', optimizer='rmsprop',  metrics=['accuracy'])
-#     model.compile(optimizer=Adam(learning_rate), loss='categorical_crossentropy',  metrics=['accuracy'])
-    model.compile(optimizer=RMSprop(lr=learning_rate), loss='binary_crossentropy',  metrics=['accuracy'])
-    
-    return model
-
-def build_model3():  # used for      tensorflow_run_name = '2020_06_08_1'
-    
-#     learning_rate = 1e-4
-    learning_rate = 1e-4
-    # https://www.tensorflow.org/api_docs/python/tf/keras/activations
-    model = tf.keras.models.Sequential([
-
-    # https://machinelearningmastery.com/rectified-linear-activation-function-for-deep-learning-neural-networks/
-    tf.keras.layers.Conv2D(16, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(320, 240, 3)),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(32, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu'),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(64, (3, 3), kernel_regularizer=regularizers.l2(0.0001),  activation='relu'),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(512, activation='relu'),
-#     tf.keras.layers.Dense(25, activation='softmax')
-    tf.keras.layers.Dense(1, activation='sigmoid')
-    ])
-
-#     model.compile(optimizer=Adam(learning_rate),loss='sparse_categorical_crossentropy',  metrics=['accuracy'])
-#     model.compile(loss='categorical_crossentropy', optimizer='rmsprop',  metrics=['accuracy'])
-#     model.compile(optimizer=Adam(learning_rate), loss='categorical_crossentropy',  metrics=['accuracy'])
-    model.compile(optimizer=RMSprop(lr=learning_rate), loss='binary_crossentropy',  metrics=['accuracy'])
-    
-    return model
-
-STEPS_PER_EPOCH = 40
-
-lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
-      0.001,
-      decay_steps=STEPS_PER_EPOCH*1000,
-      decay_rate=1,
-      staircase=False)
-
-def get_optimizer():
-#   return tf.keras.optimizers.Adam(lr_schedule)
-    return tf.keras.optimizers.RMSprop(lr_schedule)
-
-def build_model4():  # used for      tensorflow_run_name = '2020_06_08_1'
-    
-#     learning_rate = 1e-4
-    learning_rate = 1e-4
-    # https://www.tensorflow.org/api_docs/python/tf/keras/activations
-    model = tf.keras.models.Sequential([
-
-    # https://machinelearningmastery.com/rectified-linear-activation-function-for-deep-learning-neural-networks/
-    tf.keras.layers.Conv2D(16, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(320, 240, 3)),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(32, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu'),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(64, (3, 3), kernel_regularizer=regularizers.l2(0.0001),  activation='relu'),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(512, activation='relu'),
-#     tf.keras.layers.Dense(25, activation='softmax')
-    tf.keras.layers.Dense(1, activation='sigmoid')
-    ])
-
-#     model.compile(optimizer=Adam(learning_rate),loss='sparse_categorical_crossentropy',  metrics=['accuracy'])
-#     model.compile(loss='categorical_crossentropy', optimizer='rmsprop',  metrics=['accuracy'])
-#     model.compile(optimizer=Adam(learning_rate), loss='categorical_crossentropy',  metrics=['accuracy'])
-    
-    # https://www.tensorflow.org/tutorials/keras/overfit_and_underfit
-    
-
-
-    
-#     model.compile(optimizer=RMSprop(lr=learning_rate), loss='binary_crossentropy',  metrics=['accuracy'])
-    model.compile(optimizer=get_optimizer(), loss='binary_crossentropy',  metrics=['accuracy'])
-    
-    return model
-
-def build_model5():  # used for      tensorflow_run_name = '2020_06_08_1'
-    
-#     learning_rate = 1e-4
-    learning_rate = 1e-4
-    # https://www.tensorflow.org/api_docs/python/tf/keras/activations
-    model = tf.keras.models.Sequential([
-
-    # https://machinelearningmastery.com/rectified-linear-activation-function-for-deep-learning-neural-networks/
-    tf.keras.layers.Conv2D(16, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(320, 240, 3)),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(32, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu'),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(32, (3, 3), kernel_regularizer=regularizers.l2(0.0001),  activation='relu'),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(256, activation='relu'),
-#     tf.keras.layers.Dense(25, activation='softmax')
-    tf.keras.layers.Dense(1, activation='sigmoid')
-    ])
-
-#     model.compile(optimizer=Adam(learning_rate),loss='sparse_categorical_crossentropy',  metrics=['accuracy'])
-#     model.compile(loss='categorical_crossentropy', optimizer='rmsprop',  metrics=['accuracy'])
-#     model.compile(optimizer=Adam(learning_rate), loss='categorical_crossentropy',  metrics=['accuracy'])
-    
-    # https://www.tensorflow.org/tutorials/keras/overfit_and_underfit
-    
-
-
-    
-#     model.compile(optimizer=RMSprop(lr=learning_rate), loss='binary_crossentropy',  metrics=['accuracy'])
-    model.compile(optimizer=get_optimizer(), loss='binary_crossentropy',  metrics=['accuracy'])
-    
-    return model
-
-def build_model6():  # used for      tensorflow_run_name = '2020_06_08_1'
-    
-    learning_rate = 1e-4
-    # https://www.tensorflow.org/api_docs/python/tf/keras/activations
-    model = tf.keras.models.Sequential([
-
-    # https://machinelearningmastery.com/rectified-linear-activation-function-for-deep-learning-neural-networks/
-    tf.keras.layers.Conv2D(16, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(320, 240, 3)),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(16, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu'),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(16, (3, 3), kernel_regularizer=regularizers.l2(0.0001),  activation='relu'),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(256, activation='relu'),
-#     tf.keras.layers.Dense(25, activation='softmax')
-    tf.keras.layers.Dense(1, activation='sigmoid')
-    ])
-
-    model.compile(optimizer=get_optimizer(), loss='binary_crossentropy',  metrics=['accuracy'])
-    
-    return model
-
-def run_tensorflow():
-    tensorflow_run_name = '2020_06_11_2'
-    tensorflow_run_folder = base_folder + '/Audio_Analysis/audio_classifier_runs/tensorflow_runs' + '/' + tensorflow_run_name
-    if not os.path.exists(tensorflow_run_folder):
-        os.makedirs(tensorflow_run_folder)
-        
-    checkpoint_path = tensorflow_run_folder + "/training_1/cp.ckpt"
-    
-    class earlyStopCallback(tf.keras.callbacks.Callback):
-        def on_epoch_end(self, epoch, logs={}):
-            if(logs.get('accuracy')>0.999):
-                print("\nAccuracy limit reached so cancelling training!")
-                self.model.stop_training = True
-                
-    cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
-                                                     save_weights_only=True,
-                                                     verbose=1)
-        
-    print('tensorflow version is ',tf.__version__)
-    print('python version is ',sys.version)
-    
-#     training_input_directory_path = tensorflow_run_folder + '/training/'
-#     testing_input_directory_path = tensorflow_run_folder + '/testing/'
-    training_input_directory_path = tensorflow_spectrogram_images + '/training/'
-    testing_input_directory_path = tensorflow_spectrogram_images + '/validation/'
-    
-    
-    model = build_model6()
-    model.summary()
-
-    #     https://www.youtube.com/watch?v=0kYIZE8Gl90
-    
-    train_datagen = ImageDataGenerator(
-        rescale=1./255,
-#         width_shift_range=0.2,
-#         height_shift_range=0.2,
-#         zoom_range=0.2,
-        fill_mode='nearest') 
-    
-    train_generator = train_datagen.flow_from_directory(
-            training_input_directory_path,
-            target_size=(320, 240),
-            batch_size=128,
-#             class_mode='categorical')
-            class_mode='binary') # Because I've changed images to be just morepork or other (I removed the maybe and part morepork)
-
-    validation_datagen = ImageDataGenerator(rescale=1./255)
-      
-    validation_generator = validation_datagen.flow_from_directory(
-            testing_input_directory_path,
-            target_size=(320, 240),
-            batch_size=16,
-#             class_mode='categorical')
-            class_mode='binary')
-    
-
-
-    es_callback = earlyStopCallback()
-    
-    # steps_per_epoch = number_of_images / batch_ size = 5136 / 128 = 40.125 = 40
-    # validation_steps = number_of_images / batch_ size = 584 / 16 = 36.5 = 36
-    
-    # steps_per_epoch = number_of_images / batch_ size = 5059 / 128 = 39.52 = 40
-    # validation_steps = number_of_images / batch_ size = 564 / 16 = 35.25 = 35
-    
-    history = model.fit(
-        train_generator, 
-        epochs=1000, 
-        validation_data = validation_generator, 
-#         steps_per_epoch=40,
-        steps_per_epoch=STEPS_PER_EPOCH,
-        validation_steps=35,
-        verbose = 2,
-        callbacks=[es_callback, cp_callback])
-    
-    #https://keras.io/guides/serialization_and_saving/
-    path_to_model = tensorflow_run_folder + "/model"
-    model.save(path_to_model)
-    
-  
-
-def tensorflow_hello_world():
-    model = tf.keras.Sequential([tf.keras.layers.Dense(units=1, input_shape=[1])])
-    model.compile(optimizer='sgd', loss='mean_squared_error')
-    
-    xs = np.array([-1.0, 0.0, 1.0, 2.0, 3.0, 4.0], dtype=float)
-    ys = np.array([-3.0, -1.0, 1.0, 3.0, 5.0, 7.0], dtype=float)
-    
-    model.fit(xs, ys, epochs=50)
-    
-    print(model.predict([10.0]))
-
-   
-    
-    
-    

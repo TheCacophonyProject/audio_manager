@@ -7,7 +7,7 @@ Modified 17 12 2019a
 '''
 from tkinter.messagebox import showinfo
 from threading import Thread
-# from pylint.test import test_self
+from pylint.test import test_self
 
 import time
 
@@ -430,7 +430,7 @@ class CreateOnsetsPage(tk.Frame):
                
 
         
-        run_button = ttk.Button(self, text="Run", command=lambda: functions.create_onsets_in_local_db())        
+        run_button = ttk.Button(self, text="Run", command=lambda: functions.create_onsets_in_local_db_using_recordings_folder())        
         run_button.grid(column=0, columnspan=1, row=20) 
         
         instructions2_text = """
@@ -444,19 +444,127 @@ class CreateOnsetsPage(tk.Frame):
         instructions2_text_label = ttk.Label(self, text=instructions2_text)                                                    
         instructions2_text_label.grid(column=0, columnspan=1, row=25) 
         
-        fetures_directly_from_audio_button = ttk.Button(self, text="Create Features (directly from audio)", command=lambda: functions.create_features_for_onsets())        
-        fetures_directly_from_audio_button.grid(column=0, columnspan=1, row=30) 
-        
-        edge_histogram_update_button = ttk.Button(self, text="OLD - DO NOT USE - Update Onsets with Edge Histogram Features", command=lambda: functions.update_onsets_with_edge_histogram_features()())        
-        edge_histogram_update_button.grid(column=1, columnspan=1, row=30)          
-        
-        
-        
+        update_button = ttk.Button(self, text="Update Onsets with Edge Histogram Features", command=lambda: functions.update_onsets_with_edge_histogram_features()())        
+        update_button.grid(column=0, columnspan=1, row=30)        
 
         back_to_home_button = ttk.Button(self, text="Back to Home",command=lambda: controller.show_frame(HomePage))                            
         back_to_home_button.grid(column=0, columnspan=1, row=40)                  
 
+# class CreateSpectrogramsPage(tk.Frame):    
+#     
+#     def __init__(self, parent, controller):
+#         tk.Frame.__init__(self, parent)
+#         self.clip_folder = StringVar(value='')       
+#              
+#         title_label = ttk.Label(self, text="Create Spectrograms using ONSETs", font=LARGE_FONT)
+#         title_label.grid(column=0, columnspan=1, row=0)    
+#         
+#         onset_instructions = "Use this page to run the create spectrogram function that will create spectrograms in the spectrogram folder"
+#         msg = tk.Message(self, text = onset_instructions)
+#         msg.config(bg='lightgreen', font=('times', 17), width=1000)
+#         msg.grid(column=0, columnspan=2, row=1)  
+#                 
+#         run_button = ttk.Button(self, text="Run", command=lambda: functions.create_focused_mel_spectrogram_jps_using_onset_pairs())
+#         run_button.grid(column=0, columnspan=1, row=2) 
+#         
+#         spectrogram_folder_instructions = "The spectrograms will be created in the folder: " + base_folder + '/' + run_folder + " This can be changed in the python parameters file"
+#         folder_msg = tk.Message(self, text = spectrogram_folder_instructions)
+#         folder_msg.config(width=600)
+#         folder_msg.grid(column=1, columnspan=1, row=2)    
+# 
+#         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
+#         back_to_home_button.grid(column=0, columnspan=1, row=3)                  
 
+# class CreateTagsFromOnsetsPage(tk.Frame):  
+#     
+#     def __init__(self, parent, controller):
+#         tk.Frame.__init__(self, parent)
+#         self.current_onset_array_pos = 0
+#                      
+#         title_label = ttk.Label(self, text="Create Tags From Onsets", font=LARGE_FONT)
+#         title_label.grid(column=0, columnspan=1, row=0)    
+#         
+#         onset_instructions = "Use this page to create Tags from onsets"
+#         
+#         msg = tk.Message(self, text = onset_instructions)
+#         msg.config(bg='lightgreen', font=('times', 16), width=1200)
+#         msg.grid(column=0, columnspan=6, row=1)   
+#         
+#         onset_version_label = ttk.Label(self, text="The version of the onset (field in onset table") 
+#         onset_version_label.grid(column=0, columnspan=1, row=2)       
+#         onset_version = StringVar(value='5')
+#         onset_version_entry = tk.Entry(self,  textvariable=onset_version, width=30)
+#         onset_version_entry.grid(column=1, columnspan=1,row=2)
+#         
+#         recording_id_label = ttk.Label(self, text="Recording Id") 
+#         recording_id_label.grid(column=0, columnspan=1, row=3)            
+#         self.recording_id = StringVar(value='0000000')
+#         self.recording_id_entry = tk.Entry(self,  textvariable=self.recording_id, width=30).grid(column=1, columnspan=1, row=3)
+#         
+#         start_time_label = ttk.Label(self, text="Start Time")
+#         start_time_label.grid(column=2, columnspan=1, row=3)        
+#         self.start_time = StringVar(value='0.0')
+#         self.start_time_entry = tk.Entry(self,  textvariable=self.start_time, width=30).grid(column=3, columnspan=1,row=3)
+#         
+#         load_onsets_button = ttk.Button(self, text="Load Onsets",command=lambda: get_onsets())
+#         load_onsets_button.grid(column=0, columnspan=1, row=4)                        
+# 
+#         self.spectrogram_label = ttk.Label(self, image=None)
+#         self.spectrogram_label.grid(column=0, columnspan=1, row=5)
+#         
+#         self.waveform_label = ttk.Label(self, image=None)
+#         self.waveform_label.grid(column=1, columnspan=1, row=5)
+#         
+#         previous_button = ttk.Button(self, text="Previous", command=lambda: previous_onset())
+#         previous_button.grid(column=0, columnspan=1, row=6)
+#                             
+#         play_button = ttk.Button(self, text="Play", command=lambda: functions.play_clip(str(self.current_onset_recording_id), float(self.current_onset_start_time),self.current_onset_duration))
+#         play_button.grid(column=1, columnspan=1, row=6)
+#                             
+#         next_button = ttk.Button(self, text="Next", command=lambda: next_onset())
+#         next_button.grid(column=2, columnspan=1, row=6)                           
+#                              
+#         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
+#         back_to_home_button.grid(column=0, columnspan=1, row=7)    
+#                             
+#         def get_onsets():            
+#             self.onsets = functions.get_onsets_stored_locally(onset_version.get())            
+#             load_current_onset() 
+#             
+#         def next_onset():
+#             if self.current_onset_array_pos < (len(self.onsets)) -1:                        
+#                 self.current_onset_array_pos +=1
+#                 load_current_onset()
+#                
+#         def previous_onset():
+#             if self.current_onset_array_pos > 0:
+#                 self.current_onset_array_pos -=1
+#                 load_current_onset()
+#                 
+#         def play_clip():
+#             functions.play_clip(str(self.current_onset_recording_id), float(self.current_onset_start_time),self.current_onset_duration)
+#                      
+#         def display_images():
+#             self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram(self.current_onset_recording_id, self.current_onset_start_time, self.current_onset_duration)
+#             self.waveform_image = functions.get_single_waveform_image(self.current_onset_recording_id, self.current_onset_start_time, self.current_onset_duration)            
+#             
+#             self.spectrogram_label.config(image=self.spectrogram_image)
+#             self.waveform_label.config(image=self.waveform_image)
+#             
+#         def load_current_onset():
+#             
+#             current_onset = self.onsets[self.current_onset_array_pos]
+#              
+#             self.current_onset_recording_id = current_onset[1]      
+#             self.recording_id.set(self.current_onset_recording_id)
+#              
+#             self.current_onset_start_time = current_onset[2]
+#             self.start_time.set(self.current_onset_start_time)
+#             
+#             self.current_onset_duration = current_onset[3] 
+#                         
+#             threading.Thread(target=play_clip(), args=(1,)).start()
+#             threading.Thread(target=display_images(), args=(1,)).start()      
             
 class EvaluateWekaModelRunResultPage(tk.Frame):    
     
@@ -1289,45 +1397,42 @@ class CreateTestDataPage(tk.Frame):
         self.change_spectrogram()    
         
     def display_spectrogram(self):
-        try:
-            recording_id = self.recordings[self.current_recordings_index][0]
-            recording_date_time = self.recordings[self.current_recordings_index][1]
-            recording_device_super_name = self.recordings[self.current_recordings_index][4]
-    
-            self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))
+        recording_id = self.recordings[self.current_recordings_index][0]
+        recording_date_time = self.recordings[self.current_recordings_index][1]
+        recording_device_super_name = self.recordings[self.current_recordings_index][4]
+
+        self.spectrogram_image = functions.get_single_create_focused_mel_spectrogram_for_creating_test_data(str(recording_id), int(self.min_freq.get()), int(self.max_freq.get()))
+        
+        self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)   
+        self.canvas.configure(height=self.spectrogram_image.height())             
+       
+        self.canvas.grid(row=20, rowspan = 50, columnspan=20, column=0)
+        
+        self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
+        self.scroll_x.grid(row=71, columnspan=20, column=0, sticky="ew")        
+      
+        self.canvas.configure(xscrollcommand=self.scroll_x.set)
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+              
+        self.canvas.bind("<Button-1>", self.leftMousePressedcallback)        
+        self.canvas.bind("<ButtonRelease-1>", self.leftMouseReleasedcallback) 
+        self.canvas.bind("<B1-Motion>", self.on_move_press)
+        
+        self.canvas.bind("<Button-3>", self.rightMousePressedcallback) 
+        
+        self.retrieve_test_data_from_database_and_add_rectangles_to_image()    
+        
+        if self.show_model_predictions.get():
+            self.display_model_predictions()
             
-            self.image = self.canvas.create_image(0, 0, image=self.spectrogram_image, anchor=NW)   
-            self.canvas.configure(height=self.spectrogram_image.height())             
-           
-            self.canvas.grid(row=20, rowspan = 50, columnspan=20, column=0)
-            
-            self.scroll_x = tk.Scrollbar(self, orient="horizontal", command=self.canvas.xview)
-            self.scroll_x.grid(row=71, columnspan=20, column=0, sticky="ew")        
-          
-            self.canvas.configure(xscrollcommand=self.scroll_x.set)
-            self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-                  
-            self.canvas.bind("<Button-1>", self.leftMousePressedcallback)        
-            self.canvas.bind("<ButtonRelease-1>", self.leftMouseReleasedcallback) 
-            self.canvas.bind("<B1-Motion>", self.on_move_press)
-            
-            self.canvas.bind("<Button-3>", self.rightMousePressedcallback) 
-            
-            self.retrieve_test_data_from_database_and_add_rectangles_to_image()    
-            
-            if self.show_model_predictions.get():
-                self.display_model_predictions()
-                
-            if self.show_onsets.get():
-                    self.display_onsets()
-            
-            self.draw_horizontal_frequency_reference_line()   
-            
-            self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id) + " at location " + recording_device_super_name) 
-            self.recording_date_and_time_value.set("Date and Time: " + recording_date_time)
-            self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")    
-        except Exception as e:
-            print(e)                        
+        if self.show_onsets.get():
+                self.display_onsets()
+        
+        self.draw_horizontal_frequency_reference_line()   
+        
+        self.recording_id_and_result_place_value2.set("Recording Id: " + str(recording_id) + " at location " + recording_device_super_name) 
+        self.recording_date_and_time_value.set("Date and Time: " + recording_date_time)
+        self.recording_index_out_of_total_of_recordings_value.set("Result " + str(self.current_recordings_index) + " of "   + str(len(self.recordings)) + " recordings")                           
             
     def previous_recording(self):
         if self.current_recordings_index > 0:
@@ -1471,13 +1576,11 @@ class CreateTestDataPage(tk.Frame):
             predictionsToDisplay = self.model_must_predict_what_combobox.get()
             
             if predictedByModel == predictionsToDisplay:
-                
-                twenty_percent_of_spectrogram_height = self.spectrogram_image.height() * 0.10
             
                 rectangle_bbox_x1 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(startTime, duration_of_recording, self.spectrogram_image.width())
-                rectangle_bbox_y1 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.min_freq.get()) + twenty_percent_of_spectrogram_height, self.spectrogram_image.height())  
+                rectangle_bbox_y1 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.min_freq.get()), self.spectrogram_image.height())  
                 rectangle_bbox_x2 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(startTime + duration_of_prediction, duration_of_recording, self.spectrogram_image.width())
-                rectangle_bbox_y2 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.max_freq.get()) - twenty_percent_of_spectrogram_height, self.spectrogram_image.height())
+                rectangle_bbox_y2 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.max_freq.get()), self.spectrogram_image.height())
                 
                 fill_colour = functions.get_spectrogram_rectangle_selection_colour(predictedByModel)
                
@@ -1485,13 +1588,13 @@ class CreateTestDataPage(tk.Frame):
                 
             if actual_confirmed:
                 # Going to draw a slightly shorter/wider rectangle
-                thirty_percent_of_spectrogram_height = self.spectrogram_image.height() * 0.30
+                ten_percent_of_spectrogram_height = self.spectrogram_image.height() * 0.10
                 duration_of_prediction = 0.6
                 
                 rectangle2_bbox_x1 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(startTime, duration_of_recording, self.spectrogram_image.width())
-                rectangle2_bbox_y1 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.min_freq.get()) + thirty_percent_of_spectrogram_height, self.spectrogram_image.height())  
+                rectangle2_bbox_y1 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.min_freq.get()) + ten_percent_of_spectrogram_height, self.spectrogram_image.height())  
                 rectangle2_bbox_x2 = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(startTime + duration_of_prediction, duration_of_recording, self.spectrogram_image.width())
-                rectangle2_bbox_y2 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.max_freq.get()) - thirty_percent_of_spectrogram_height, self.spectrogram_image.height())
+                rectangle2_bbox_y2 = functions.convert_frequency_to_y_value_for_canvas_create_method(int(self.min_freq.get()), int(self.max_freq.get()), int(self.max_freq.get()) - ten_percent_of_spectrogram_height, self.spectrogram_image.height())
                 
                 fill_colour2 = functions.get_spectrogram_rectangle_selection_colour(predictedByModel)
                    
@@ -1510,15 +1613,12 @@ class CreateTestDataPage(tk.Frame):
             
             x_pos_on_spectrogram = functions.convert_time_in_seconds_to_x_value_for_canvas_create_method(start_time_seconds, duration_of_recording, self.spectrogram_image.width())
             
-            fill = "red"
-            dash=(4, 4)
+            fill = "yellow"
             
             if this_onset_version == onset_version:
-                fill = "blue"
-                dash=(10, 7)
+                fill = "red"
                             
-#             aLine = self.canvas.create_line(x_pos_on_spectrogram, 0, x_pos_on_spectrogram, self.spectrogram_image.height(), fill=fill, dash=(4, 4))
-            aLine = self.canvas.create_line(x_pos_on_spectrogram, 0, x_pos_on_spectrogram, self.spectrogram_image.height(), fill=fill, dash=dash)
+            aLine = self.canvas.create_line(x_pos_on_spectrogram, 0, x_pos_on_spectrogram, self.spectrogram_image.height(), fill=fill, dash=(4, 4))
 
     
     def retrieve_all_test_recordings_checkbox_pressed(self): 
