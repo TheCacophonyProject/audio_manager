@@ -3821,9 +3821,11 @@ def test111():
             print("yipee")
             
 def update_model_run_result_actual_confirmed_from_test_data():
-    model_run_name = '2020_06_05_1'
+    # Use this to update each row in the model_run_table with the actual sound (if there exists one) from the test data
+#     model_run_name = '2020_06_05_1'
+    modelRunName = "2020_06_12_2" # This is the first tensorflow model that I've tested
     cur = get_database_connection().cursor()
-    cur.execute("SELECT ID, recording_id, startTime, duration, predictedByModel from model_run_result WHERE modelRunName = ? ORDER BY recording_id ASC", (model_run_name,))
+    cur.execute("SELECT ID, recording_id, startTime, duration, predictedByModel from model_run_result WHERE modelRunName = ? ORDER BY recording_id ASC", (modelRunName,))
 
     model_run_results = cur.fetchall()
     number_of_model_run_results = len(model_run_results)
@@ -3851,20 +3853,21 @@ def update_model_run_result_actual_confirmed_from_test_data():
         cur.execute("SELECT ID, what, start_time_seconds, finish_time_seconds from test_data WHERE recording_id = ?", (recording_id,))
         test_data_rows = cur.fetchall()
         test_data_found = False
+        actual_confirmed = "no_test_data"
         for test_data_row in test_data_rows:
             results_id = test_data_row[0]
-            what = test_data_row[1]
+            actual_confirmed = test_data_row[1]
             test_data_start_time_seconds = test_data_row[2]
             test_data_finish_time_seconds = test_data_row[3]
             
             if do_rectangle_times_overlap(prediction_startTime, prediction_endTime, test_data_start_time_seconds, test_data_finish_time_seconds):                      
-                print("Predicted: ",predictedByModel, " what: ", what )
+                print("Predicted: ",predictedByModel, " actual_confirmed: ", actual_confirmed )
                 test_data_found = True
                 break
             
         if test_data_found:
             count_of_predictions_with_overlapping_test_data+=1
-            if predictedByModel == "morepork_more-pork" and what == "morepork_more-pork":
+            if predictedByModel == "morepork_more-pork" and actual_confirmed == "morepork_more-pork":
                 print("True Positive") 
                 count_of_true_positives+=1
             else:
@@ -3874,13 +3877,12 @@ def update_model_run_result_actual_confirmed_from_test_data():
             if predictedByModel == "morepork_more-pork":
                 # Predicted morepork, but no morepork test data exists
                 count_of_false_positives+=1
-                what = "no_test_data"
-        table = "model_run_result"        
-        sql = ''' UPDATE ''' + table + ''' 
-                    SET actual_confirmed = ?               
-                    WHERE ID = ?'''
+#                 actual_confirmed = "no_test_data"
+        
+#         table = "model_run_result"        
+        sql = "UPDATE model_run_result SET actual_confirmed = ? WHERE ID = ?"
             
-        cur.execute(sql, (what, model_run_result_ID))        
+        cur.execute(sql, (actual_confirmed, model_run_result_ID))        
         get_database_connection().commit() 
             
     print("count_of_predictions_with_overlapping_test_data ", count_of_predictions_with_overlapping_test_data)
@@ -3890,7 +3892,8 @@ def update_model_run_result_actual_confirmed_from_test_data():
    
             
 def test_data_analysis_using_version_7_onsets_with_spectrogram_based_prediction():
-    modelRunName = "2020_06_05_1"
+#     modelRunName = "2020_06_05_1"
+    modelRunName = "2020_06_12_2" # This is the first tensorflow model that I've tested
     
     cur = get_database_connection().cursor()
     cur.execute("SELECT ID, recording_id, start_time_seconds, finish_time_seconds, what FROM test_data WHERE what = 'morepork_more-pork' ORDER BY recording_id, start_time_seconds ASC")
@@ -3940,7 +3943,16 @@ def test_data_analysis_using_version_7_onsets_with_spectrogram_based_prediction(
         cur.execute(sql, (modelRunName, recording_id, model_run_result_startTime, model_run_result_duration, model_run_result_predictedByModel, model_run_result_probability )) 
         get_database_connection().commit()
 
-      
+def tensorflow_hello_world():
+    model = tf.keras.Sequential([tf.keras.layers.Dense(units=1, input_shape=[1])])
+    model.compile(optimizer='sgd', loss='mean_squared_error')
+    
+    xs = np.array([-1.0, 0.0, 1.0, 2.0, 3.0, 4.0], dtype=float)
+    ys = np.array([-3.0, -1.0, 1.0, 3.0, 5.0, 7.0], dtype=float)
+    
+    model.fit(xs, ys, epochs=50)
+    
+    print(model.predict([10.0]))      
 
 def create_single_focused_mel_spectrogram(recording_id, start_time_seconds, duration_seconds, actual_confirmed):
     spectrogram_folder_path = tensorflow_spectrogram_images + '/' + actual_confirmed
@@ -4000,7 +4012,108 @@ def create_spectrogram_images_for_tensorflow():
         actual_confirmed = confired_onset[4]    
         
         create_single_focused_mel_spectrogram(recording_id, start_time_seconds, duration_seconds, actual_confirmed)
+        
+def create_temp_single_focused_mel_spectrogram_for_tensorflow(recording_id, start_time_seconds, duration_seconds, image_out_path_name):
+    
+#     spectrogram_folder_path = base_folder + '/Audio_Analysis/temp'
+#     print(spectrogram_folder_path)
+#     if not os.path.exists(spectrogram_folder_path):
+#         os.makedirs(spectrogram_folder_path)      
+
+    try:
+        
+        audio_filename = str(recording_id) + '.m4a'
+        audio_in_path = base_folder + '/' + downloaded_recordings_folder + '/' +  audio_filename 
+               
+       
+#         image_out_path = spectrogram_folder_path + '/' + image_out_name
+        
+        y, sr = librosa.load(audio_in_path, sr=None)      
+               
+        start_time_seconds_float = float(start_time_seconds)            
+        
+        start_position_array = int(sr * start_time_seconds_float)              
+                   
+        end_position_array = start_position_array + int((sr * duration_seconds))                  
+                    
+        y_part = y[start_position_array:end_position_array]  
+        mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
+        
+        plt.axis('off') # no axis
+        plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+        librosa.display.specshow(mel_spectrogram, cmap='binary') #https://matplotlib.org/examples/color/colormaps_reference.html
+        plt.savefig(image_out_path_name, bbox_inches=None, pad_inches=0)
+        plt.close()
+        
+#         return get_image(image_out_path)
+        
+    except Exception as e:
+        print(e, '\n')
+        print('Error processing onset ', onset)
+
+def classify_march_test_data_using_tensorflow_model():
+    tensorflow_run_name = '2020_06_12_2'
+    tensorflow_run_folder = base_folder + '/Audio_Analysis/audio_classifier_runs/tensorflow_runs' + '/' + tensorflow_run_name
+    path_to_model = tensorflow_run_folder + "/model"
+    cut_off = 0.5
+    
+    reconstructed_model = tf.keras.models.load_model(path_to_model)    
+    
+    
+    spectrogram_folder_path = base_folder + '/Audio_Analysis/temp'
+    print(spectrogram_folder_path)
+    if not os.path.exists(spectrogram_folder_path):
+        os.makedirs(spectrogram_folder_path) 
+        
+    image_out_path_name = spectrogram_folder_path + "/" + 'temp.jpg'     
+
+    cur = get_database_connection().cursor()
+#     cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ  from onsets WHERE version = 7 AND (recording_id > ? AND recording_id < ?)", (first_test_data_recording_id, last_test_data_recording_id))
+    cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ  from onsets WHERE version = 7 AND recordingDateTimeNZ BETWEEN ? AND ? ORDER BY recordingDateTimeNZ", ("2020-03-01 00:00", "2020-03-31 23:59"))
+    confirmed_onsets = cur.fetchall() 
+    count_of_confirmed_onsets = len(confirmed_onsets)
+    print("count_of_confirmed_onsets ", count_of_confirmed_onsets)
+    count = 0
+    
+    for confired_onset in confirmed_onsets:
+        count+=1
+        print(count, ' of ', count_of_confirmed_onsets)
+        recording_id = confired_onset[1]
+        start_time_seconds = confired_onset[2]
+        duration_seconds = confired_onset[3]
+        device_super_name = confired_onset[4]
+        device_name = confired_onset[5]
+        recordingDateTime = confired_onset[6]
+        recordingDateTimeNZ = confired_onset[7]
+               
+       
+#         create_single_focused_mel_spectrogram(recording_id, start_time_seconds, duration_seconds, image_out_path_name )
+        create_temp_single_focused_mel_spectrogram_for_tensorflow(recording_id, start_time_seconds, duration_seconds, image_out_path_name)
+        
+        # Now test spectrogram image against model
+        img = tf.keras.preprocessing.image.load_img(image_out_path_name, target_size=[320, 240], color_mode="grayscale")
+        x = tf.keras.preprocessing.image.img_to_array(img)        
+        x = tf.keras.applications.mobilenet.preprocess_input(x[tf.newaxis,...])
+        result = reconstructed_model(x)
+        what = ""
+        probability = result.numpy()[0][0] # https://stackoverflow.com/questions/49568041/tensorflow-how-do-i-convert-a-eagertensor-into-a-numpy-array
+        print("probability ", probability)
+#         if result[0] < cut_off:
+        if probability < cut_off:
+            print("morepork")
+            what = "morepork_more-pork"
+           
+        else:
+            print("other")
+            what = "other"
             
+        probability_str = str(probability)
+           
+        sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, predictedByModel, probability, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ)
+                  VALUES(?,?,?,?,?,?,?,?,?,?) '''
+        cur.execute(sql, (tensorflow_run_name, recording_id, start_time_seconds, duration_seconds, what, probability_str, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ))
+        get_database_connection().commit()
+                        
         
 def split_data(SOURCE, TRAINING, TESTING, SPLIT_SIZE):
     files = []
@@ -4142,17 +4255,7 @@ def build_model3():  # used for      tensorflow_run_name = '2020_06_08_1'
     
     return model
 
-STEPS_PER_EPOCH = 40
 
-lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
-      0.001,
-      decay_steps=STEPS_PER_EPOCH*1000,
-      decay_rate=1,
-      staircase=False)
-
-def get_optimizer():
-#   return tf.keras.optimizers.Adam(lr_schedule)
-    return tf.keras.optimizers.RMSprop(lr_schedule)
 
 def build_model4():  # used for      tensorflow_run_name = '2020_06_08_1'
     
@@ -4192,6 +4295,10 @@ def build_model4():  # used for      tensorflow_run_name = '2020_06_08_1'
     
     return model
 
+# def get_optimizer():
+# #   return tf.keras.optimizers.Adam(lr_schedule)
+#     return tf.keras.optimizers.RMSprop(lr_schedule)
+
 def build_model5():  # used for      tensorflow_run_name = '2020_06_08_1'
     
 #     learning_rate = 1e-4
@@ -4230,26 +4337,35 @@ def build_model5():  # used for      tensorflow_run_name = '2020_06_08_1'
     
     return model
 
+STEPS_PER_EPOCH = 40
+
+lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
+      0.001,
+      decay_steps=STEPS_PER_EPOCH*1000,
+      decay_rate=1,
+      staircase=False)
+
+def get_optimizer():
+    return tf.keras.optimizers.RMSprop(lr_schedule)
+
 def build_model6():  # used for      tensorflow_run_name = '2020_06_08_1'
     
-    learning_rate = 1e-4
     # https://www.tensorflow.org/api_docs/python/tf/keras/activations
     model = tf.keras.models.Sequential([
 
     # https://machinelearningmastery.com/rectified-linear-activation-function-for-deep-learning-neural-networks/
-    tf.keras.layers.Conv2D(16, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(320, 240, 3)),
-    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Conv2D(8, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(320, 240, 1)),
+    tf.keras.layers.Dropout(0.3),
     tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(16, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu'),
-    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Conv2D(8, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu'),
+    tf.keras.layers.Dropout(0.3),
     tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(16, (3, 3), kernel_regularizer=regularizers.l2(0.0001),  activation='relu'),
-    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Conv2D(8, (3, 3), kernel_regularizer=regularizers.l2(0.0001),  activation='relu'),
+    tf.keras.layers.Dropout(0.3),
     tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dropout(0.3),
     tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(256, activation='relu'),
-#     tf.keras.layers.Dense(25, activation='softmax')
+    tf.keras.layers.Dense(64, activation='relu'),
     tf.keras.layers.Dense(1, activation='sigmoid')
     ])
 
@@ -4258,7 +4374,7 @@ def build_model6():  # used for      tensorflow_run_name = '2020_06_08_1'
     return model
 
 def run_tensorflow():
-    tensorflow_run_name = '2020_06_11_2'
+    tensorflow_run_name = '2020_06_18_1'
     tensorflow_run_folder = base_folder + '/Audio_Analysis/audio_classifier_runs/tensorflow_runs' + '/' + tensorflow_run_name
     if not os.path.exists(tensorflow_run_folder):
         os.makedirs(tensorflow_run_folder)
@@ -4298,6 +4414,9 @@ def run_tensorflow():
     
     train_generator = train_datagen.flow_from_directory(
             training_input_directory_path,
+            color_mode="grayscale",
+#             target_size=(640, 480),
+           
             target_size=(320, 240),
             batch_size=128,
 #             class_mode='categorical')
@@ -4307,7 +4426,10 @@ def run_tensorflow():
       
     validation_generator = validation_datagen.flow_from_directory(
             testing_input_directory_path,
+             color_mode="grayscale",
             target_size=(320, 240),
+            
+#             target_size=(640, 480),
             batch_size=16,
 #             class_mode='categorical')
             class_mode='binary')
@@ -4338,18 +4460,143 @@ def run_tensorflow():
     
   
 
-def tensorflow_hello_world():
-    model = tf.keras.Sequential([tf.keras.layers.Dense(units=1, input_shape=[1])])
-    model.compile(optimizer='sgd', loss='mean_squared_error')
+def use_tensflow_model_test():
+#     tensorflow_run_name = '2020_06_12_3'
+#     tensorflow_run_name = '2020_06_12_2' # This looks best so far - 1.7% of other are incorrectly classified as morepork
+#     tensorflow_run_name = '2020_06_12_1'
+#     tensorflow_run_name = '2020_06_11_2'
+    tensorflow_run_name = '2020_06_11_2'
     
-    xs = np.array([-1.0, 0.0, 1.0, 2.0, 3.0, 4.0], dtype=float)
-    ys = np.array([-3.0, -1.0, 1.0, 3.0, 5.0, 7.0], dtype=float)
+    tensorflow_run_folder = base_folder + '/Audio_Analysis/audio_classifier_runs/tensorflow_runs' + '/' + tensorflow_run_name
+    path_to_model = tensorflow_run_folder + "/model"
     
-    model.fit(xs, ys, epochs=50)
+    cut_off = 0.5
     
-    print(model.predict([10.0]))
+    print(path_to_model)
+    reconstructed_model = tf.keras.models.load_model(path_to_model)
+    input_folder = tensorflow_spectrogram_images + "/validation/morepork_more-pork"
+    count_of_TP = 0
+    count_of_FP = 0
+    for file in os.listdir(input_folder):
+        img_path=input_folder + "/" + file
+        print(file)
+#         print(img_path)
+#         img = tf.keras.preprocessing.image.load_img(img_path, target_size=[320, 240], color_mode="grayscale")
+        img = tf.keras.preprocessing.image.load_img(img_path, target_size=[320, 240], color_mode="rgb")
+        
+        x = tf.keras.preprocessing.image.img_to_array(img)
+        
+        x = tf.keras.applications.mobilenet.preprocess_input(x[tf.newaxis,...])
+        # print(x.shape)
+        # print(x)
+        
+        
+        result = reconstructed_model(x)
+        if result[0] < cut_off:
+            print(file + " is an morepork")
+            count_of_TP +=1
+        else:
+            print(file + " is a other")
+            count_of_FP +=1
+            
+        
+#     input_folder = tensorflow_spectrogram_images + "/validation/other"
+    input_folder = tensorflow_spectrogram_images + "/validation/other"
+    count_of_TN = 0
+    count_of_FN = 0
+    for file in os.listdir(input_folder):
+        img_path=input_folder + "/" + file
+#         print(file)
+#         print(img_path)
+#         img = tf.keras.preprocessing.image.load_img(img_path, target_size=[320, 240], color_mode="grayscale")
+        img = tf.keras.preprocessing.image.load_img(img_path, target_size=[320, 240], color_mode="rgb")
+        
+        x = tf.keras.preprocessing.image.img_to_array(img)
+        
+        x = tf.keras.applications.mobilenet.preprocess_input(x[tf.newaxis,...])
+        # print(x.shape)
+        # print(x)
+        
+        
+        result = reconstructed_model(x)
+        print(result)
+        print(result[0])
+        if result[0] < cut_off:
+            print(file + " is an morepork")
+            count_of_FN +=1
+        else:
+            print(file + " is a other")
+            count_of_TN +=1
+            
+    print("cut_off set at ", cut_off)
+    print("count_of_TP ", count_of_TP)
+    print("count_of_FP ", count_of_FP)
+    print("count_of_TN ", count_of_TN)
+    print("count_of_FN ", count_of_FN)
+    
+    success_rate = (count_of_TP + count_of_TN)/ (count_of_TP + count_of_TN + count_of_FP + count_of_FN)
+    
+    print("success_rate ", success_rate)
 
-   
+def update_classify_march_test_data_using_tensorflow_model_with_probability():
+    # I stuffed up the probability when I first classified March test data
+    tensorflow_run_name = '2020_06_12_2'
+    modelRunName = '2020_06_12_2'
+    tensorflow_run_folder = base_folder + '/Audio_Analysis/audio_classifier_runs/tensorflow_runs' + '/' + tensorflow_run_name
+    path_to_model = tensorflow_run_folder + "/model"
+        
+    reconstructed_model = tf.keras.models.load_model(path_to_model)        
     
+    spectrogram_folder_path = base_folder + '/Audio_Analysis/temp'
+    print(spectrogram_folder_path)
+    if not os.path.exists(spectrogram_folder_path):
+        os.makedirs(spectrogram_folder_path) 
+        
+    image_out_path_name = spectrogram_folder_path + "/" + 'temp.jpg'     
+
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT ID, recording_id, startTime, duration, predictedByModel from model_run_result WHERE modelRunName = ? AND predictedByModel = ?", (modelRunName, "morepork_more-pork"))
+    rows = cur.fetchall() 
+    count_of_rows = len(rows)
+    print("count_of_rows ", count_of_rows)
+    count = 0
     
+    for row in rows:
+        count+=1
+        print(count, ' of ', count_of_rows)
+        model_run_result_ID = row[0]
+        recording_id = row[1]
+        startTime = row[2]
+        duration = row[3]
+
+        create_temp_single_focused_mel_spectrogram_for_tensorflow(recording_id, startTime, duration, image_out_path_name)
+        
+        # Now test spectrogram image against model
+        img = tf.keras.preprocessing.image.load_img(image_out_path_name, target_size=[320, 240], color_mode="grayscale")
+        x = tf.keras.preprocessing.image.img_to_array(img)        
+        x = tf.keras.applications.mobilenet.preprocess_input(x[tf.newaxis,...])
+        result = reconstructed_model(x)
+        probability = str(result.numpy()[0][0]) # https://stackoverflow.com/questions/49568041/tensorflow-how-do-i-convert-a-eagertensor-into-a-numpy-array
+        print("model_run_result_ID ", model_run_result_ID, " recording_id ", recording_id,  " startTime ", startTime, " has a  probability of ", probability)
+        
+        sql = "UPDATE model_run_result SET probability = ? WHERE ID = ?"            
+        cur.execute(sql, (probability, model_run_result_ID))                
+        get_database_connection().commit()
+        
+def test_sql_dates():
+    cur = get_database_connection().cursor()
+#     cur.execute("SELECT ID, recordingDateTimeNZ from test_data WHERE recordingDateTimeNZ BETWEEN ? AND ?", ("2020-03-01 02:23:01+13:00", "2020-03-30 00:41:29+13:00"))
+    cur.execute("SELECT ID, recordingDateTime, recordingDateTimeNZ from onsets WHERE version = 7 AND recordingDateTimeNZ BETWEEN ? AND ? ORDER BY recordingDateTimeNZ", ("2020-03-01 00:00", "2020-03-31 23:59"))
     
+    rows = cur.fetchall() 
+    count_of_rows = len(rows)
+    print("count_of_rows ", count_of_rows)
+       
+    for row in rows:
+        recordingDateTime = row[1]
+        recordingDateTimeNZ = row[2]
+        print(recordingDateTime,recordingDateTimeNZ)
+        
+    
+        
+        

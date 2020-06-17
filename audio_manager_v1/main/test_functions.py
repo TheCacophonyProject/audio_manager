@@ -183,5 +183,19 @@ print('boo')
 # functions.tensorflow_hello_world()
 
 functions.run_tensorflow()
+# functions.use_tensflow_model_test()
 
+# functions.classify_march_test_data_using_tensorflow_model()
+
+# functions.update_model_run_result_actual_confirmed_from_test_data()
+
+# functions.update_classify_march_test_data_using_tensorflow_model_with_probability()
+
+# functions.test_sql_dates()
+
+# functions.classify_march_test_data_using_tensorflow_model()
+
+# functions.update_model_run_result_actual_confirmed_from_test_data()
+
+# functions.test_data_analysis_using_version_7_onsets_with_spectrogram_based_prediction()
     
