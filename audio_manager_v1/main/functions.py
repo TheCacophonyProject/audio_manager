@@ -4345,6 +4345,7 @@ lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
       decay_rate=1,
       staircase=False)
 
+
 def get_optimizer():
     return tf.keras.optimizers.RMSprop(lr_schedule)
 
