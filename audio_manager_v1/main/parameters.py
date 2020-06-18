@@ -13,9 +13,14 @@ import sys
 # model_run_name='2020_01_28_1'
 # model_run_name='2020_01_28_2'
 # model_run_name='2020_02_01_1'
+
 # model_run_name='2020_02_08_1' # this is the latest model for using edge histogram / spectrogram
 # model_run_name='2020_05_04_1' # This is the latest model for features directly from librosa
-model_run_name='2020_06_05_1' # This is a copy of 2020_02_08_1 - the latest edge histogram / spectrogram.  Copied here to use for assessing the version 7 onsets. The model is exactly the same as that in 2020_02_08_1
+# model_run_name='2020_06_05_1' # This is a copy of 2020_02_08_1 - the latest edge histogram / spectrogram.  Copied here to use for assessing the version 7 onsets. The model is exactly the same as that in 2020_02_08_1
+
+# model_run_name='2020_02_08_1'
+model_run_name='2020_05_04_1'
+
 
 
 model_version = '000002' # update this to be the same as the name of the model stored in the model_run_result folder. Cacophony API says: version (hex coded, e.g. 0x0110 would be v1.10)

@@ -167,7 +167,7 @@ print('boo')
 # functions.update_model_run_result_actual_confirmed_from_test_data()
 
 # functions.update_test_data_analyis()
-    
+
 # functions.update_model_run_result_analysis()
 
 # functions.update_model_run_result_actual_confirmed_from_test_data()
@@ -198,4 +198,7 @@ functions.run_tensorflow()
 # functions.update_model_run_result_actual_confirmed_from_test_data()
 
 # functions.test_data_analysis_using_version_7_onsets_with_spectrogram_based_prediction()
+
+functions.update_model_run_result_analysis()
+
     
