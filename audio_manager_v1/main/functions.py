@@ -4349,25 +4349,28 @@ lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
 def get_optimizer():
     return tf.keras.optimizers.RMSprop(lr_schedule)
 
-def build_model6():  # used for      tensorflow_run_name = '2020_06_08_1'
-    
-    # https://www.tensorflow.org/api_docs/python/tf/keras/activations
+ # https://www.tensorflow.org/api_docs/python/tf/keras/activations
+ # https://machinelearningmastery.com/rectified-linear-activation-function-for-deep-learning-neural-networks/
+ 
+def build_model6():      
+   
     model = tf.keras.models.Sequential([
-
-    # https://machinelearningmastery.com/rectified-linear-activation-function-for-deep-learning-neural-networks/
-    tf.keras.layers.Conv2D(8, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(320, 240, 1)),
+    
+    tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(320, 240, 1)),
     tf.keras.layers.Dropout(0.3),
     tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(8, (3, 3), kernel_regularizer=regularizers.l2(0.0001), activation='relu'),
+    tf.keras.layers.Conv2D(16, (3, 3), activation='relu'),
     tf.keras.layers.Dropout(0.3),
     tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(8, (3, 3), kernel_regularizer=regularizers.l2(0.0001),  activation='relu'),
+    tf.keras.layers.Conv2D(16, (3, 3), activation='relu'),
     tf.keras.layers.Dropout(0.3),
     tf.keras.layers.MaxPooling2D(2, 2),
     tf.keras.layers.Dropout(0.3),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(64, activation='relu'),
-    tf.keras.layers.Dense(1, activation='sigmoid')
+#     tf.keras.layers.Dense(1, activation='sigmoid')
+#     tf.keras.layers.Dense(1, activation='softmax')
+    tf.keras.layers.Dense(1, activation='swish')
     ])
 
     model.compile(optimizer=get_optimizer(), loss='binary_crossentropy',  metrics=['accuracy'])
@@ -4375,7 +4378,7 @@ def build_model6():  # used for      tensorflow_run_name = '2020_06_08_1'
     return model
 
 def run_tensorflow():
-    tensorflow_run_name = '2020_06_18_1'
+    tensorflow_run_name = '2020_06_18_5'
     tensorflow_run_folder = base_folder + '/Audio_Analysis/audio_classifier_runs/tensorflow_runs' + '/' + tensorflow_run_name
     if not os.path.exists(tensorflow_run_folder):
         os.makedirs(tensorflow_run_folder)
@@ -4391,6 +4394,12 @@ def run_tensorflow():
     cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
                                                      save_weights_only=True,
                                                      verbose=1)
+    
+    log_dir = tensorflow_run_folder +"/logs/fit/"
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
         
     print('tensorflow version is ',tf.__version__)
     print('python version is ',sys.version)
@@ -4453,7 +4462,7 @@ def run_tensorflow():
         steps_per_epoch=STEPS_PER_EPOCH,
         validation_steps=35,
         verbose = 2,
-        callbacks=[es_callback, cp_callback])
+        callbacks=[es_callback, cp_callback, tensorboard_callback])
     
     #https://keras.io/guides/serialization_and_saving/
     path_to_model = tensorflow_run_folder + "/model"
