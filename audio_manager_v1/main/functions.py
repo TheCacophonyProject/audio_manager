@@ -1213,13 +1213,18 @@ def insert_model_run_result_into_database(modelRunName, recording_id, startTime,
         print('\t\tUnable to insert result' + str(recording_id) + ' ' + str(startTime), '\n')  
     
 def play_clip(recording_id, start_time, duration, applyBandPassFilter):
+    from pathlib import Path
     audio_in_path = getRecordingsFolder() + '/' + recording_id + '.m4a'
     print('audio_in_path ', audio_in_path)
     print('start_time ', start_time)
     print('duration ', duration)
-
-    audio_out_path = base_folder + '/' + temp_folder + '/' + 'temp.wav'
+    audio_out_folder = base_folder + '/' + temp_folder
+    Path(audio_out_folder).mkdir(parents=True, exist_ok=True)
+#     audio_out_path = base_folder + '/' + temp_folder + '/' + 'temp.wav'
+    audio_out_path = audio_out_folder + '/' + 'temp.wav'
+    
     print('audio_out_path ', audio_out_path)
+    
     y, sr = librosa.load(audio_in_path, sr=None) 
     if applyBandPassFilter:
         y = apply_band_pass_filter(y, sr)
