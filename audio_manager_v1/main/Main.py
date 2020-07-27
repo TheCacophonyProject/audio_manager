@@ -61,7 +61,7 @@ class Main_GUI(tk.Tk):
         self.frames = {}
         
 #         for F in (HomePage, RecordingsPage, TaggingPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, CreateSpectrogramsPage, CreateTagsFromOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage, ModelAccuracyAnalysisPage, CreateTestDataPage):
-        for F in (HomePage, RecordingsPage, CreateWekaModelPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage, ModelAccuracyAnalysisPage, CreateTestDataPage):
+        for F in (HomePage, RecordingsPage, ClassifyOnsetsUsingWekaModelPage, CreateOnsetsPage, EvaluateWekaModelRunResultPage, CreateTagsOnCacophonyServerFromModelRunPage, ModelAccuracyAnalysisPage, CreateTestDataPage):
           
             frame = F(container, self)
             self.frames[F] = frame            
@@ -117,11 +117,8 @@ class HomePage(tk.Frame):
         
         modelAccuracyAnalysisPage_button = ttk.Button(self, text="Step 5: Model Accuracy Analysis",
                             command=lambda: controller.show_frame(ModelAccuracyAnalysisPage))        
-        modelAccuracyAnalysisPage_button.pack()
+        modelAccuracyAnalysisPage_button.pack()     
         
-        createWekaModelPage_button = ttk.Button(self, text="Step 6: Create Weka Model",
-                            command=lambda: controller.show_frame(CreateWekaModelPage))        
-        createWekaModelPage_button.pack()  
         
         outside_normal_flow_label = tk.Label(self, text="Functions below here are outside normal model development iteration")
         outside_normal_flow_label.pack(pady=10,padx=10)
@@ -200,178 +197,7 @@ class RecordingsPage(tk.Frame):
                             command=lambda: controller.show_frame(HomePage))
         back_to_home_button.grid(column=0, columnspan=1, row=20)               
 
-class CreateWekaModelPage(tk.Frame):    
-    
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        
-        title_label = ttk.Label(self, text="Create a Weka model - using Weka https://www.cs.waikato.ac.nz/ml/weka/downloading.html", font=LARGE_FONT)
-        title_label.grid(column=0, columnspan=10, row=10)  
-        
-        instructions1_text = """
-        
-    Before we can use Weka to create a model, you first need to create an input arff file that uses 
-    the model_run_results confirmed sounds. 
-    
-    Any model you create should be evaluated against test data.  Pick start and end dates to exclude recordings made between those dates (inclusive).
-    
-    This will also create a csv file that can be used to keep track of which confirmed onsets where used to create the model.
-    
-    This csv will be used by the Model Accuracy Analysis page.
-        
-    """    
-        instructions1_text_label = ttk.Label(self, text=instructions1_text)                                                    
-        instructions1_text_label.grid(column=0, columnspan=10, row=20)  
-        
-        
-        # Couldn't get a date picker to work !!!!! so had to created separate input fields for day/month/year
-        first_date_to_exclude_label = ttk.Label(self, text="First date to exclude")
-        first_date_to_exclude_label.grid(column=0, columnspan=2, row=21)           
-        
-        first_date_to_exclude_day_label = ttk.Label(self, text="DAY")
-        first_date_to_exclude_day_label.grid(column=0, columnspan=1, row=22)
-        
-        first_date_to_exclude_day = StringVar(value='1')
-        first_date_to_exclude_day_entry = tk.Entry(self,  textvariable=first_date_to_exclude_day, width=5)
-        first_date_to_exclude_day_entry.grid(column=1, columnspan=1, row=22)
-        
-        first_date_to_exclude_month_label = ttk.Label(self, text="MONTH")
-        first_date_to_exclude_month_label.grid(column=0, columnspan=1, row=23)
-        
-        first_date_to_exclude_month = StringVar(value='3')
-        first_date_to_exclude_month_entry = tk.Entry(self,  textvariable=first_date_to_exclude_month, width=5)
-        first_date_to_exclude_month_entry.grid(column=1, columnspan=1, row=23)
-        
-        first_date_to_exclude_year_label = ttk.Label(self, text="YEAR")
-        first_date_to_exclude_year_label.grid(column=0, columnspan=1, row=24)
-        
-        first_date_to_exclude_year = StringVar(value='2020')
-        first_date_to_exclude_year_entry = tk.Entry(self,  textvariable=first_date_to_exclude_year, width=5)
-        first_date_to_exclude_year_entry.grid(column=1, columnspan=1, row=24)
-        
-        
-        last_date_to_exclude_label = ttk.Label(self, text="Last date to exclude")
-        last_date_to_exclude_label.grid(column=2, columnspan=2, row=21)
-        
-        last_date_to_exclude_day_label = ttk.Label(self, text="DAY")
-        last_date_to_exclude_day_label.grid(column=2, columnspan=1, row=22)
-        
-        last_date_to_exclude_day = StringVar(value='31')
-        last_date_to_exclude_day_entry = tk.Entry(self,  textvariable=last_date_to_exclude_day, width=5)
-        last_date_to_exclude_day_entry.grid(column=3, columnspan=1, row=22)
-        
-        last_date_to_exclude_month_label = ttk.Label(self, text="MONTH")
-        last_date_to_exclude_month_label.grid(column=2, columnspan=1, row=23)
-        
-        last_date_to_exclude_month = StringVar(value='3')
-        last_date_to_exclude_month_entry = tk.Entry(self,  textvariable=last_date_to_exclude_month, width=5)
-        last_date_to_exclude_month_entry.grid(column=3, columnspan=1, row=23)
-        
-        last_date_to_exclude_year_label = ttk.Label(self, text="YEAR")
-        last_date_to_exclude_year_label.grid(column=2, columnspan=1, row=24)
-        
-        last_date_to_exclude_year = StringVar(value='2020')
-        last_date_to_exclude_year_entry = tk.Entry(self,  textvariable=last_date_to_exclude_year, width=5)
-        last_date_to_exclude_year_entry.grid(column=3, columnspan=1, row=24)
-        
 
-#         create_arff_file_for_weka_button = ttk.Button(self, text="Create Arff file for Weka input", command=lambda: functions.create_arff_file_for_weka(False))  
-        create_arff_file_for_weka_button = ttk.Button(self, text="Create Arff file for Weka input", command=lambda: create_arff_and_csv_files())      
-        create_arff_file_for_weka_button.grid(column=6, columnspan=1, row=25)
-        
-        instructions2_text = """
-BEFORE pressing the 'Create folders for next run' button, update the model_run_name parameter in the 
-parameters file with a new name AND exit/close this program and restart to refresh - check it has.  
-It is currently set to " + model_run_name + " which is most likely the previous model run folder that 
-you used - you don't want to use the same folder - it will end in tears!! (Once pressed, check that 
-the folders have been created in the file system).  This will give you a place to save your next Weka 
-model.model file. You can now press the Create folders for next run button to create all the necessary 
-folders for the next iteration/run."""    
-        instructions2_text_label = ttk.Label(self, text=instructions2_text)                                                    
-        instructions2_text_label.grid(column=0, columnspan=5, row=30)  
-        
-        create_folders_button = ttk.Button(self, text="Create folders for next run",command=lambda: functions.create_folders_for_next_run())
-        create_folders_button.grid(column=6, columnspan=1, row=30)  
-        
-
-        
-        instructions3_text = """
-You are now ready to use Weka. BUT, if you are going to use AutoWeka it needs to use Java 1.8 
-(unlike Weka or Eclipse/Audio Manager which can use openjdk 11 - so at a terminal type 
-'sudo update-alternatives --config java' without the quotes and choose option (5 on my computer) 
-for jdk1.8 Once the java version has been changed, from a terminal command prompt, cd into the 
-directory where Weka has been installed (e.g. ~/weka-3-8-4b (on my computer) and launch Weka 
-using the command: java -Xmx16384m -jar weka.jar
-    
-These instructions are from the video: https://www.futurelearn.com/courses/advanced-data-
-mining-with-weka/0/steps/29486\ You will need to have installed the Image Filters Package 
-into Weka."""    
-        instructions3_text_label = ttk.Label(self, text=instructions3_text)                                                    
-        instructions3_text_label.grid(column=0, columnspan=5, row=40)  
-
-        
-        instructions5_text = """
-        
-    In Weka, Press the Explorer button and then the Open file.. button to open the previously created .arff file.
-        
-    """    
-        instructions5_text_label = ttk.Label(self, text=instructions5_text)                                                    
-        instructions5_text_label.grid(column=0, columnspan=10, row=50) 
-
-        
-        instructions7_text = """
-        
-    If you want to use AutoWeka follow A instructions next otherwise follow B instructions. 
-    
-    A) Select the Auto-Weka tab (in Weka) then right click on AUTOWEKAClassifier | Show properties and change timeLimit 
-    to something suitable say 4320 (ie 3 days), or first test with 10 minutes :-), press OK, check that (Nom) class is 
-    selected and then press start. The weka icon does its dance.  Make sure computer Power Saving is Off, and come back 
-    in 3 days! 
-    
-    B) If don't want to use AutoWeka try this - it will create the same model type (CostSensitiveClassifier) that was being 
-    used when these instructions where written.  Note: the ClassifyOnsets code will need to use the same model type as you 
-    create here - change it in that code if you create a different model type.
-    
-    1) Select the Classify tab (at the top). Press the Choose button and navigate to  Weka|classifiers|meta|CostSensitiveClassifier
-    
-    2) Then left click in text box that has the text CostSensitiveClassifier..... to open another dialog.
-    
-    3) Next to word classifier, Press Choose and navigate to weka|classifiers|meta|RandomCommittee. 
-    
-    4) In your computers file system, find the file 'penalties 16x16 10 penalty.cost' and copy it to the current model_run\model folder
-    
-    5) Press on the box next to costMatrix, press Open and find the 'penalties 16x16 10 penalty.cost', and close the CostMatrixEditor 
-    window.
-    
-    6) Next to the word classifer, press the Choose button and navigate to weka|classifiers|meta|RandomForest, press OK, OK
-    
-    7) Back in the Classify tab, in Test Options, select 'Cross-validation Folds 10' and press the 'Start' button.
-    
-    The weka in the bottom right corner does it's dance.
-    
-    8) When the weka has finished dancing the results are displayed - take a look.
-    
-    9) Right click on the just finished 'Result list' listing, and save save the result buffer in weka_model foler for this run.
-    
-    10) Also export the model, to the same location so it is available for future classifications.        
-        
-    """    
-        instructions7_text_label = ttk.Label(self, text=instructions7_text)                                                    
-        instructions7_text_label.grid(column=0, columnspan=10, row=60) 
-        
-              
-        
-        back_to_home_button = ttk.Button(self, text="Back to Home",
-                            command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=80)    
-        
-        def create_arff_and_csv_files(): 
-            # https://www.w3schools.com/python/python_datetime.asp
-            firstDate = datetime.datetime((int)(first_date_to_exclude_year.get()), (int)(first_date_to_exclude_month.get()), (int)(first_date_to_exclude_day.get()))
-            lastDate = datetime.datetime((int)(last_date_to_exclude_year.get()), (int)(last_date_to_exclude_month.get()), (int)(last_date_to_exclude_day.get()))
-#             print(firstDate.strftime("%c"))           
-            functions.create_arff_file_for_weka(False, firstDate,lastDate)             
-        
 class ClassifyOnsetsUsingWekaModelPage(tk.Frame):
     
     def __init__(self, parent, controller):
