@@ -1,24 +1,7 @@
 import sys
 
 
-# model_run_name='2019_11_28_1'
-# model_run_name='2019_12_03_1'
-# model_run_name='2019_12_05_1'
-# model_run_name='2019_12_11_1'
-# model_run_name='2019_12_14_1'
-# model_run_name='2019_12_16_1'
-# model_run_name='2019_12_17_1'
-# model_run_name='2020_01_14_1'
-# model_run_name='2020_01_24_1'
-# model_run_name='2020_01_28_1'
-# model_run_name='2020_01_28_2'
-# model_run_name='2020_02_01_1'
 
-# model_run_name='2020_02_08_1' # this is the latest model for using edge histogram / spectrogram
-# model_run_name='2020_05_04_1' # This is the latest model for features directly from librosa
-# model_run_name='2020_06_05_1' # This is a copy of 2020_02_08_1 - the latest edge histogram / spectrogram.  Copied here to use for assessing the version 7 onsets. The model is exactly the same as that in 2020_02_08_1
-
-# model_run_name='2020_02_08_1'
 model_run_name='2020_05_04_1'
 
 
