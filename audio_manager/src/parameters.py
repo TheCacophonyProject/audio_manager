@@ -78,6 +78,9 @@ initial_locatation_for_choosing_arff_file_dialog = "/home/tim/Work/Cacophony/Aud
 
 squawk_duration_seconds = 0.8
 morepork_more_pork_call_duration = 0.9
+morepork_min_freq = 400
+morepork_max_freq = 2000
+morepork_expected_freq = 900
 
 #### End of Local File Structure Configuration
 

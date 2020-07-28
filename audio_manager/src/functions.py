@@ -13,6 +13,7 @@ import numpy as np
 from scipy.signal import butter, lfilter
 import matplotlib.pyplot as plt
 import librosa.display
+import matplotlib.colors as mcolors
 import soundfile as sf
 from subprocess import PIPE, run
 from librosa import onset
@@ -836,7 +837,7 @@ def insert_model_run_result_into_database(modelRunName, recording_id, startTime,
         print(e, '\n')
         print('\t\tUnable to insert result' + str(recording_id) + ' ' + str(startTime), '\n')  
     
-def play_clip(recording_id, start_time, duration, applyBandPassFilter):
+def play_clip(recording_id, start_time, duration, applyBandPassFilter, min_freq, max_freq):
     from pathlib import Path
     audio_in_path = getRecordingsFolder() + '/' + recording_id + '.m4a'
     print('audio_in_path ', audio_in_path)
@@ -851,7 +852,8 @@ def play_clip(recording_id, start_time, duration, applyBandPassFilter):
     
     y, sr = librosa.load(audio_in_path, sr=None) 
     if applyBandPassFilter:
-        y = apply_band_pass_filter(y, sr)
+#         y = apply_band_pass_filter(y, sr)
+        y = butter_bandpass_filter(y, min_freq, max_freq, sr, order=3)    
     y_amplified = np.int16(y/np.max(np.abs(y)) * 32767)
     y_amplified_start = sr * start_time
     y_amplified_end = (sr * start_time) + (sr * duration)
@@ -919,50 +921,50 @@ def insert_onset_into_database(version, recording_id, start_time_seconds, durati
         print(e, '\n')
         print('\t\tUnable to insert onest ' + str(recording_id), '\n')   
  
-# https://stackoverflow.com/questions/25191620/creating-lowpass-filter-in-scipy-understanding-methods-and-units
-def butter_lowpass(cutoff, fs, order=5):
-    nyq = 0.5 * fs
-    normal_cutoff = cutoff / nyq
-    b, a = butter(order, normal_cutoff, btype='low', analog=False)
-    return b, a
+# # https://stackoverflow.com/questions/25191620/creating-lowpass-filter-in-scipy-understanding-methods-and-units
+# def butter_lowpass(cutoff, fs, order=5):
+#     nyq = 0.5 * fs
+#     normal_cutoff = cutoff / nyq
+#     b, a = butter(order, normal_cutoff, btype='low', analog=False)
+#     return b, a
+# 
+# def butter_lowpass_filter(data, cutoff, fs, order=5):
+#     b, a = butter_lowpass(cutoff, fs, order=order)
+#     y = lfilter(b, a, data)
+#     return y
 
-def butter_lowpass_filter(data, cutoff, fs, order=5):
-    b, a = butter_lowpass(cutoff, fs, order=order)
-    y = lfilter(b, a, data)
-    return y
-
-def apply_lowpass_filter(y, sr):
-    # Filter requirements.
-    order = 6
-       
-#     cutoff = 1000  # desired cutoff frequency of the filter, Hz
-    cutoff = 900  # desired cutoff frequency of the filter, Hz
-    
-    y = butter_lowpass_filter(y, cutoff, sr, order)
-    
-    return y
- 
+# def apply_lowpass_filter(y, sr):
+#     # Filter requirements.
+#     order = 6
+#        
+# #     cutoff = 1000  # desired cutoff frequency of the filter, Hz
+#     cutoff = 900  # desired cutoff frequency of the filter, Hz
+#     
+#     y = butter_lowpass_filter(y, cutoff, sr, order)
+#     
+#     return y
+#  
 
 #https://dsp.stackexchange.com/questions/41184/high-pass-filter-in-python-scipy/41185#41185
-def highpass_filter_with_parameters(y, sr, filter_stop_freq, filter_pass_freq ):
-  
-    filter_order = 1001
-    
-    # High-pass filter
-    nyquist_rate = sr / 2.
-    desired = (0, 0, 1, 1)
-    bands = (0, filter_stop_freq, filter_pass_freq, nyquist_rate)
-    filter_coefs = signal.firls(filter_order, bands, desired, nyq=nyquist_rate)
-    
-    # Apply high-pass filter
-    filtered_audio = signal.filtfilt(filter_coefs, [1], y)
-    return filtered_audio
-
-    
-def apply_band_pass_filter(y, sr):
-    y = highpass_filter_with_parameters(y=y, sr=sr, filter_stop_freq=600, filter_pass_freq=650 )
-    y = apply_lowpass_filter(y, sr)    
-    return y
+# def highpass_filter_with_parameters(y, sr, filter_stop_freq, filter_pass_freq ):
+#   
+#     filter_order = 1001
+#     
+#     # High-pass filter
+#     nyquist_rate = sr / 2.
+#     desired = (0, 0, 1, 1)
+#     bands = (0, filter_stop_freq, filter_pass_freq, nyquist_rate)
+#     filter_coefs = signal.firls(filter_order, bands, desired, nyq=nyquist_rate)
+#     
+#     # Apply high-pass filter
+#     filtered_audio = signal.filtfilt(filter_coefs, [1], y)
+#     return filtered_audio
+# 
+#     
+# def apply_band_pass_filter(y, sr):
+#     y = highpass_filter_with_parameters(y=y, sr=sr, filter_stop_freq=600, filter_pass_freq=650 )
+#     y = apply_lowpass_filter(y, sr)    
+#     return y
    
    
 def create_onsets_in_local_db():
@@ -1196,7 +1198,11 @@ def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, 
     except Exception as e:
         print(e, '\n')
         print('Error processing onset ', onset)
-        
+
+def scale_minmax(X, min=0.0, max=1.0):
+    X_std = (X - X.min()) / (X.max() - X.min())
+    X_scaled = X_std * (max - min) + min
+    return X_scaled        
 
 def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_id, min_freq, max_freq):
     
@@ -1216,13 +1222,19 @@ def get_single_create_focused_mel_spectrogram_for_creating_test_data(recording_i
        
         image_out_path = temp_display_images_folder_path + '/' + image_out_name
         
-        y, sr = librosa.load(audio_in_path, sr=None) 
+        y, sr = librosa.load(audio_in_path, sr=None)         
 
-        mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=min_freq,fmax=max_freq)
+#         y = butter_bandpass_filter(y, min_freq, max_freq, sr, order=4)  
+        y = butter_bandpass_filter(y, min_freq, max_freq, sr)    
+        y = noise_reduce(y, sr) 
+        mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr, fmin=min_freq,fmax=max_freq, n_mels=32)
+        
+
          
         plt.axis('off') # no axis
         plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
-        librosa.display.specshow(mel_spectrogram, cmap='binary') #https://matplotlib.org/examples/color/colormaps_reference.html
+        librosa.display.specshow(mel_spectrogram, norm=mcolors.PowerNorm(0.2), cmap='binary')                
+
         plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
         plt.close()
         
@@ -2031,8 +2043,13 @@ def get_filtered_recording(recording_id):
     filename = str(recording_id) + ".m4a"
     audio_in_path = recordings_folder_with_path + "/" + filename
     y, sr = librosa.load(audio_in_path)
-    y_filtered = apply_band_pass_filter(y, sr)
-    return y_filtered, sr
+#     y_filtered = apply_band_pass_filter(y, sr)
+    
+    y = butter_bandpass_filter(y, parameters.morepork_min_freq, parameters.morepork_max_freq, sr, order=4)    
+    y = noise_reduce(y, sr) 
+
+
+    return y, sr
              
 def create_features_for_single_onset_version_2(onset_id, recording_id, start_time_seconds, actual_confirmed, device_super_name, device_name, duration_seconds, recordingDateTime, y_filtered, sr):
     
@@ -2156,7 +2173,7 @@ def march_test_data_analysis():
     print(count_of_test_data_with_ver_7_onset, " of the test data had a version 7 onset")
     
 
-def butter_bandpass(lowcut, highcut, fs, order=5):
+def butter_bandpass(lowcut, highcut, fs, order):
     nyq = 0.5 * fs
     low = lowcut / nyq
     high = highcut / nyq
@@ -2164,8 +2181,8 @@ def butter_bandpass(lowcut, highcut, fs, order=5):
     return b, a
 
 
-def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
-    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
+def butter_bandpass_filter(data, lowcut, highcut, fs):
+    b, a = butter_bandpass(lowcut, highcut, fs, order=4)
     y = lfilter(b, a, data)
     return y
 

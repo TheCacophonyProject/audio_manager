@@ -104,11 +104,8 @@ class HomePage(tk.Frame):
         
         createOnsetsPage_button = ttk.Button(self, text="Step 2: Create onsets (Do not always use)",
                             command=lambda: controller.show_frame(CreateOnsetsPage))        
-        createOnsetsPage_button.pack()
-        
-        classifyOnsetsUsingWekaModelPage_button = ttk.Button(self, text="Step 3: Classify Onsets Using Weka Model",
-                            command=lambda: controller.show_frame(ClassifyOnsetsUsingWekaModelPage))        
-        classifyOnsetsUsingWekaModelPage_button.pack()        
+        createOnsetsPage_button.pack()       
+           
           
         evaluateWekaModelRunResultPage_button = ttk.Button(self, text="Step 4: Manually Evaluate Weka model Run Result",
                             command=lambda: controller.show_frame(EvaluateWekaModelRunResultPage))        
@@ -1016,7 +1013,7 @@ class CreateTestDataPage(tk.Frame):
         self.aLine_id = self.canvas.create_line(x_canvas_pos, 0,x_canvas_pos, self.spectrogram_image.height(), fill='red', tags = "audio_position_line")
         # Now play the clip
        
-        functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,duration, self.play_filtered.get())
+        functions.play_clip(str(self.recordings[self.current_recordings_index][0]), start_position_seconds,duration, self.play_filtered.get(),int(self.min_freq.get()), int(self.max_freq.get()))
         
         # https://www.youtube.com/watch?v=f8sKAot-15w
         # Need to calculate the speed to move the line, how many pixels per second
@@ -1157,21 +1154,24 @@ class CreateTestDataPage(tk.Frame):
         min_freq_label = ttk.Label(self, text="Enter the minimum frequency (Hz)")
         min_freq_label.grid(column=1, columnspan=1, row=0)
              
-        self.min_freq = StringVar(value='700')
+#         self.min_freq = StringVar(value='200')
+        self.min_freq = StringVar(value=str(parameters.morepork_min_freq))
         min_freq_entry = tk.Entry(self,  textvariable=self.min_freq, width=30)
         min_freq_entry.grid(column=1, columnspan=1, row=1)        
         
         max_freq_label = ttk.Label(self, text="Enter the maximum frequency (Hz)")
         max_freq_label.grid(column=2, columnspan=1, row=0)
              
-        self.max_freq = StringVar(value='1100')
+#         self.max_freq = StringVar(value='2000')
+        self.max_freq = StringVar(value=str(parameters.morepork_max_freq))
         max_freq_entry = tk.Entry(self,  textvariable=self.max_freq, width=30)
         max_freq_entry.grid(column=2, columnspan=1, row=1)
         
         horizonal_ref_line_freq_label = ttk.Label(self, text="Enter the frequency (Hz) of the horizontal reference line")
         horizonal_ref_line_freq_label.grid(column=3, columnspan=1, row=0)
         
-        self.horizonal_ref_line_freq = StringVar(value='900')      
+        
+        self.horizonal_ref_line_freq = StringVar(value=str(parameters.morepork_expected_freq))      
         horizonal_ref_line_freq_entry = tk.Entry(self,  textvariable=self.horizonal_ref_line_freq, width=30)
         horizonal_ref_line_freq_entry.grid(column=3, columnspan=1, row=1)  
         
