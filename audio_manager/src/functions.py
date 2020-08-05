@@ -2806,8 +2806,45 @@ def test_data_analysis_using_version_7_onsets_with_spectrogram_based_prediction(
         cur.execute(sql, (modelRunName, recording_id, model_run_result_startTime, model_run_result_duration, model_run_result_predictedByModel, model_run_result_probability )) 
         get_database_connection().commit()
 
+def get_non_test_march_2020_recordings():
+    table_name = 'onsets'
+    
+    firstDateStr = firstDateStr + ':00:00:00'
+    lastDateStr = lastDateStr + ':23:59:59'
+    
+    cur = get_database_connection().cursor()
+    # https://stackoverflow.com/questions/8187288/sql-select-between-dates
+    cur.execute("select ID, recordingDateTime from " + table_name + " where strftime('%Y-%m-%d:%H-%M-%S', recordingDateTimeNZ) NOT BETWEEN '" + firstDateStr + "' AND '" + lastDateStr + "' order by recordingDateTimeNZ")      
+         
+    records = cur.fetchall()
+    numOfRecords = len(records)
+    count = 0
+    
+    for record in records:          
+        
+        ID = record[0]
+        recordingDateTime = record[1]
+        
+        print('
 
-
+def create_audio_clips_for_speaker_recogntion_not_march_test_data():
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT recording_id, start_time_seconds, version from onsets WHERE recording_id = ? AND start_time_seconds > ? AND start_time_seconds < ?", (recording_id, test_data_start_time_seconds, test_data_finish_time_seconds))
+    
+    onset_records = cur.fetchall()
+    for onset_record in onset_records:  
+        recording_id = onset_record[0]
+        start_time_seconds = onset_record[1]
+        version = onset_record[2]
+        print("recording_id = ", recording_id, " start_time_seconds = ", start_time_seconds," version = ", version," test_data_start_time_seconds = ", test_data_start_time_seconds," test_data_finish_time_seconds = ", test_data_finish_time_seconds)
+        if version == '5':
+            count_of_test_data_with_ver_5_onset += 1
+        if version == '6':
+            count_of_test_data_with_ver_6_onset += 1
+        if version == '7':
+            count_of_test_data_with_ver_7_onset += 1
+       
+   
 
         
         
