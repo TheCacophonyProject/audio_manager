@@ -11,18 +11,24 @@ import os
 from scipy import signal
 import numpy as np
 from scipy.signal import butter, lfilter
+import librosa
 import matplotlib.pyplot as plt
-import librosa.display
+# import librosa.display
 import matplotlib.colors as mcolors
 import soundfile as sf
 from subprocess import PIPE, run
 from librosa import onset
 from PIL import ImageTk,Image 
-from datetime import datetime
+# from datetime import datetime
+import datetime
 from pytz import timezone
 import sys
-
 from tkinter import filedialog
+from pathlib import Path
+import tensorflow as tf
+from tensorflow import keras 
+from keras import metrics
+import shutil
 
 
 
@@ -1347,7 +1353,7 @@ def get_single_recording_info_from_local_db(recording_id):
     device_super_name = single_recording[0]
     recordingDateTime = single_recording[1]
     
-    date_time_obj = datetime.strptime(recordingDateTime, "%Y-%m-%dT%H:%M:%S.000Z")    
+    date_time_obj = datetime.datetime.strptime(recordingDateTime, "%Y-%m-%dT%H:%M:%S.000Z")    
     date_time_obj_Zulu = timezone('Zulu').localize(date_time_obj)
 
     fmt = "%Y-%m-%d %H:%M"
@@ -1512,7 +1518,7 @@ def create_local_tags_from_model_run_result():
             automatic = 'True'
             created_locally = 1 # 1 is true as using integer in db
             
-            now = datetime.now(timezone('Zulu')) 
+            now = datetime.datetime.now(timezone('Zulu')) 
             fmt = "%Y-%m-%dT%H:%M:%S %Z"
             createdAtDate = now.strftime(fmt)
                   
@@ -1713,7 +1719,7 @@ def update_model_run_results_with_onsets_used_to_create_model(model_run_name, cs
 def convert_time_zones(day_time_from_database):
     # recording ID is  319810 - server says time is Thu Jun 13 2019, 06:42:00
 #     day_time_from_database = '2019-06-12T18:42:00.000Z'
-    day_time_from_database_00_format = datetime.fromisoformat(day_time_from_database.replace('Z', '+00:00'))
+    day_time_from_database_00_format = datetime.datetime.fromisoformat(day_time_from_database.replace('Z', '+00:00'))
     print('day_time_from_database_00_format: ', day_time_from_database_00_format)
     nz = timezone('NZ')
     day_time_nz = day_time_from_database_00_format.astimezone(nz)
@@ -2806,37 +2812,5 @@ def test_data_analysis_using_version_7_onsets_with_spectrogram_based_prediction(
         cur.execute(sql, (modelRunName, recording_id, model_run_result_startTime, model_run_result_duration, model_run_result_predictedByModel, model_run_result_probability )) 
         get_database_connection().commit()
 
-def get_onsets_from_non_test_march_2020_recordings():
-    
-    cur = get_database_connection().cursor()
-#     cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ  from onsets WHERE version = 7 AND (recording_id > ? AND recording_id < ?)", (first_test_data_recording_id, last_test_data_recording_id))
-    cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds, actual_confirmed, recordingDateTimeNZ, version from onsets WHERE actual_confirmed IS NOT NULL AND version = 5 AND recordingDateTimeNZ NOT BETWEEN ? AND ? ORDER BY recordingDateTimeNZ", ("2020-03-01 00:00", "2020-03-31 23:59"))
-    confirmed_onsets = cur.fetchall() 
-    
-    return confirmed_onsets    
-    
 
-def create_audio_clips_for_speaker_recogntion_not_march_test_data():
-    confirmed_onsets = get_onsets_from_non_test_march_2020_recordings()
-   
-    count = 0
-    count_of_confirmed_onsets = len(confirmed_onsets)
-    print("count_of_confirmed_onsets ", count_of_confirmed_onsets)
-    for confired_onset in confirmed_onsets:
-        count+=1
-        print(count, ' of ', count_of_confirmed_onsets)
-        recording_id = confired_onset[1]
-        start_time_seconds = confired_onset[2]
-        duration_seconds = confired_onset[3]
-        what = confired_onset[4]
-        recordingDateTimeNZ = confired_onset[5]
-        version = confired_onset[6]
-        
-        # Create filtered clip
-        
-   
-       
-   
-
-        
         
