@@ -43,7 +43,7 @@ CHECKPOINT_PATH = TENSORFLOW_RUN_FOLDER + "/checkpoints/" + "training_1/cp.ckpt"
 CHECKPOINT_DIRECTORY = os.path.dirname(CHECKPOINT_PATH)
 
 SAVED_MODELS_DIRECTORY = TENSORFLOW_RUN_FOLDER + "/saved_model"
-SAVE_MODEL_NAME = SAVED_MODELS_DIRECTORY + "/model" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+SAVE_MODEL_NAME = SAVED_MODELS_DIRECTORY + "/model-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 # CHECKPOINT_FILEPATH = TENSORFLOW_RUN_FOLDER + '/tmp/checkpoint'
 TENSORBOARD_LOGS_DIR = TENSORFLOW_RUN_FOLDER + "/logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
@@ -78,6 +78,7 @@ SCALE = 0.5
 
 BATCH_SIZE = 128
 EPOCHS = 500
+# EPOCHS = 2
 
 def get_onsets_from_non_test_march_2020_recordings():
     
@@ -421,7 +422,8 @@ def build_model(input_shape, num_classes):
     
 def get_keras_metrics():
     METRICS = [     
-      keras.metrics.BinaryAccuracy(name='accuracy'),       
+#       keras.metrics.BinaryAccuracy(name='accuracy'),
+      "accuracy",      
       tf.keras.metrics.SparseCategoricalCrossentropy(),
     ]
     return METRICS
@@ -457,7 +459,10 @@ def get_all_callbacks():
 #     return earlystopping_cb
 
 def test_model(valid_audio_paths, valid_labels, noises, model, class_names):
-    SAMPLES_TO_DISPLAY = 10
+    count_of_validation_audio_paths = len(valid_audio_paths)
+    print("count_of_validation_audio_paths: ", count_of_validation_audio_paths)
+#     SAMPLES_TO_DISPLAY = 10
+    SAMPLES_TO_DISPLAY = count_of_validation_audio_paths
 
     test_ds = paths_and_labels_to_dataset(valid_audio_paths, valid_labels)
     test_ds = test_ds.shuffle(buffer_size=BATCH_SIZE * 8, seed=SHUFFLE_SEED).batch(
@@ -476,21 +481,61 @@ def test_model(valid_audio_paths, valid_labels, noises, model, class_names):
         audios = audios.numpy()[rnd, :, :]
         labels = labels.numpy()[rnd]
         y_pred = np.argmax(y_pred, axis=-1)[rnd]
+        
+        count_of_TP_morepork = 0
+        count_of_TN_morepork = 0
+        count_of_FP_morepork = 0
+        count_of_FN_morepork = 0
+        
     
         for index in range(SAMPLES_TO_DISPLAY):
             # For every sample, print the true and predicted label
             # as well as run the voice with the noise
-            print(
-                "Speaker: {} - Predicted: {}".format(
-                    class_names[labels[index]],
-                    class_names[y_pred[index]],
-                )
-            )
+#             print(
+#                 "Speaker: {} - Predicted: {}".format(
+#                     class_names[labels[index]],
+#                     class_names[y_pred[index]],
+#                 )
+#             )
+            print("Speaker: {} - Predicted: {}".format(class_names[labels[index]], class_names[y_pred[index]],))
+            
+            actual_class_name = class_names[labels[index]]
+            predicted_class_name = class_names[y_pred[index]]
+            
+            if predicted_class_name == "morepork_more-pork":
+                if actual_class_name == "morepork_more-pork":
+                    count_of_TP_morepork+=1
+                else:
+                    count_of_FP_morepork+=1
+            else:
+                if actual_class_name == "morepork_more-pork":
+                    count_of_FN_morepork+=1
+                else:
+                    count_of_TN_morepork+=1
+                                
+        print("count_of_TP_morepork: ", count_of_TP_morepork)
+        print("count_of_TN_morepork: ", count_of_TN_morepork)
+        print("count_of_FP_morepork: ", count_of_FP_morepork)
+        print("count_of_FN_morepork: ", count_of_FN_morepork)
+        
+                 
+                 
 #             display(Audio(audios[index, :, :].squeeze(), rate=SAMPLING_RATE))
         
-    
+def evaluate_model_and_store_in_database(model_name):
+    # https://www.tensorflow.org/tutorials/keras/save_and_load
+    model_to_load = SAVED_MODELS_DIRECTORY + "/" + model_name
+    print("Model to load: ", model_to_load)
+    model = tf.keras.models.load_model(model_to_load)
 
-def run(use_saved_checkpoint, train_model, save_model_for_standalone_use):
+    # Check its architecture
+    model.summary()
+    
+    # Prepare a wav file
+    
+       
+
+def run(use_saved_checkpoint, train_model, save_model_for_standalone_use, evaluate_model, model_name):
     check_tensorflow_setup()
     prepare_audio_files()
     noises = setup_noise()
@@ -526,14 +571,15 @@ def run(use_saved_checkpoint, train_model, save_model_for_standalone_use):
     
     if (save_model_for_standalone_use):
         model.save(filepath=SAVE_MODEL_NAME)
-
-def use_saved_model(): 
-    print("to do")
-
-
-# run(use_saved_checkpoint=False, train_model=True, save_model_for_standalone_use=False)  # Normal options
-# run(use_saved_checkpoint=True, train_model=True, save_model_for_standalone_use=False)  # Carry on training from previous checkpoint
-run(use_saved_checkpoint=True, train_model=False, save_model_for_standalone_use=True)  # Just load model from checkpoint, and save as standalone model for production use
+        print("Model saved at: ", SAVE_MODEL_NAME)
+        
+    if (evaluate_model):
+        evaluate_model_and_store_in_database(model_name)
 
 
+run(use_saved_checkpoint=False, train_model=True, save_model_for_standalone_use=False, evaluate_model=False, model_name=None)  # Normal options
+# run(use_saved_checkpoint=True, train_model=True, save_model_for_standalone_use=False, evaluate_model=False, model_name=None)  # Carry on training from previous checkpoint
+# run(use_saved_checkpoint=True, train_model=False, save_model_for_standalone_use=True, evaluate_model=False, model_name=None)  # Just load model from checkpoint, and save as standalone model for production use
+# run(use_saved_checkpoint=False, train_model=False, save_model_for_standalone_use=False, evaluate_model=True, model_name="model-20200810-163033") # Load latest model and evaluate test data, storing results in database
+# run(use_saved_checkpoint=True, train_model=False, save_model_for_standalone_use=False, evaluate_model=False, model_name=None) # Just test_model
     
