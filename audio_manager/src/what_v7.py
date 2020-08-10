@@ -38,8 +38,15 @@ import shutil
 BASE_FOLDER = '/home/tim/Work/Cacophony'
 TENSORFLOW_RUN_NAME = 'practice'
 TENSORFLOW_RUN_FOLDER = BASE_FOLDER + '/Audio_Analysis/audio_classifier_runs/tensorflow_runs' + '/' + TENSORFLOW_RUN_NAME
-PATH_TO_MODEL = TENSORFLOW_RUN_FOLDER + "/model"
-CHECKPOINT_FILEPATH = TENSORFLOW_RUN_FOLDER + '/tmp/checkpoint'
+
+CHECKPOINT_PATH = TENSORFLOW_RUN_FOLDER + "/checkpoints/" + "training_1/cp.ckpt"
+CHECKPOINT_DIRECTORY = os.path.dirname(CHECKPOINT_PATH)
+
+SAVED_MODELS_DIRECTORY = TENSORFLOW_RUN_FOLDER + "/saved_model"
+SAVE_MODEL_NAME = SAVED_MODELS_DIRECTORY + "/model" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+# CHECKPOINT_FILEPATH = TENSORFLOW_RUN_FOLDER + '/tmp/checkpoint'
+TENSORBOARD_LOGS_DIR = TENSORFLOW_RUN_FOLDER + "/logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+
     
 
 DATASET_ROOT = os.path.join(os.path.expanduser("~"), "Work/Cacophony/Audio_Analysis/audio_clips")
@@ -70,7 +77,7 @@ SAMPLING_RATE = 16000
 SCALE = 0.5
 
 BATCH_SIZE = 128
-EPOCHS = 5
+EPOCHS = 500
 
 def get_onsets_from_non_test_march_2020_recordings():
     
@@ -148,15 +155,24 @@ def check_tensorflow_setup():
         # Invalid device or cannot modify virtual devices once initialized.
         pass
     
-    print(PATH_TO_MODEL)    
+    
 
     if not os.path.exists(TENSORFLOW_RUN_FOLDER):
         os.makedirs(TENSORFLOW_RUN_FOLDER)
+        
+    if not os.path.exists(CHECKPOINT_DIRECTORY):
+        os.makedirs(CHECKPOINT_DIRECTORY)
+        
+    if not os.path.exists(SAVED_MODELS_DIRECTORY):
+        os.makedirs(SAVED_MODELS_DIRECTORY)
+        
     
     print('tensorflow version is ',tf.__version__)
     physical_devices = tf.config.list_physical_devices('GPU')
     print(physical_devices)
     print(DATASET_ROOT)
+    print("TENSORBOARD_LOGS_DIR: ", TENSORBOARD_LOGS_DIR)
+    
     
 def prepare_audio_files():
     # If folder `audio`, does not exist, create it, otherwise do nothing
@@ -415,7 +431,8 @@ def get_model_check_point_callback():
    
     metric = 'val_accuracy'
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=CHECKPOINT_FILEPATH,
+#         filepath=PATH_TO_MODEL_CHECKPOINT + 'model.{epoch:02d}-{val_loss:.2f}.h5',
+        filepath=CHECKPOINT_PATH,
         save_weights_only=True,
         monitor=metric,
         mode='max',
@@ -423,9 +440,21 @@ def get_model_check_point_callback():
     
     return model_checkpoint_callback
 
-def get_early_stopping_callback():
-    earlystopping_cb = keras.callbacks.EarlyStopping(patience=50, restore_best_weights=True)   
-    return earlystopping_cb
+def get_all_callbacks():
+    my_callbacks = [
+    tf.keras.callbacks.EarlyStopping(patience=50, restore_best_weights=True),
+#     tf.keras.callbacks.ModelCheckpoint(filepath=PATH_TO_MODEL_CHECKPOINT + 'model.{epoch:02d}-{val_loss:.2f}.h5'),
+    get_model_check_point_callback(),
+#     tf.keras.callbacks.TensorBoard(log_dir='./logs'),  TENSORBOARD_LOGS_DIR
+#     tf.keras.callbacks.TensorBoard(log_dir=TENSORBOARD_LOGS_DIR),  
+    tf.keras.callbacks.TensorBoard(log_dir=TENSORBOARD_LOGS_DIR, profile_batch=0),  # Bug in tensorboard updating- needs , profile_batch=0 - https://github.com/tensorflow/tensorboard/issues/2084#issuecomment-483395808
+    ]
+    
+    return my_callbacks
+
+# def get_early_stopping_callback():
+#     earlystopping_cb = keras.callbacks.EarlyStopping(patience=50, restore_best_weights=True)   
+#     return earlystopping_cb
 
 def test_model(valid_audio_paths, valid_labels, noises, model, class_names):
     SAMPLES_TO_DISPLAY = 10
@@ -459,7 +488,9 @@ def test_model(valid_audio_paths, valid_labels, noises, model, class_names):
             )
 #             display(Audio(audios[index, :, :].squeeze(), rate=SAMPLING_RATE))
         
-def main():
+    
+
+def run(use_saved_checkpoint, train_model, save_model_for_standalone_use):
     check_tensorflow_setup()
     prepare_audio_files()
     noises = setup_noise()
@@ -468,23 +499,41 @@ def main():
     train_ds, valid_ds, valid_audio_paths, valid_labels = split_into_training_and_validation(audio_paths, labels)
     add_noise_to_training_set(train_ds, noises)
     train_ds, valid_ds = transform_audio_wave_to_the_frequency_domain(train_ds, valid_ds)
-    
+        
     model = build_model((SAMPLING_RATE // 2, 1), len(class_names))
     model.compile(optimizer="Adam", loss="sparse_categorical_crossentropy", metrics=get_keras_metrics())
+        
+    if use_saved_checkpoint:
+#         check_point_to_load = PATH_TO_MODEL_CHECKPOINT + "model.01-0.77.h5"
+        check_point_to_load =  CHECKPOINT_PATH
+        print("check_point_to_load: ", check_point_to_load)
+        model.load_weights(check_point_to_load)
     
     model.summary()
     
-    history = model.fit(
-        train_ds,
-        epochs=EPOCHS,
-        validation_data=valid_ds,
-        callbacks=[get_model_check_point_callback(), get_early_stopping_callback()],
-    )
+    if (train_model):
+        history = model.fit(
+            train_ds,
+            epochs=EPOCHS,
+            validation_data=valid_ds,
+            callbacks=[get_all_callbacks()],
+        )
+    
     
     print(model.evaluate(valid_ds))
     
     test_model(valid_audio_paths, valid_labels, noises, model, class_names)
     
+    if (save_model_for_standalone_use):
+        model.save(filepath=SAVE_MODEL_NAME)
 
-main()
+def use_saved_model(): 
+    print("to do")
+
+
+# run(use_saved_checkpoint=False, train_model=True, save_model_for_standalone_use=False)  # Normal options
+# run(use_saved_checkpoint=True, train_model=True, save_model_for_standalone_use=False)  # Carry on training from previous checkpoint
+run(use_saved_checkpoint=True, train_model=False, save_model_for_standalone_use=True)  # Just load model from checkpoint, and save as standalone model for production use
+
+
     
