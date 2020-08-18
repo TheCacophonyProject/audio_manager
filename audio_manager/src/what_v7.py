@@ -1,6 +1,7 @@
 '''
 Created on 9 Aug. 2020
 based/copied from https://keras.io/examples/audio/speaker_recognition_using_cnn/
+also see https://github.com/keras-team/keras-io/blob/master/examples/audio/speaker_recognition_using_cnn.py
 @author: tim
 '''
 
@@ -29,7 +30,7 @@ import datetime
 from pytz import timezone
 import sys
 from tkinter import filedialog
-from pathlib import Path
+# from pathlib import Path
 import tensorflow as tf
 from tensorflow import keras 
 from keras import metrics
@@ -54,6 +55,8 @@ DATASET_ROOT = os.path.join(os.path.expanduser("~"), "Work/Cacophony/Audio_Analy
 # The folders in which we will put the audio samples and the noise samples
 AUDIO_SUBFOLDER = "audio"
 NOISE_SUBFOLDER = "noise"
+
+CACOPHONY_NOISE_SAMPLES = BASE_FOLDER + "/Audio_Analysis/examples_of_cacophony_noise/"
 
 DATASET_AUDIO_PATH = os.path.join(DATASET_ROOT, AUDIO_SUBFOLDER)
 DATASET_NOISE_PATH = os.path.join(DATASET_ROOT, NOISE_SUBFOLDER)
@@ -95,19 +98,20 @@ def create_and_save_clip_as_wav(recording_id, start_time, duration, applyBandPas
     print('audio_in_path ', audio_in_path)
     print('start_time ', start_time)
     print('duration ', duration)
+    
+    if what == "white_noise":  # This is tricky.  The speaker_recognition_using_cnn code, uses any samples labeled noise NOT as a class - but I want to for now, will use separate noise examples.
+        what = "white"
 
     audio_out_folder = '/home/tim/Work/Cacophony/Audio_Analysis/audio_clips/' + what + '/'    
        
     Path(audio_out_folder).mkdir(parents=True, exist_ok=True)
-    
-    audio_out_folder_filename = audio_out_folder  + str(recording_id) + '_' + what + '_' + str(start_time) + '.wav'
-    
-#     audio_in_path = '/home/tim/Work/Cacophony/downloaded_recordings/all_recordings/' + recording_id + '.m4a'
-
-    
+            
+    audio_out_folder_filename = audio_out_folder  + str(recording_id) + '_' + what + '_' + str(start_time) + '.wav'    
+        
     print('audio_out_folder_filename ', audio_out_folder_filename)
     
-    y, sr = librosa.load(audio_in_path, sr=None) 
+#     y, sr = librosa.load(audio_in_path, sr=None) 
+    y, sr = librosa.load(audio_in_path, sr=SAMPLING_RATE) 
     y_start = sr * start_time
     y_end = (sr * start_time) + (sr * duration)
     y_time_clipped = y[int(y_start):int(y_end)]
@@ -124,6 +128,7 @@ def create_and_save_clip_as_wav(recording_id, start_time, duration, applyBandPas
     
 
 def create_audio_clips_for_speaker_recogntion_not_march_test_data():
+#  This was just used once.
     confirmed_onsets = get_onsets_from_non_test_march_2020_recordings()
    
     count = 0
@@ -137,11 +142,16 @@ def create_audio_clips_for_speaker_recogntion_not_march_test_data():
 #         duration_seconds = confired_onset[3]
         duration_seconds = 1 # For now use 1 second so it is the same as the speaker recognition example code
         what = confired_onset[4]
-        recordingDateTimeNZ = confired_onset[5]
-        version = confired_onset[6]
-        
-        # Create filtered clip
-        create_and_save_clip_as_wav(recording_id, start_time_seconds, duration_seconds, True, what)
+        if what not in  ["unknown", "maybe_morepork_more-pork", "morepork_more-pork_part"]: # not going to use "unknown", "maybe_morepork_more-pork", "morepork_more-pork_part"
+            recordingDateTimeNZ = confired_onset[5]
+            version = confired_onset[6]
+            
+            # Create filtered clip
+            create_and_save_clip_as_wav(recording_id, start_time_seconds, duration_seconds, True, what)
+     
+    print("Finished - create_audio_clips_for_speaker_recogntion_not_march_test_data()")   
+
+
         
 def check_tensorflow_setup():
     print('tensorflow version is ',tf.__version__)
@@ -190,13 +200,16 @@ def prepare_audio_files():
                 # If folder is `audio` or `noise`, do nothing
                 continue
     #         elif folder in ["other", "_background_noise_"]:
-            elif folder in ["car","car_horn","chainsaw", "cow", "crackle", "dog", "fire_work", "hammering", "hand_saw", "music", "plane", "rumble", "siren", "unknown" , "water", "white_noise"]:
+            
+#             elif folder in ["car","car_horn","chainsaw", "cow", "crackle", "dog", "fire_work", "hammering", "hand_saw", "music", "plane", "rumble", "siren", "unknown" , "water", "white_noise"]:
+            elif folder in ["white_noise"]:
                 # If folder is one of the folders that contains noise samples,
                 # move it to the `noise` folder
                 shutil.move(
                     os.path.join(DATASET_ROOT, folder),
                     os.path.join(DATASET_NOISE_PATH, folder),
                 )
+            
             else:
                 # Otherwise, it should be a speaker folder, then move it to
                 # `audio` folder
@@ -204,6 +217,15 @@ def prepare_audio_files():
                     os.path.join(DATASET_ROOT, folder),
                     os.path.join(DATASET_AUDIO_PATH, folder),
                 )
+                
+#   Now get the extra noise files and put noise folder
+    destination_folder = DATASET_NOISE_PATH + "/cacophony"
+    if not os.path.exists(destination_folder):
+        os.makedirs(destination_folder)
+            
+    for file in os.listdir(CACOPHONY_NOISE_SAMPLES):
+        destination_file_name = DATASET_NOISE_PATH + "/cacophony/" + file        
+        shutil.copy(CACOPHONY_NOISE_SAMPLES + "/" + file, destination_file_name)
 
 # Split noise into chunks of 16000 each
 def load_noise_sample(path):
@@ -259,9 +281,7 @@ def setup_noise():
     noises = tf.stack(noises)
     
     print(
-        "{} noise files were split into {} noise samples where each is {} sec. long".format(
-            len(noise_paths), noises.shape[0], noises.shape[1] // SAMPLING_RATE
-        )
+        "{} noise files were split into {} noise samples where each is {} sec. long".format(len(noise_paths), noises.shape[0], noises.shape[1])
     )
     
     return noises
@@ -518,14 +538,19 @@ def test_model(valid_audio_paths, valid_labels, noises, model, class_names):
         print("count_of_FP_morepork: ", count_of_FP_morepork)
         print("count_of_FN_morepork: ", count_of_FN_morepork)
         
-                 
+        accuracy = (count_of_TP_morepork + count_of_TN_morepork) / (count_of_TP_morepork + count_of_FP_morepork + count_of_FN_morepork + count_of_TN_morepork )
+        precision = count_of_TP_morepork / (count_of_TP_morepork + count_of_FP_morepork)
+        recall = count_of_TP_morepork / (count_of_TP_morepork + count_of_FN_morepork)
+        f1_score = 2*(recall * precision) / (recall + precision) 
+        print("accuracy: ", accuracy)   
+        print("precision: ", precision)   
+        print("recall: ", recall)   
+        print("f1_score: ", f1_score)        
                  
 #             display(Audio(audios[index, :, :].squeeze(), rate=SAMPLING_RATE))
         
-def evaluate_model_and_store_in_database(model_name):
-    # https://www.tensorflow.org/tutorials/keras/save_and_load
-    model_to_load = SAVED_MODELS_DIRECTORY + "/" + model_name
-    print("Model to load: ", model_to_load)
+def evaluate_model_and_store_in_database(model_to_load):
+    # https://www.tensorflow.org/tutorials/keras/save_and_load  
     model = tf.keras.models.load_model(model_to_load)
 
     # Check its architecture
@@ -535,7 +560,7 @@ def evaluate_model_and_store_in_database(model_name):
     
        
 
-def run(use_saved_checkpoint, train_model, save_model_for_standalone_use, evaluate_model, model_name):
+def run(use_saved_checkpoint, train_model, save_model_for_standalone_use, evaluate_model, saved_model_name):
     check_tensorflow_setup()
     prepare_audio_files()
     noises = setup_noise()
@@ -544,18 +569,22 @@ def run(use_saved_checkpoint, train_model, save_model_for_standalone_use, evalua
     train_ds, valid_ds, valid_audio_paths, valid_labels = split_into_training_and_validation(audio_paths, labels)
     add_noise_to_training_set(train_ds, noises)
     train_ds, valid_ds = transform_audio_wave_to_the_frequency_domain(train_ds, valid_ds)
-        
+          
     model = build_model((SAMPLING_RATE // 2, 1), len(class_names))
-    model.compile(optimizer="Adam", loss="sparse_categorical_crossentropy", metrics=get_keras_metrics())
-        
+    
+    
+#     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001), loss="sparse_categorical_crossentropy", metrics=get_keras_metrics()) # Default learning rate
+#     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.01), loss="sparse_categorical_crossentropy", metrics=get_keras_metrics())
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001), loss="sparse_categorical_crossentropy", metrics=get_keras_metrics())
+          
     if use_saved_checkpoint:
 #         check_point_to_load = PATH_TO_MODEL_CHECKPOINT + "model.01-0.77.h5"
         check_point_to_load =  CHECKPOINT_PATH
         print("check_point_to_load: ", check_point_to_load)
         model.load_weights(check_point_to_load)
-    
+      
     model.summary()
-    
+      
     if (train_model):
         history = model.fit(
             train_ds,
@@ -563,23 +592,47 @@ def run(use_saved_checkpoint, train_model, save_model_for_standalone_use, evalua
             validation_data=valid_ds,
             callbacks=[get_all_callbacks()],
         )
-    
-    
+      
+      
     print(model.evaluate(valid_ds))
-    
+      
     test_model(valid_audio_paths, valid_labels, noises, model, class_names)
-    
+      
     if (save_model_for_standalone_use):
         model.save(filepath=SAVE_MODEL_NAME)
         print("Model saved at: ", SAVE_MODEL_NAME)
-        
+          
     if (evaluate_model):
-        evaluate_model_and_store_in_database(model_name)
+        
+        if saved_model_name == None:
+            # Evaluate latest model
+            paths = sorted(Path(SAVED_MODELS_DIRECTORY).iterdir(), key=os.path.getmtime, reverse=False)                           
+            model_to_load = paths[len(paths) - 1]          # This gets the full path of the last saved model dir   
+        else:
+            model_to_load = SAVED_MODELS_DIRECTORY + "/" + saved_model_name
+        print("Model to load: ", model_to_load)
+            
+            
+        evaluate_model_and_store_in_database(model_to_load)
 
 
-run(use_saved_checkpoint=False, train_model=True, save_model_for_standalone_use=False, evaluate_model=False, model_name=None)  # Normal options
-# run(use_saved_checkpoint=True, train_model=True, save_model_for_standalone_use=False, evaluate_model=False, model_name=None)  # Carry on training from previous checkpoint
-# run(use_saved_checkpoint=True, train_model=False, save_model_for_standalone_use=True, evaluate_model=False, model_name=None)  # Just load model from checkpoint, and save as standalone model for production use
-# run(use_saved_checkpoint=False, train_model=False, save_model_for_standalone_use=False, evaluate_model=True, model_name="model-20200810-163033") # Load latest model and evaluate test data, storing results in database
-# run(use_saved_checkpoint=True, train_model=False, save_model_for_standalone_use=False, evaluate_model=False, model_name=None) # Just test_model
+# create_audio_clips_for_speaker_recogntion_not_march_test_data()
+
+# Normal options
+run(use_saved_checkpoint=False, train_model=True, save_model_for_standalone_use=True, evaluate_model=True, saved_model_name=None)  
+
+# Carry on training from previous checkpoint
+# run(use_saved_checkpoint=True, train_model=True, save_model_for_standalone_use=False, evaluate_model=False, saved_model_name=None) 
+ 
+# Just load model from checkpoint, and save as standalone model for production use 
+# run(use_saved_checkpoint=True, train_model=False, save_model_for_standalone_use=True, evaluate_model=False, saved_model_name=None)  
+
+# Load latest model and evaluate test data, storing results in database
+# run(use_saved_checkpoint=False, train_model=False, save_model_for_standalone_use=False, evaluate_model=True, saved_model_name=None) 
+
+# Load the specified model and evaluate test data, storing results in database
+# run(use_saved_checkpoint=False, train_model=False, save_model_for_standalone_use=False, evaluate_model=True, saved_model_name="model-20200810-163033") 
+
+# Just test_model
+# run(use_saved_checkpoint=True, train_model=False, save_model_for_standalone_use=False, evaluate_model=False, saved_model_name="model-20200812-145706") 
     

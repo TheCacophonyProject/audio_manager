@@ -8,6 +8,7 @@ import requests
 import json
 from pathlib import Path
 import os
+import os.path
 from scipy import signal
 import numpy as np
 from scipy.signal import butter, lfilter
@@ -18,6 +19,7 @@ import matplotlib.colors as mcolors
 import soundfile as sf
 from subprocess import PIPE, run
 from librosa import onset
+import librosa.display
 from PIL import ImageTk,Image 
 # from datetime import datetime
 import datetime
@@ -28,7 +30,9 @@ from pathlib import Path
 import tensorflow as tf
 from tensorflow import keras 
 from keras import metrics
+
 import shutil
+import warnings
 
 
 
@@ -1167,9 +1171,9 @@ def create_focused_mel_spectrogram_jps_using_onset_pairs():
         
             
             
-def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, duration_seconds):
+def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, duration_seconds, run_folder):
 
-    temp_display_images_folder_path = parameters.base_folder + '/' + parameters.run_folder + '/' + parameters.temp_display_images_folder 
+    temp_display_images_folder_path = parameters.base_folder + '/' + run_folder + '/' + parameters.temp_display_images_folder 
     if not os.path.exists(temp_display_images_folder_path):
         os.makedirs(temp_display_images_folder_path)         
 
@@ -1200,6 +1204,53 @@ def get_single_create_focused_mel_spectrogram(recording_id, start_time_seconds, 
         plt.close()
         
         return get_image(image_out_path)
+        
+    except Exception as e:
+        print(e, '\n')
+        print('Error processing onset ', onset)
+        
+def get_single_create_focused_mel_spectrogram_return_path(recording_id, start_time_seconds, duration_seconds, run_folder):
+
+    temp_display_images_folder_path = parameters.base_folder + '/' + run_folder + '/' + parameters.temp_display_images_folder 
+    if not os.path.exists(temp_display_images_folder_path):
+        os.makedirs(temp_display_images_folder_path)         
+
+    try:
+        
+        audio_filename = str(recording_id) + '.m4a'
+        audio_in_path = parameters.base_folder + '/' + parameters.downloaded_recordings_folder + '/' +  audio_filename 
+        image_out_name = 'temp_spectrogram.jpg'
+        print('image_out_name', image_out_name)           
+       
+        image_out_path = temp_display_images_folder_path + '/' + image_out_name
+        
+        # Delete the image to make sure it isn't using an old one
+        try: # might give error on first time around loop
+            os.remove(image_out_path)
+        except:
+            print(image_out_path, " was not there.")
+             
+        
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            y, sr = librosa.load(audio_in_path, sr=None)      
+               
+        start_time_seconds_float = float(start_time_seconds)            
+        
+        start_position_array = int(sr * start_time_seconds_float)              
+                   
+        end_position_array = start_position_array + int((sr * duration_seconds))                  
+                    
+        y_part = y[start_position_array:end_position_array]  
+        mel_spectrogram = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000)
+        
+        plt.axis('off') # no axis
+        plt.axes([0., 0., 1., 1.], frameon=False, xticks=[], yticks=[]) # Remove the white edge
+        librosa.display.specshow(mel_spectrogram, cmap='binary') #https://matplotlib.org/examples/color/colormaps_reference.html
+        plt.savefig(image_out_path, bbox_inches=None, pad_inches=0)
+        plt.close()
+        
+        return image_out_path
         
     except Exception as e:
         print(e, '\n')
@@ -2813,4 +2864,20 @@ def test_data_analysis_using_version_7_onsets_with_spectrogram_based_prediction(
         get_database_connection().commit()
 
 
-        
+def get_march_2020_version_7_onsets():
+    firstDate = parameters.recordings_for_creating_test_data_start_date 
+    lastDate = parameters.recordings_for_creating_test_data_end_date 
+    
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ FROM onsets WHERE version = 7 AND recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' ORDER BY recording_id") 
+    march_onsets = cur.fetchall() 
+   
+    
+    return march_onsets
+     
+    
+    
+
+
+
+
