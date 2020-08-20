@@ -71,55 +71,55 @@ def calculate_statistics():
     
     
     TPR = TP / (TP + FN)   
-    print("Sensitivity, recall, hit rate, or true positive rate (TPR) ", round(TPR,4))
+    print("Sensitivity, recall, hit rate, or true positive rate, TPR = TP / (TP + FN) ", round(TPR,4))
     
     TNR = TN / (TN + FP)
-    print("specificity, selectivity or true negative rate (TNR) ", round(TNR,4))
+    print("specificity, selectivity or true negative rate, TNR = TN / (TN + FP) ", round(TNR,4))
     
     PPV = TP / (TP + FP)
-    print("precision or positive predictive value (PPV) ", round(PPV,4))
+    print("precision or positive predictive value, PPV = TP / (TP + FP) ", round(PPV,4))
     
     NPV = TN / (TN + FN)
-    print("negative predictive value (NPV) ", round(NPV,4))
+    print("negative predictive value, NPV = TN / (TN + FN) ", round(NPV,4))
     
     FNR = FN / (FN + TP)
-    print("miss rate or false negative rate (FNR) ", round(FNR,4))
+    print("miss rate or false negative rate, FNR = FN / (FN + TP) ", round(FNR,4))
     
     FPR = FP / (FN + TN)
-    print("fall-out or false positive rate (FPR) ", round(FPR,4))
+    print("fall-out or false positive rate, FPR = FP / (FN + TN) ", round(FPR,4))
     
     FDR = FP / (FP + TP)
-    print("false discovery rate (FDR) ", round(FDR,4))
+    print("false discovery rate, FDR = FP / (FP + TP) ", round(FDR,4))
     
     FOR = FN / (FN + TN)
-    print("false omission rate (FOR) ", round(FOR,4))
+    print("false omission rate, FOR = FN / (FN + TN) ", round(FOR,4))
     
     PT = (math.sqrt(TPR * (-TNR + 1)) + TNR - 1)/(TPR + TNR - 1)
-    print("Prevalence Threshold (PT) ", round(PT,4))
+    print("Prevalence Threshold, PT = (math.sqrt(TPR * (-TNR + 1)) + TNR - 1)/(TPR + TNR - 1) ", round(PT,4))
     
     TS = TP / (TP + FN + FP)
-    print("Threat score (TS) or critical success index (CSI) ", round(TS,4))
+    print("Threat score (TS) or critical success index (CSI), TS = TP / (TP + FN + FP) ", round(TS,4))
     
     ACC = (TP + TN)/(TP + TN + FP + FN)
-    print("Accuracy (ACC) ", round(ACC,4))
+    print("Accuracy, ACC = (TP + TN)/(TP + TN + FP + FN) ", round(ACC,4))
     
     BA = (TPR + TNR)/2
-    print("balanced accuracy (BA) ", round(BA,4))
+    print("balanced accuracy, BA = (TPR + TNR)/2 ", round(BA,4))
     
     F1_score = (2 * TP)/(2 * TP + FP + FN)
-    print("F1 score ", round(F1_score,4))
+    print("F1_score = (2 * TP)/(2 * TP + FP + FN)  ", round(F1_score,4))
     
-    MCC = (TP * TN - FP * FN)/(math.sqrt((TP + FP)*(TP + FN)*(TN + FP)*(TN + FN)))
-    print("Matthews correlation coefficient (MCC) ", round(MCC,4))
+    MCC = (TP * TN - FP * FN)/(math.sqrt((TP + FP)*(TP + FN)*(TN + FP)*(TN + FN))) # https://en.wikipedia.org/wiki/Matthews_correlation_coefficient
+    print("Matthews correlation coefficient, MCC = (TP * TN - FP * FN)/(math.sqrt((TP + FP)*(TP + FN)*(TN + FP)*(TN + FN))) ", round(MCC,4))
     
     FM = math.sqrt(PPV*TPR)
-    print("Fowlkes–Mallows index (FM) ", round(FM,4))
+    print("Fowlkes–Mallows index, FM = math.sqrt(PPV*TPR) ", round(FM,4))
     
     BM = TPR + TNR - 1
-    print("informedness or bookmaker informedness (BM) ", round(BM,4))
+    print("informedness or bookmaker informedness, BM = TPR + TNR - 1 ", round(BM,4))
     
     MK = PPV + NPV - 1
-    print("markedness (MK) or deltaP ", round(MK,4))
+    print("markedness (MK) or deltaP, MK = PPV + NPV - 1 ", round(MK,4))
 
 
 def part_1():
