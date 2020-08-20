@@ -109,6 +109,8 @@ arff_path = '/home/tim/Work/Cacophony/opensmile_weka/TestAudioOutput'
 
 
 db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2.db"
+# db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2_dummy.db"
+
 
 
 test_data_canvas_height = 1000

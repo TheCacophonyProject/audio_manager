@@ -33,6 +33,7 @@ from keras import metrics
 
 import shutil
 import warnings
+# from builtins import True
 
 
 
@@ -2874,10 +2875,57 @@ def get_march_2020_version_7_onsets():
    
     
     return march_onsets
-     
-    
-    
 
+def get_model_run_results_simple(model_run_name):        
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT recording_id, startTime, duration, predictedByModel, probability, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ FROM model_run_result WHERE modelRunName = '" + model_run_name + "'") 
+    model_run_results = cur.fetchall()    
+    
+    return model_run_results
+     
+def get_march_2020_test_data_for_like_morepork():
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds, what, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ from test_data WHERE what LIKE '%morepork%'")
+    march_2020_test_data = cur.fetchall()
+    return march_2020_test_data
+    
+def does_test_data_overlap_a_morepork_prediction(modelRunName, recording_id, test_data_start_time_seconds, test_data_finish_time_seconds):
+    
+    cur = get_database_connection().cursor()
+#     cur.execute("SELECT ID, modelRunName, recording_id, predicted_startTime, predicted_duration, predictedByModel, probability, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, determination from sensitivity_specificity WHERE modelRunName = ? AND recording_id = ? AND predictedByModel IS NOT NULL", (modelRunName, recording_id)) # predictedByModel IS NOT NULL to just check against predictions
+    cur.execute("SELECT ID, modelRunName, recording_id, predicted_startTime, predicted_duration, predictedByModel from sensitivity_specificity WHERE modelRunName = ? AND recording_id = ? AND predictedByModel IS NOT NULL", (modelRunName, recording_id)) # predictedByModel IS NOT NULL to just check against predictions
+   
+    sensitivity_specificity_results = cur.fetchall()
+    overlap = False
+    for sensitivity_specificity_result in sensitivity_specificity_results:
+        ID = sensitivity_specificity_result[0]
+        modelRunName = sensitivity_specificity_result[1]
+        recording_id = sensitivity_specificity_result[2]
+        predicted_startTime = sensitivity_specificity_result[3]
+        predicted_duration = sensitivity_specificity_result[4]
+        predictedByModel = sensitivity_specificity_result[5]
+#         probability = sensitivity_specificity_result[6]
+#         device_super_name = sensitivity_specificity_result[7]
+#         device_name = sensitivity_specificity_result[8]
+#         recordingDateTime = sensitivity_specificity_result[9]
+#         recordingDateTimeNZ = sensitivity_specificity_result[10]
+#         determination  = sensitivity_specificity_result[11]
+        
+        predicted_endTime = predicted_startTime + predicted_duration
+        
+        if predicted_startTime > test_data_start_time_seconds and predicted_startTime < test_data_finish_time_seconds:
+            overlap = True
+            break
+        elif predicted_endTime > test_data_start_time_seconds and predicted_endTime < test_data_finish_time_seconds:
+            overlap = True
+            break
+    
+    if overlap:   
+        return overlap, ID, predictedByModel 
+    else:
+        return overlap, None, None        
+        
+    
 
 
 
