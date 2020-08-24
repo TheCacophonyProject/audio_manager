@@ -2103,7 +2103,7 @@ def get_filtered_recording(recording_id):
     y, sr = librosa.load(audio_in_path)
 #     y_filtered = apply_band_pass_filter(y, sr)
     
-    y = butter_bandpass_filter(y, parameters.morepork_min_freq, parameters.morepork_max_freq, sr, order=4)    
+    y = butter_bandpass_filter(y, parameters.morepork_min_freq, parameters.morepork_max_freq, sr)    
     y = noise_reduce(y, sr) 
 
 
@@ -2888,6 +2888,12 @@ def get_march_2020_test_data_for_like_morepork():
     cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds, what, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ from test_data WHERE what LIKE '%morepork%'")
     march_2020_test_data = cur.fetchall()
     return march_2020_test_data
+
+def get_march_2020_test_data_for_morepork_morepork():
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT recording_id, start_time_seconds, finish_time_seconds, what, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ from test_data WHERE what = 'morepork_more-pork'")
+    march_2020_test_data = cur.fetchall()
+    return march_2020_test_data
     
 def does_test_data_overlap_a_morepork_prediction(modelRunName, recording_id, test_data_start_time_seconds, test_data_finish_time_seconds):
     
@@ -2925,7 +2931,19 @@ def does_test_data_overlap_a_morepork_prediction(modelRunName, recording_id, tes
     else:
         return overlap, None, None        
         
+def find_matching_onset(recording_id, start_time_seconds):
+    search_start_seconds = start_time_seconds - 0.2
+    search_end_seconds = start_time_seconds + 0.2
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT COUNT(*) from onsets WHERE recording_id = ? AND version = 7 AND start_time_seconds BETWEEN ? AND ? ", (recording_id, search_start_seconds, search_end_seconds))
+       
+   
+    count = cur.fetchall()
     
-
-
+    return count[0][0]
+    
+    
+    
+    march_2020_test_data = cur.fetchall()
+    return march_2020_test_data
 
