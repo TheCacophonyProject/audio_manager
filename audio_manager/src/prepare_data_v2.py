@@ -83,9 +83,11 @@ def load_single_audio_number_moreporks(recording_id):
 #     mfccs_normalized = mfccs / np.max(np.abs(mfccs),axis=0)
     mfccs_normalized = mfccs / max_value
     
-    print("mfccs_normalized.shape ", mfccs_normalized.shape)    
+    # As we are going to use a Conv2d layer in the model, it expects 3 dimensions, so need to expand
+#     https://machinelearningmastery.com/a-gentle-introduction-to-channels-first-and-channels-last-image-formats-for-deep-learning/
+#     print("mfccs_normalized.shape ", mfccs_normalized.shape)    
     mfccs_normalized = np.expand_dims(mfccs_normalized, axis=2)    
-    print("mfccs_normalized.shape ", mfccs_normalized.shape)
+#     print("mfccs_normalized.shape ", mfccs_normalized.shape)
    
     if mfccs_normalized.shape[1] < 2584:    
 
@@ -120,7 +122,7 @@ def get_all_training_recording_data_morepork(testing):
         print("Processing ", count, " of ", number_of_distinct_recordings)
         recording_id = unique_recording_id[0]
         mfccs, labels = load_single_audio_number_moreporks(recording_id)
-        print("mfccs.shape ", mfccs.shape)
+#         print("mfccs.shape ", mfccs.shape)
         array_of_mfccs.append(mfccs)
         array_of_labels.append(labels)
               
@@ -156,23 +158,23 @@ def get_data(create_data, testing):
     
     print("maximum_number_of_moreporks ", maximum_number_of_moreporks)
         
-    print("array_of_mfccs shape is ", array_of_mfccs.shape)
-    print("array_of_labels shape is ", array_of_labels.shape)
+#     print("array_of_mfccs shape is ", array_of_mfccs.shape)
+#     print("array_of_labels shape is ", array_of_labels.shape)
 
     X_train, X_test, y_train, y_test = train_test_split(array_of_mfccs,
                                                     array_of_labels,
                                                     test_size=0.33,
                                                     random_state=42)    
     
-    print(X_train.shape)    
-    print(X_test.shape)
-    print(y_train.shape)    
-    print(y_test.shape)
-        
-    print(X_train[:3])
-    print(X_test[:3])
-    print(y_train[:3])
-    print(y_test[:3])
+#     print(X_train.shape)    
+#     print(X_test.shape)
+#     print(y_train.shape)    
+#     print(y_test.shape)
+#         
+#     print(X_train[:3])
+#     print(X_test[:3])
+#     print(y_train[:3])
+#     print(y_test[:3])
     
     return X_train, X_test, y_train, y_test, maximum_number_of_moreporks
 
@@ -181,10 +183,10 @@ def run(create_data, testing):
     
     X_train, X_test, y_train, y_test, maximum_number_of_moreporks = get_data(create_data=create_data, testing=testing)  
        
-    print(X_train.shape)
-    print(X_test.shape)
-    print(y_train.shape)
-    print(y_test.shape)
+#     print(X_train.shape)
+#     print(X_test.shape)
+#     print(y_train.shape)
+#     print(y_test.shape)
     
     print("maximum_number_of_moreporks", maximum_number_of_moreporks)
        
