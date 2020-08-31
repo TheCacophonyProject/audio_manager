@@ -40,8 +40,8 @@ import prepare_data_v2
 
 BASE_FOLDER = '/home/tim/Work/Cacophony'
 RUNS_FOLDER = '/Audio_Analysis/audio_classifier_runs/tensorflow_runs/' 
-MODEL_RUN_NAME = "2020_08_24a"
-run_sub_log_dir = "1"
+MODEL_RUN_NAME = "2020_08_31a"
+run_sub_log_dir = "2"
 
 
 
@@ -78,7 +78,7 @@ def create_model(num_classes):
    
 #     
 #     model.compile(optimizer=tf.keras.optimizers.Adam(1e-6), loss='sparse_categorical_crossentropy',  metrics=['accuracy'])
-    model.compile(optimizer=tf.keras.optimizers.Adam(1e-6), loss='categorical_crossentropy',  metrics=['accuracy'])
+    model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='categorical_crossentropy',  metrics=['accuracy'])
 #     
 #     model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy',  metrics=['accuracy'])
     return model
@@ -168,18 +168,18 @@ def get_callbacks():
     print("tensorflow_run_folder ", tensorflow_run_folder)
     checkpoint_path = tensorflow_run_folder + "/training_1/cp.ckpt"
     
-    cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
+    checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
                                                  save_weights_only=True,
                                                  verbose=1)
-    log_dir = "logs/fit/" + run_sub_log_dir
+    log_dir = tensorflow_run_folder + "/" + run_sub_log_dir +  "/logs/fit/"
     tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=0) 
     
     # https://machinelearningmastery.com/how-to-stop-training-deep-neural-networks-at-the-right-time-using-early-stopping/
     # es_val_loss_callback = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
-    es_train_loss_callback = keras.callbacks.EarlyStopping(monitor='loss', mode='min', verbose=1, patience=30)
+    earlystop_train_loss_callback = keras.callbacks.EarlyStopping(monitor='loss', mode='min', verbose=1, patience=30)
     
-#     return [cp_callback, es_train_loss_callback,tensorboard_callback]
-    return [cp_callback, es_train_loss_callback]
+    return [checkpoint_callback, earlystop_train_loss_callback,tensorboard_callback]
+#     return [cp_callback, es_train_loss_callback]
     
 # def train_model(model, train_dataset, val_dataset):
 def train_model(model, train_x, train_y, val_x, val_y, ):
@@ -193,10 +193,15 @@ def train_model(model, train_x, train_y, val_x, val_y, ):
 #               epochs=100, 
 #               )
 
-    model.fit(train_x, train_y, 
+#     model.fit(train_x, train_y, 
+#               epochs=100, 
+#               )
+#     https://keras.io/api/models/model_training_apis/
+    model.fit(x=train_x, y=train_y, 
+              validation_data=(val_x, val_y),
               epochs=100, 
+              callbacks=get_callbacks(),
               )
-    
     
 #     model.fit(train_dataset, 
 #               epochs=100, 
@@ -277,7 +282,7 @@ def model_predict(model, test_dataset):
 def main():
     create_data=False
 
-    testing=True # Only has an affect if create_data is True
+    testing=False # Only has an affect if create_data is True
     
     print("Started")
         
