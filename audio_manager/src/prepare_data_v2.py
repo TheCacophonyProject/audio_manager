@@ -20,7 +20,7 @@ BASE_FOLDER = '/home/tim/Work/Cacophony'
 MODEL_RUN_NAME = "2020_08_24a"
 RUNS_FOLDER = '/Audio_Analysis/audio_classifier_runs/tensorflow_runs/' 
 
-MODEL_RUN_NAME = "2020_08_24a"    
+   
          
 def what_to_integer_lookup(what): # https://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python
     return {
@@ -203,7 +203,8 @@ def load_onset_audio(recording_id, start_time):
 #     else:
 #         return mfccs_normalized, label_count_morepork    
 #     
-def get_all_training_onset_data(testing):
+def get_all_training_onset_data(testing, display_image):
+    
     version_to_use = 5
     cur = functions.get_database_connection().cursor()    
     cur.execute("select recording_id, start_time_seconds, actual_confirmed FROM onsets WHERE version = ? AND actual_confirmed IS NOT NULL ORDER BY recording_id", (version_to_use, )) 
@@ -240,6 +241,18 @@ def get_all_training_onset_data(testing):
         if testing:
             if count >= number_of_onsets:
                 break
+            
+            
+        if display_image:
+            result = mfccs[:, :, 0]
+            print(result.shape)
+
+            plt.matshow(result)
+            plt.title(actual_confirmed)
+            plt.show()
+           
+       
+            
     
 #     result_mfccs = np.stack(array_of_mfccs, axis=-1)
 #     result_labels = np.stack(array_of_labels, axis=-1)
@@ -330,12 +343,12 @@ def get_all_training_onset_data(testing):
 #     return X_train, X_test, y_train, y_test, maximum_number_of_moreporks 
 
    
-def get_data(create_data, testing):
+def get_data(create_data, testing, display_image):
     array_of_mfccs_filename = BASE_FOLDER + RUNS_FOLDER +  MODEL_RUN_NAME + "/" + 'array_of_mfccs' 
     array_of_labels_filename = BASE_FOLDER + RUNS_FOLDER +  MODEL_RUN_NAME + "/" + 'array_of_labels'
            
     if create_data:
-        array_of_mfccs, array_of_labels = get_all_training_onset_data(testing=testing)    
+        array_of_mfccs, array_of_labels = get_all_training_onset_data(testing=testing, display_image=display_image)    
         np.save(array_of_mfccs_filename, array_of_mfccs)
         np.save(array_of_labels_filename, array_of_labels)
         
@@ -351,7 +364,7 @@ def get_data(create_data, testing):
 #     print("array_of_mfccs shape is ", array_of_mfccs.shape)
 #     print("array_of_labels shape is ", array_of_labels.shape)
 
-     # https://www.educative.io/edpresso/how-to-perform-one-hot-encoding-using-keras
+    # https://www.educative.io/edpresso/how-to-perform-one-hot-encoding-using-keras
     array_of_labels = one_hot_encode_labels(array_of_labels)
    
 

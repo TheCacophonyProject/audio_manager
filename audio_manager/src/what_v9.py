@@ -34,132 +34,54 @@ from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import GlobalAveragePooling2D
 from tensorflow.keras.layers import Activation
 
-
+import io
+import itertools
+import sklearn.metrics
+from datetime import datetime
+# from tensorflow.summary import create_file_writer
 
 import prepare_data_v2
 
 BASE_FOLDER = '/home/tim/Work/Cacophony'
 RUNS_FOLDER = '/Audio_Analysis/audio_classifier_runs/tensorflow_runs/' 
-MODEL_RUN_NAME = "2020_08_31a"
-run_sub_log_dir = "2"
+MODEL_RUN_NAME = "2020_09_01a"
+run_sub_log_dir = "4-testing"
 
 
-
-def create_model(num_classes):
-    # https://www.youtube.com/watch?v=x_VrgWTKkiM&list=PLQY2H8rRoyvwLbzbnKJ59NkZvQAW9wLbx&index=14
-    # https://www.youtube.com/watch?v=u2TjZzNuly8&list=PLQY2H8rRoyvwLbzbnKJ59NkZvQAW9wLbx&index=15
-    print("num_classes ", num_classes)
-    model = keras.models.Sequential()
-     
-    model.add(Conv2D(64,(3, 3), padding = "same", input_shape=(32, 32, 1))) 
-    model.add(Activation("relu"))
-    model.add(MaxPooling2D(2,2)) 
-     
-    model.add(Conv2D(64,(3, 3), padding = "same"))  
-    model.add(Activation("relu"))    
-    model.add(MaxPooling2D(2,2)) 
-     
-    model.add(Conv2D(128,(3, 3), padding = "same"))  
-    model.add(Activation("relu"))    
-    model.add(MaxPooling2D(2,2)) 
-     
-    model.add(Conv2D(128,(3, 3), padding = "same"))  
-    model.add(Activation("relu"))    
-    model.add(MaxPooling2D(2,2)) 
-     
-    model.add(Flatten())
-     
-    model.add(Dropout(0.5))
-     
-    model.add(Dense(512, activation = "relu"))
-     
+def create_model_basic(num_classes):
+    # 8-DO(0.8-0.2-0.2-0.2-0.2) 
+    model = Sequential()
+    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(32, 32, 1)))
+    model.add(Dropout(0.8))
+    model.add(MaxPooling2D(2,2))             
+    
+    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
+    model.add(Dropout(0.2))
+    model.add(MaxPooling2D(2,2))
+    
+    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
+    model.add(Dropout(0.2))
+    model.add(MaxPooling2D(2,2))
+    
+    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
+    model.add(Dropout(0.2))
+    model.add(MaxPooling2D(2,2))
+    
+    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
+    model.add(Dropout(0.2))
+    model.add(MaxPooling2D(2,2))
+        
+    model.add(Flatten())    
+    
+    model.add(Dense(64, activation='relu'))    
+    
     model.add(Dense(num_classes, activation="softmax")) 
     
-   
-#     
-#     model.compile(optimizer=tf.keras.optimizers.Adam(1e-6), loss='sparse_categorical_crossentropy',  metrics=['accuracy'])
     model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='categorical_crossentropy',  metrics=['accuracy'])
-#     
-#     model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy',  metrics=['accuracy'])
+    
     return model
-    
-#     model.add(Conv2D(8,(3, 3), padding = "same", input_shape=(32, 32, 1)))
-#     model.add(Conv2D(8,(3, 3), padding = "same"))  
-#     model.add(Activation("relu"))
-#     model.add(MaxPooling2D(2,2))     
-#      
-#     model.add(Conv2D(8,(3, 3), padding = "same"))  
-#     model.add(Activation("relu"))    
-#     model.add(MaxPooling2D(2,2)) 
-#      
-#     model.add(Conv2D(8,(3, 3), padding = "same"))  
-#     model.add(Activation("relu"))    
-#     model.add(MaxPooling2D(2,2))
-#      
-#     model.add(Conv2D(8,(3, 3), padding = "same"))  
-#     model.add(Activation("relu"))    
-#     model.add(MaxPooling2D(2,2))
-#      
-#     model.add(Flatten())
-#      
-#     model.add(Dense(64, activation = "relu"))
-#      
-#     model.add(Dense(num_classes, activation="softmax"))       
-#      
-#     model.compile(optimizer=tf.keras.optimizers.Adam(1e-6), loss='sparse_categorical_crossentropy',  metrics=['accuracy'])
-#       
-#     return model
-    
-#     print("num_classes ", num_classes)
-#     model = keras.models.Sequential()
-# #     model.add(Conv2D(4,(3, 3), padding = "same", input_shape=(32, 2584, 1))) 
-#     model.add(Conv2D(4,(3, 3), padding = "same", input_shape=(32, 32, 1))) 
-#     model.add(Activation("relu"))
-#     model.add(MaxPooling2D(2,2))     
-#      
-#     model.add(Conv2D(8,(3, 3), padding = "same"))  
-#     model.add(Activation("relu"))    
-#     model.add(MaxPooling2D()) 
-#      
-#     model.add(Flatten())
-#      
-#     model.add(Dense(64, activation = "relu"))
-#      
-#     model.add(Dense(num_classes, activation="softmax"))       
-#      
-#     model.compile(optimizer=tf.keras.optimizers.Adam(1e-5), loss='sparse_categorical_crossentropy',  metrics=['accuracy'])
-#      
-#     return model
 
-# def create_regression_model():
-#     
-#     model = keras.models.Sequential()
-#     model.add(Conv2D(16,(3, 3), padding = "same", input_shape=(32, 2584, 1)))  
-# #     model.add(Conv2D(16,(3, 3), padding = "same", input_shape=(32, 2584)))   
-# #     model.add(Conv2D(16,(3, 3), padding = "same", input_shape=(2584, 32, 1)))
-# #     model.add(Conv2D(16,(3, 3), padding = "same", input_shape=(None, 32, 2584)))    
-#     
-#     model.add(BatchNormalization())
-#     model.add(Activation("relu"))
-#     model.add(MaxPooling2D(2,2))     
-#     
-#     model.add(Conv2D(16,(3, 3), padding = "same"))    
-#     model.add(BatchNormalization())      
-#     model.add(Activation("relu"))    
-#     model.add(Conv2D(16,(3, 3), padding = "same"))
-#     model.add(BatchNormalization())    
-#     model.add(Activation("relu"))
-#     model.add(MaxPooling2D()) 
-#     
-#     model.add(Flatten())
-#     
-#     model.add(Dense(64, activation = "relu"))
-#     model.add(Dropout(0.5))
-#     model.add(Dense(1))       
-#     
-#     model.compile(optimizer=tf.keras.optimizers.Adam(), loss='mse',  metrics=['accuracy'])
-#     
-#     return model
+
 
 def get_callbacks():
     
@@ -171,15 +93,20 @@ def get_callbacks():
     checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
                                                  save_weights_only=True,
                                                  verbose=1)
-    log_dir = tensorflow_run_folder + "/" + run_sub_log_dir +  "/logs/fit/"
+    
+    log_dir = tensorflow_run_folder + "/logs/fit/" + run_sub_log_dir + "/"
+    
+    
     tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=0) 
     
     # https://machinelearningmastery.com/how-to-stop-training-deep-neural-networks-at-the-right-time-using-early-stopping/
     # es_val_loss_callback = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
     earlystop_train_loss_callback = keras.callbacks.EarlyStopping(monitor='loss', mode='min', verbose=1, patience=30)
     
+    
+    
     return [checkpoint_callback, earlystop_train_loss_callback,tensorboard_callback]
-#     return [cp_callback, es_train_loss_callback]
+
     
 # def train_model(model, train_dataset, val_dataset):
 def train_model(model, train_x, train_y, val_x, val_y, ):
@@ -209,13 +136,18 @@ def train_model(model, train_x, train_y, val_x, val_y, ):
 #               callbacks=get_callbacks(),
 #               validation_data=val_dataset)
     
-def evaluate_model(model, test_dataset):
-    model.evaluate(test_dataset)
+# def evaluate_model(model, test_dataset):
+#     model.evaluate(test_dataset)
+
+def evaluate_model(model, val_examples, val_labels):
+    print(model.evaluate(x=val_examples, y=val_labels))
+    
+    
 
 
-def prepare_data_no_dataset(create_data, testing):
+def prepare_data_no_dataset(create_data, testing, display_image):
     # https://www.tensorflow.org/tutorials/load_data/numpy
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels = prepare_data_v2.get_data(create_data=create_data, testing=testing) 
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels = prepare_data_v2.get_data(create_data=create_data, testing=testing, display_image=display_image) 
    
    
     return train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels
@@ -267,46 +199,90 @@ def prepare_data_no_dataset(create_data, testing):
 #     return train_dataset, val_dataset, number_of_distinct_labels
 
 # def use_model(model, val_examples, val_labels):
-def model_predict(model, test_dataset):
-#     example_batch = train_dataset[:3]
-#     example_result = model.predict(example_batch)
-#     print(example_result)
-#     test_predictions = model.predict(test_examples, test_labels)
-    test_predictions = model.predict(test_dataset)
+# def model_predict(model, test_dataset):
+def plot_confusion_matrix(predictions_decoded, val_labels_decoded):
+    from sklearn.metrics import confusion_matrix
+   
+#     cm = confusion_matrix(val_examples, val_predictions)
+    cm = tf.math.confusion_matrix(val_labels_decoded, predictions_decoded)
+    print("cm ")
+    print(cm)
     
-    print("test_predictions")
-    print(test_predictions)
+    plt.matshow(cm)
+#             plt.title(actual_confirmed)
+    plt.show()
+          
 
-    
+
+
+      
 
 def main():
     create_data=False
 
     testing=False # Only has an affect if create_data is True
     
+    display_image = False # Only has an affect if create_data is True
+    
     print("Started")
         
 #     train_dataset, test_dataset, maximum_number_of_moreporks, test_examples, test_labels = prepare_data(create_data, testing)  
 #     train_dataset, val_dataset, number_of_distinct_labels  = prepare_data(create_data, testing) 
     
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels = prepare_data_no_dataset(create_data, testing)
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels = prepare_data_no_dataset(create_data=create_data, testing=testing, display_image=display_image)
     print("train_examples shape ", train_examples.shape)
-    print("train_labels shape ", train_labels.shape)
+    print("train_labels shape ", train_labels.shape)    
+    print("This run used ", len(train_labels), " training examples")
+    
+    print("val_examples shape is ", val_examples.shape)
+    print("val_examples ndim is ", val_examples.ndim)
+    print("val_examples size is ", val_examples.size)
+    
+    # get one example
+    one_val_example = val_examples[:1]
+    print("one_val_example ", one_val_example)
+    
+    val_labels_decoded = tf.argmax(val_labels, 1)
+    print("val_labels_decoded ", val_labels_decoded)
     
     
-    model = create_model(number_of_distinct_labels)
+    
+#     model = create_model(number_of_distinct_labels)
+    model = create_model_basic(number_of_distinct_labels)
    
 #     model = create_regression_model()
     print(model.summary())
 #     train_model(model, train_dataset, val_dataset)
     train_model(model, train_examples, train_labels, val_examples, val_labels)
 #     evaluate_model(model, val_dataset)
-#     
-#     model_predict(model, val_dataset)
 
-    evaluate_model(model, val_examples, val_labels)
+    print("val_examples shape is ", val_examples.shape)
+    print("val_examples ndim is ", val_examples.ndim)
+    print("val_examples size is ", val_examples.size)
     
-    model_predict(model, val_examples, val_labels)
+    # get one example
+#     one_val_example = val_examples[:1]
+#     print("one_val_example ", one_val_example)
+#     
+#     one_prediction = model.predict(one_val_example)
+#     print("one_prediction ", one_prediction)
+#     prediction_index_with_largest_value = tf.argmax(one_prediction, 1)
+#     print("index_with_largest_value ", index_with_largest_value)
+#     
+    predictions = model(val_examples)
+    predictions_decoded = tf.argmax(predictions, 1)
+    
+    
+#     val_predictions = model(val_examples)
+#     print(val_predictions)
+
+    plot_confusion_matrix(predictions_decoded, val_labels_decoded)
+    
+#     model_predict(model, val_examples)
+    
+   
+    
+    print("This run used ", len(train_labels), " training examples")
     
 
 if __name__ == '__main__':
