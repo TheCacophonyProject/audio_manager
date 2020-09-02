@@ -80,7 +80,9 @@ def one_hot_encode_labels(sounds):
     one_hot_encode = to_categorical(sounds)  
     integer_to_sound_mapping = create_integer_to_sound_mapping(sound_to_integer_mapping)
 #     return one_hot_encode, mapping
-    return one_hot_encode, integer_to_sound_mapping          
+    return one_hot_encode, integer_to_sound_mapping       
+
+
 
 def get_onsets_stored_locally_for_recording_id(version_to_use, recording_id):
     cur = functions.get_database_connection().cursor()    
@@ -132,7 +134,7 @@ def load_onset_audio(recording_id, start_time):
         return mfccs_normalized  
 
 
-def get_all_training_onset_data(testing, display_image):
+def get_all_training_onset_data(binary, testing, display_image):
     
     version_to_use = 5
     cur = functions.get_database_connection().cursor()    
@@ -158,7 +160,11 @@ def get_all_training_onset_data(testing, display_image):
         if actual_confirmed == 'maybe_morepork_more-pork' or actual_confirmed == 'morepork_more-pork_part':
             continue # won't use them for training  
         
-        
+        if binary:
+            if actual_confirmed == "morepork_more-pork":
+                actual_confirmed = 1.0
+            else:
+                actual_confirmed = 0.0
         
         mfccs = load_onset_audio(recording_id, start_time)
         if mfccs is not None:
@@ -193,14 +199,18 @@ def get_all_training_onset_data(testing, display_image):
 
 
    
-def get_data(model_run_name, saved_mfccs_location, create_data, testing, display_image):
+def get_data(binary, model_run_name, saved_mfccs_location, create_data, testing, display_image):
 #     array_of_mfccs_filename = BASE_FOLDER + RUNS_FOLDER +  model_run_name + "/" + 'array_of_mfccs' 
 #     array_of_labels_filename = BASE_FOLDER + RUNS_FOLDER +  model_run_name + "/" + 'array_of_labels'
-    array_of_mfccs_filename = saved_mfccs_location + 'array_of_mfccs' 
-    array_of_labels_filename = saved_mfccs_location + 'array_of_labels'
+    if binary:    
+        array_of_mfccs_filename = saved_mfccs_location + 'array_of_mfccs_binary' 
+        array_of_labels_filename = saved_mfccs_location + 'array_of_labels_binary'
+    else:
+        array_of_mfccs_filename = saved_mfccs_location + 'array_of_mfccs' 
+        array_of_labels_filename = saved_mfccs_location + 'array_of_labels'
            
     if create_data:
-        array_of_mfccs, array_of_labels = get_all_training_onset_data(testing=testing, display_image=display_image)    
+        array_of_mfccs, array_of_labels = get_all_training_onset_data(binary=binary, testing=testing, display_image=display_image)    
         np.save(array_of_mfccs_filename, array_of_mfccs)
         np.save(array_of_labels_filename, array_of_labels)
         
@@ -221,8 +231,11 @@ def get_data(model_run_name, saved_mfccs_location, create_data, testing, display
 
     # https://www.educative.io/edpresso/how-to-perform-one-hot-encoding-using-keras
 #     array_of_labels, sound_to_integer_mapping = one_hot_encode_labels(array_of_labels)
-    array_of_labels, integer_to_sound_mapping = one_hot_encode_labels(array_of_labels)
-    
+    if binary:
+#         array_of_labels =  tf.strings.to_number(array_of_labels)  
+        array_of_labels =  array_of_labels.astype(np.float)        
+    else:
+        array_of_labels, integer_to_sound_mapping = one_hot_encode_labels(array_of_labels)
    
     # According to https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
     # setting random_state to an integer (same each time) will result in the same data in the train and test each time this is called
@@ -234,12 +247,15 @@ def get_data(model_run_name, saved_mfccs_location, create_data, testing, display
     
 
     
-#     return X_train, X_test, y_train, y_test, number_of_distinct_labels, sound_to_integer_mapping
-    return X_train, X_test, y_train, y_test, number_of_distinct_labels, integer_to_sound_mapping
+    if binary:
+        return X_train, X_test, y_train, y_test, number_of_distinct_labels
+    else:
+        return X_train, X_test, y_train, y_test, number_of_distinct_labels, integer_to_sound_mapping
 
 def run(create_data, testing, display_image):
     print("Started")
     MODEL_RUN_NAME = "testing"
+    binary=True
 #     X_train, X_test, y_train, y_test, number_of_distinct_labels, sound_to_integer_mapping = get_data(create_data=create_data, testing=testing, display_image=display_image)
     X_train, X_test, y_train, y_test, number_of_distinct_labels, integer_to_sound_mapping = get_data(MODEL_RUN_NAME, create_data=create_data, testing=testing, display_image=display_image)  
      

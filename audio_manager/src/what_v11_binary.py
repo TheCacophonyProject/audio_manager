@@ -1,5 +1,7 @@
 '''
-Created on 1 Sept. 2020
+Created on 2 Sep. 2020
+
+
 This will take the mel spectrums directly without going via pics
 It will not rely on onsets, but instead look at whole recording (or sliding window)
 Train in whole recordings with labels of has morepork / no morepork or maybe how many moreporks
@@ -60,11 +62,9 @@ def get_metrics():
       ]
     return METRICS
 
-def create_model_basic(num_classes):
+def create_model_basic(binary, num_classes):
     
-    # run_sub_log_dir = "8-do-moved-to-after-pooling-SpatialDropout2D-filters16-16-16-16-32"
-    
-    
+    # run_sub_log_dir = "9-binary"        
     
     model = Sequential()
     model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(32, 32, 1)))
@@ -89,13 +89,16 @@ def create_model_basic(num_classes):
             
     model.add(Flatten())    
     
-    model.add(Dense(64, activation='relu'))    
+    model.add(Dense(64, activation='relu'))  
     
-    model.add(Dense(num_classes, activation="softmax")) 
+    if binary:
+        model.add(Dense(1, activation="sigmoid"))
+        model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='binary_crossentropy',  metrics=['accuracy'])
+    else:
+        model.add(Dense(num_classes, activation="softmax"))
+        model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='categorical_crossentropy',  metrics=['accuracy'])       
     
-#     model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='categorical_crossentropy',  metrics=['accuracy'])
-    model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='categorical_crossentropy',  metrics=get_metrics())
-    
+        
     return model
 
 
@@ -142,11 +145,15 @@ def train_the_model(model_run_name, run_sub_log_dir,  model, train_x, train_y, v
 def evaluate_model(model, val_examples, val_labels):
     print(model.evaluate(x=val_examples, y=val_labels))   
   
-def prepare_data_no_dataset(model_run_name, saved_mfccs_location, create_data, testing, display_image):
+def prepare_data_no_dataset(binary, model_run_name, saved_mfccs_location, create_data, testing, display_image):
     # https://www.tensorflow.org/tutorials/load_data/numpy
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping = prepare_data_v4.get_data(model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image) 
- 
-    return train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping
+    if binary:
+        train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels = prepare_data_v4.get_data(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image) 
+        return train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels 
+    else:
+        train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping = prepare_data_v4.get_data(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image) 
+        return train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping
+    
 
 
        
@@ -217,15 +224,17 @@ def load_model(model_location):
     return model
 
 def main():       
-    run_sub_log_dir = "8-do-moved-to-after-pooling-SpatialDropout2D-filters16-16-16-16-32"
+    run_sub_log_dir = "9-binary"
     model_run_name = "2020_09_01a"    
     model_name = "model_2"
     saved_mfccs = "version_1/"
            
+    binary=True       
+           
     train_a_model=True # False implies it will load a trained model from disk
     save_model=True # Only applies if model is trained
-    create_data=False # If True, creates mfccs from original audio files; if false loads previously saved mfccs files (created for each confirmed training onset)
-    testing=False # Only has an affect if create_data is True
+    create_data=True # If True, creates mfccs from original audio files; if false loads previously saved mfccs files (created for each confirmed training onset)
+    testing=True # Only has an affect if create_data is True
     
     model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/" + model_name       
     print("model_location: ",model_location)
@@ -236,20 +245,29 @@ def main():
     
     print("Started")        
   
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping = prepare_data_no_dataset(model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image)
+    if binary:
+        train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels = prepare_data_no_dataset(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image)
+    else:
+        train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping = prepare_data_no_dataset(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image)
+
 
     
     # get one example
     one_val_example = val_examples[:1]
     print("one_val_example ", one_val_example)
     
-    val_labels_decoded = tf.argmax(val_labels, 1)
-    print("val_labels_decoded ", val_labels_decoded)    
+    if binary:        
+        print("one val_labels ", val_labels[:1])  
+    else:
+        val_labels_decoded = tf.argmax(val_labels, 1)
+        print("val_labels_decoded ", val_labels_decoded)
 
     
     if train_a_model: 
-
-        model = create_model_basic(number_of_distinct_labels)  
+        if binary:
+            model = create_model_basic(binary, number_of_distinct_labels)  
+        else:
+            model = create_model_basic(binary,number_of_distinct_labels)  
         print(model.summary())    
         model = train_the_model(model_run_name, run_sub_log_dir, model, train_examples, train_labels, val_examples, val_labels)
         print("This run used ", len(train_labels), " training examples")
