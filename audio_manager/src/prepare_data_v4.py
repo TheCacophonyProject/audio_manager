@@ -9,6 +9,7 @@ import parameters
 import librosa
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
@@ -211,9 +212,12 @@ def get_data(model_run_name, saved_mfccs_location, create_data, testing, display
     number_of_distinct_labels = len(np.unique(array_of_labels))
      
     print("number_of_distinct_labels ", number_of_distinct_labels)
+    
+    # Count numbers in each class
+    class_count = pd.value_counts(array_of_labels)
+    print(class_count)
         
-#     print("array_of_mfccs shape is ", array_of_mfccs.shape)
-#     print("array_of_labels shape is ", array_of_labels.shape)
+
 
     # https://www.educative.io/edpresso/how-to-perform-one-hot-encoding-using-keras
 #     array_of_labels, sound_to_integer_mapping = one_hot_encode_labels(array_of_labels)

@@ -26,6 +26,7 @@ from tensorflow.keras import regularizers
 from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import SpatialDropout2D
 from tensorflow.keras.layers import MaxPooling2D
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import Flatten
@@ -45,38 +46,55 @@ MODELS_FOLDER = "saved_models"
 SAVED_MFCCS_FOLDER = "saved_mfccs"
 
 
-
+def get_metrics():
+    # https://www.tensorflow.org/tutorials/structured_data/imbalanced_data
+    METRICS = [
+      keras.metrics.TruePositives(name='tp'),
+      keras.metrics.FalsePositives(name='fp'),
+      keras.metrics.TrueNegatives(name='tn'),
+      keras.metrics.FalseNegatives(name='fn'), 
+      keras.metrics.BinaryAccuracy(name='accuracy'),
+      keras.metrics.Precision(name='precision'),
+      keras.metrics.Recall(name='recall'),
+      keras.metrics.AUC(name='auc'),
+      ]
+    return METRICS
 
 def create_model_basic(num_classes):
-    # 8-DO(0.8-0.2-0.2-0.2-0.2) 
+    
+    # run_sub_log_dir = "8-do-moved-to-after-pooling-SpatialDropout2D-filters16-16-16-16-32"
+    
+    
+    
     model = Sequential()
     model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(32, 32, 1)))
-    model.add(Dropout(0.8))
-    model.add(MaxPooling2D(2,2))             
+    model.add(MaxPooling2D(2,2))  
+    model.add(SpatialDropout2D(0.8))           
+    
+    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))          
+    model.add(MaxPooling2D(2,2))
+    model.add(SpatialDropout2D(0.2))
     
     model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
-    model.add(Dropout(0.2))
     model.add(MaxPooling2D(2,2))
+    model.add(SpatialDropout2D(0.2))
     
     model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
-    model.add(Dropout(0.2))
     model.add(MaxPooling2D(2,2))
+    model.add(SpatialDropout2D(0.2))
     
-    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
-    model.add(Dropout(0.2))
+    model.add(Conv2D(32, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
     model.add(MaxPooling2D(2,2))
-    
-    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
-    model.add(Dropout(0.2))
-    model.add(MaxPooling2D(2,2))
-        
+    model.add(SpatialDropout2D(0.2))
+            
     model.add(Flatten())    
     
     model.add(Dense(64, activation='relu'))    
     
     model.add(Dense(num_classes, activation="softmax")) 
     
-    model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='categorical_crossentropy',  metrics=['accuracy'])
+#     model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='categorical_crossentropy',  metrics=['accuracy'])
+    model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='categorical_crossentropy',  metrics=get_metrics())
     
     return model
 
@@ -115,7 +133,7 @@ def train_the_model(model_run_name, run_sub_log_dir,  model, train_x, train_y, v
 #     https://keras.io/api/models/model_training_apis/
     model.fit(x=train_x, y=train_y, 
               validation_data=(val_x, val_y),
-              epochs=300, 
+              epochs=800, 
               callbacks=get_callbacks(model_run_name, run_sub_log_dir),
               )
    
@@ -207,8 +225,8 @@ def load_model(model_location):
     return model
 
 def main():       
-    model_run_name = "2020_09_01a"
-    run_sub_log_dir = "2-testing"
+    run_sub_log_dir = "8-do-moved-to-after-pooling-SpatialDropout2D-filters16-16-16-16-32"
+    model_run_name = "2020_09_01a"    
     model_name = "model_2"
     saved_mfccs = "version_1/"
            
