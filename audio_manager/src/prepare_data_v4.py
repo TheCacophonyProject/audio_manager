@@ -17,7 +17,7 @@ from tensorflow.keras.utils import to_categorical
 
 
 BASE_FOLDER = '/home/tim/Work/Cacophony'
-MODEL_RUN_NAME = "2020_08_24a"
+# MODEL_RUN_NAME = "2020_09_02a"
 RUNS_FOLDER = '/Audio_Analysis/audio_classifier_runs/tensorflow_runs/' 
 
    
@@ -192,9 +192,11 @@ def get_all_training_onset_data(testing, display_image):
 
 
    
-def get_data(create_data, testing, display_image):
-    array_of_mfccs_filename = BASE_FOLDER + RUNS_FOLDER +  MODEL_RUN_NAME + "/" + 'array_of_mfccs' 
-    array_of_labels_filename = BASE_FOLDER + RUNS_FOLDER +  MODEL_RUN_NAME + "/" + 'array_of_labels'
+def get_data(model_run_name, saved_mfccs_location, create_data, testing, display_image):
+#     array_of_mfccs_filename = BASE_FOLDER + RUNS_FOLDER +  model_run_name + "/" + 'array_of_mfccs' 
+#     array_of_labels_filename = BASE_FOLDER + RUNS_FOLDER +  model_run_name + "/" + 'array_of_labels'
+    array_of_mfccs_filename = saved_mfccs_location + 'array_of_mfccs' 
+    array_of_labels_filename = saved_mfccs_location + 'array_of_labels'
            
     if create_data:
         array_of_mfccs, array_of_labels = get_all_training_onset_data(testing=testing, display_image=display_image)    
@@ -218,7 +220,9 @@ def get_data(create_data, testing, display_image):
     array_of_labels, integer_to_sound_mapping = one_hot_encode_labels(array_of_labels)
     
    
-
+    # According to https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
+    # setting random_state to an integer (same each time) will result in the same data in the train and test each time this is called
+    # An example used 42 - presumably as it's the answer to the meaning of life
     X_train, X_test, y_train, y_test = train_test_split(array_of_mfccs,
                                                     array_of_labels,
                                                     test_size=0.33,
@@ -231,9 +235,9 @@ def get_data(create_data, testing, display_image):
 
 def run(create_data, testing, display_image):
     print("Started")
-    
+    MODEL_RUN_NAME = "testing"
 #     X_train, X_test, y_train, y_test, number_of_distinct_labels, sound_to_integer_mapping = get_data(create_data=create_data, testing=testing, display_image=display_image)
-    X_train, X_test, y_train, y_test, number_of_distinct_labels, integer_to_sound_mapping = get_data(create_data=create_data, testing=testing, display_image=display_image)  
+    X_train, X_test, y_train, y_test, number_of_distinct_labels, integer_to_sound_mapping = get_data(MODEL_RUN_NAME, create_data=create_data, testing=testing, display_image=display_image)  
      
        
 
