@@ -1,5 +1,8 @@
 '''
-Created on 2 Sep. 2020
+Created on 4 Sep. 2020
+
+
+
 
 
 This will take the mel spectrums directly without going via pics
@@ -39,7 +42,7 @@ from tensorflow.keras.layers import Activation
 
 from sklearn.metrics import confusion_matrix
 
-import prepare_data_v4
+import prepare_data_v5
 
 BASE_FOLDER = '/home/tim/Work/Cacophony'
 RUNS_FOLDER = '/Audio_Analysis/audio_classifier_runs/tensorflow_runs/' 
@@ -136,7 +139,7 @@ def train_the_model(model_run_name, run_sub_log_dir,  model, train_x, train_y, v
 #     https://keras.io/api/models/model_training_apis/
     model.fit(x=train_x, y=train_y, 
               validation_data=(val_x, val_y),
-              epochs=800, 
+              epochs=2, 
               callbacks=get_callbacks(model_run_name, run_sub_log_dir),
               )
    
@@ -145,7 +148,7 @@ def train_the_model(model_run_name, run_sub_log_dir,  model, train_x, train_y, v
 def evaluate_model(model, val_examples, val_labels):
     print(model.evaluate(x=val_examples, y=val_labels))   
   
-def prepare_data_no_dataset(binary, model_run_name, saved_mfccs_location, create_data, testing, display_image):
+def prepare_data(binary, model_run_name, saved_mfccs_location, create_data, testing, display_image):
     # https://www.tensorflow.org/tutorials/load_data/numpy
 #     if binary:
 #         train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels = prepare_data_v4.get_data(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image) 
@@ -154,7 +157,7 @@ def prepare_data_no_dataset(binary, model_run_name, saved_mfccs_location, create
 #         train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping = prepare_data_v4.get_data(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image) 
 #         return train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping
     
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping = prepare_data_v4.get_data(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image) 
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping = prepare_data_v5.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image) 
     return train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping
 
 
@@ -289,14 +292,18 @@ def main():
     model_name = "model_2"
     saved_mfccs = "version_1/"
            
-    binary=True       
+    binary=False       
            
-    train_a_model=False # False implies it will load a trained model from disk
+    train_a_model=True # False implies it will load a trained model from disk
     save_model=True # Only applies if model is trained
-    create_data=True # If True, creates mfccs from original audio files; if false loads previously saved mfccs files (created for each confirmed training onset)
+    create_data=False # If True, creates mfccs from original audio files; if false loads previously saved mfccs files (created for each confirmed training onset)
     testing=True # Only has an affect if create_data is True
     
-    model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/" + model_name       
+    if binary:
+        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary/" + model_name  
+    else:
+        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class/" + model_name
+             
     print("model_location: ",model_location)
     saved_mfccs_location = BASE_FOLDER + RUNS_FOLDER + SAVED_MFCCS_FOLDER + "/" + saved_mfccs 
     print("saved_mfccs_location: ", saved_mfccs_location)  
@@ -310,7 +317,7 @@ def main():
 #     else:
 #         train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping = prepare_data_no_dataset(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image)
     
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping = prepare_data_no_dataset(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image)
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping = prepare_data(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image)
 
     
     # get one example
@@ -320,8 +327,8 @@ def main():
     if binary:        
         print("one val_labels ", val_labels[:1])  
     else:
-        val_labels_decoded = tf.argmax(val_labels, 1)
-        print("val_labels_decoded ", val_labels_decoded)
+        val_labels_decoded = tf.argmax(val_labels, 1) # Returns the index with the largest value across axes of a tensor. - https://www.tensorflow.org/api_docs/python/tf/math/argmax
+        print("val_labels", val_labels)
 
     
     if train_a_model: 
@@ -343,10 +350,10 @@ def main():
  
     predictions = model(val_examples)
     predictions_decoded = tf.argmax(predictions, 1) 
-    
+      
     if binary:
-        plot_confusion_matrix_3(binary, predictions_decoded, val_labels)
-    else:
+        plot_confusion_matrix_3(binary, predictions_decoded, val_labels, sound_to_integer_mapping)
+    else: 
         plot_confusion_matrix_3(binary, predictions_decoded, val_labels_decoded, sound_to_integer_mapping)
 
         

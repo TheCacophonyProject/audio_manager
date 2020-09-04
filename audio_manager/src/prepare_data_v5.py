@@ -1,5 +1,5 @@
 '''
-Created on 1 Sep. 2020
+Created on 4 Sep. 2020
 
 @author: tim
 '''
@@ -21,37 +21,7 @@ BASE_FOLDER = '/home/tim/Work/Cacophony'
 # MODEL_RUN_NAME = "2020_09_02a"
 RUNS_FOLDER = '/Audio_Analysis/audio_classifier_runs/tensorflow_runs/' 
 
-   
-         
-# def what_to_integer_lookup(what): # https://stackoverflow.com/questions/60208/replacements-for-switch-statement-in-python
-#     return {
-#         'bird': 1,
-#         'buzzy_insect': 2,
-#         'car': 3,
-#         'car_horn': 4,
-#         'chainsaw': 5,
-#         'cow': 6,
-#         'crackle': 7,
-#         'dog': 8,
-#         'dove': 9,
-#         'duck': 10,
-#         'fire_work': 11,
-#         'frog': 12,
-#         'hammering': 13,
-#         'hand_saw': 14,
-#         'human': 15,
-#         'maybe_morepork_more-pork': 16,
-#         'morepork_more-pork': 17,
-#         'morepork_more-pork_part': 18,
-#         'music': 19,
-#         'plane': 20,
-#         'rumble': 21,
-#         'siren': 22,
-#         'unknown': 23,
-#         'water': 24,
-#         'white_noise': 25         
-#     }.get(what, 0)    # 0 is default if what not found
-
+ 
 def create_integer_to_sound_mapping(sound_to_integer_mapping):
 
     print(sound_to_integer_mapping)
@@ -82,10 +52,23 @@ def create_integer_to_sound_mapping(sound_to_integer_mapping):
 # #     return one_hot_encode, mapping
 #     return one_hot_encode, integer_to_sound_mapping 
 
-def encode_labels(sounds):
+def group_non_morepork(array_of_labels_strings_all_classes):
+    array_of_labels_strings_binary_classes = []
+    for label in array_of_labels_strings_all_classes:
+        if label != "morepork_more-pork":
+            label = "other"
+        array_of_labels_strings_binary_classes.append(label)
+        
+    return array_of_labels_strings_binary_classes
+
+def encode_labels(sounds, binary):
     # https://www.educative.io/edpresso/how-to-perform-one-hot-encoding-using-keras
+    
+    if binary:
+        sounds = group_non_morepork(sounds)
+    
     total_sounds = np.unique(sounds)
-    print("len(total_sounds) ", len(total_sounds))
+    print("len(total_sounds) ", len(sounds))
 
     # map each sound to an integer
     sound_to_integer_mapping = {}
@@ -96,8 +79,12 @@ def encode_labels(sounds):
     for x in range(len(sounds)):
         sounds[x] = sound_to_integer_mapping[sounds[x]]
     
-    if len(total_sounds) > 2:        
+    if binary:
+        sounds = np.array(sounds)
+        sounds = sounds.astype(np.float)
+    else:                
         sounds = to_categorical(sounds)  # one hot encoded
+    
     integer_to_sound_mapping = create_integer_to_sound_mapping(sound_to_integer_mapping)
 #     return one_hot_encode, mapping
     return sounds, integer_to_sound_mapping            
@@ -152,7 +139,7 @@ def load_onset_audio(recording_id, start_time):
         return mfccs_normalized  
 
 
-def get_all_training_onset_data(binary, testing, display_image):
+def get_all_training_onset_data(testing, display_image):
     
     version_to_use = 5
     cur = functions.get_database_connection().cursor()    
@@ -176,24 +163,18 @@ def get_all_training_onset_data(binary, testing, display_image):
         actual_confirmed = onset[2]
         
         if actual_confirmed == 'maybe_morepork_more-pork' or actual_confirmed == 'morepork_more-pork_part':
-            continue # won't use them for training  
-        
-        if binary:
-            if actual_confirmed != "morepork_more-pork":
-                actual_confirmed = "not_morepork"           
-        
+            continue # won't use them for training          
+                
         mfccs = load_onset_audio(recording_id, start_time)
         if mfccs is not None:
 
             array_of_mfccs.append(mfccs)
-
             array_of_labels.append(actual_confirmed)
               
         if testing:
             if count >= number_of_onsets:
                 break
-            
-            
+                    
         if display_image:
             result = mfccs[:, :, 0]
             print(result.shape)
@@ -208,25 +189,18 @@ def get_all_training_onset_data(binary, testing, display_image):
     
     print("result_mfccs shape is ", result_mfccs.shape)
     print("result_labels shape is ", result_labels.shape)
-    
-   
-    
+          
     return result_mfccs, result_labels
 
 
    
-def get_data(binary, model_run_name, saved_mfccs_location, create_data, testing, display_image):
-#     array_of_mfccs_filename = BASE_FOLDER + RUNS_FOLDER +  model_run_name + "/" + 'array_of_mfccs' 
-#     array_of_labels_filename = BASE_FOLDER + RUNS_FOLDER +  model_run_name + "/" + 'array_of_labels'
-    if binary:    
-        array_of_mfccs_filename = saved_mfccs_location + 'array_of_mfccs_binary' 
-        array_of_labels_filename = saved_mfccs_location + 'array_of_labels_binary'
-    else:
-        array_of_mfccs_filename = saved_mfccs_location + 'array_of_mfccs' 
-        array_of_labels_filename = saved_mfccs_location + 'array_of_labels'
+def get_data(binary, saved_mfccs_location, create_data, testing, display_image):
+    
+    array_of_mfccs_filename = saved_mfccs_location + 'array_of_mfccs' 
+    array_of_labels_filename = saved_mfccs_location + 'array_of_labels'
            
     if create_data:
-        array_of_mfccs, array_of_labels = get_all_training_onset_data(binary=binary, testing=testing, display_image=display_image)    
+        array_of_mfccs, array_of_labels = get_all_training_onset_data(testing=testing, display_image=display_image)    
         np.save(array_of_mfccs_filename, array_of_mfccs)
         np.save(array_of_labels_filename, array_of_labels)
         
@@ -236,24 +210,17 @@ def get_data(binary, model_run_name, saved_mfccs_location, create_data, testing,
         array_of_labels = np.load(array_of_labels_filename + ".npy")
         
     number_of_distinct_labels = len(np.unique(array_of_labels))
+    
+    if binary:
+        number_of_distinct_labels = 2
      
     print("number_of_distinct_labels ", number_of_distinct_labels)
     
     # Count numbers in each class
     class_count = pd.value_counts(array_of_labels)
-    print(class_count)
-        
+    print(class_count)       
 
-
-#     # https://www.educative.io/edpresso/how-to-perform-one-hot-encoding-using-keras
-# #     array_of_labels, sound_to_integer_mapping = one_hot_encode_labels(array_of_labels)
-#     if binary:
-# #         array_of_labels =  tf.strings.to_number(array_of_labels)  
-#         array_of_labels =  array_of_labels.astype(np.float)        
-#     else:
-#         array_of_labels, integer_to_sound_mapping = one_hot_encode_labels(array_of_labels)
-
-    array_of_labels, integer_to_sound_mapping = encode_labels(array_of_labels)
+    array_of_labels, integer_to_sound_mapping = encode_labels(array_of_labels, binary)
    
     # According to https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
     # setting random_state to an integer (same each time) will result in the same data in the train and test each time this is called
@@ -265,10 +232,7 @@ def get_data(binary, model_run_name, saved_mfccs_location, create_data, testing,
     
 
     
-    if binary:
-        return X_train, X_test, y_train, y_test, number_of_distinct_labels
-    else:
-        return X_train, X_test, y_train, y_test, number_of_distinct_labels, integer_to_sound_mapping
+    return X_train, X_test, y_train, y_test, number_of_distinct_labels, integer_to_sound_mapping
 
 def run(create_data, testing, display_image):
     print("Started")
