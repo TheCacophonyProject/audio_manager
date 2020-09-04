@@ -33,24 +33,6 @@ def create_integer_to_sound_mapping(sound_to_integer_mapping):
     print(integer_to_sound_mapping)
     return integer_to_sound_mapping
 
-# def one_hot_encode_labels(sounds):
-#     # https://www.educative.io/edpresso/how-to-perform-one-hot-encoding-using-keras
-#     total_sounds = np.unique(sounds)
-#     print("len(total_sounds) ", len(total_sounds))
-# 
-#     # map each sound to an integer
-#     sound_to_integer_mapping = {}
-#     for x in range(len(total_sounds)):
-#         sound_to_integer_mapping[total_sounds[x]] = x
-#     
-#     # integer representation
-#     for x in range(len(sounds)):
-#         sounds[x] = sound_to_integer_mapping[sounds[x]]
-#     
-#     one_hot_encode = to_categorical(sounds)  
-#     integer_to_sound_mapping = create_integer_to_sound_mapping(sound_to_integer_mapping)
-# #     return one_hot_encode, mapping
-#     return one_hot_encode, integer_to_sound_mapping 
 
 def group_non_morepork(array_of_labels_strings_all_classes):
     array_of_labels_strings_binary_classes = []
@@ -106,9 +88,6 @@ def get_filtered_recording_for_onset(recording_id, start_time):
     
     return y_filtered, sr
 
-
-
-
 def load_onset_audio(recording_id, start_time):
    
   
@@ -121,18 +100,13 @@ def load_onset_audio(recording_id, start_time):
     
     # As we are going to use a Conv2d layer in the model, it expects 3 dimensions, so need to expand
 #     https://machinelearningmastery.com/a-gentle-introduction-to-channels-first-and-channels-last-image-formats-for-deep-learning/
-#     print("mfccs_normalized.shape ", mfccs_normalized.shape)    
+
     mfccs_normalized = np.expand_dims(mfccs_normalized, axis=2)    
     print("mfccs_normalized.shape ", mfccs_normalized.shape)
    
 #     if mfccs_normalized.shape[1] < 2584:   # need to change this to ? 
     if mfccs_normalized.shape[1] < 32:   # need to change this to ? 
 
-#         reshaped_mfccs = np.zeros((32, 2584, 1))
-#         reshaped_mfccs[:mfccs_normalized.shape[0],:mfccs_normalized.shape[1]] = mfccs_normalized
-#        
-# #         print(reshaped_mfccs.shape)
-#         return reshaped_mfccs 
         return None # just throw it away
        
     else:
@@ -251,7 +225,7 @@ def run(create_data, testing, display_image):
     print("Finished")
 
 
-# run(True) # True means create data from recordings and database, False means read in already saved numpy files
+
 
 if __name__ == '__main__':
     # create_data=True means create data from recordings and database, False means read in already saved numpy files

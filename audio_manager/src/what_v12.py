@@ -126,8 +126,7 @@ def get_callbacks(model_run_name, run_sub_log_dir):
     
     # https://machinelearningmastery.com/how-to-stop-training-deep-neural-networks-at-the-right-time-using-early-stopping/
     # es_val_loss_callback = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
-    earlystop_train_loss_callback = keras.callbacks.EarlyStopping(monitor='loss', mode='min', verbose=1, patience=30)
-    
+    earlystop_train_loss_callback = keras.callbacks.EarlyStopping(monitor='loss', mode='min', verbose=1, patience=30)    
     
     return [checkpoint_callback, earlystop_train_loss_callback,tensorboard_callback]
 
@@ -139,7 +138,7 @@ def train_the_model(model_run_name, run_sub_log_dir,  model, train_x, train_y, v
 #     https://keras.io/api/models/model_training_apis/
     model.fit(x=train_x, y=train_y, 
               validation_data=(val_x, val_y),
-              epochs=2, 
+              epochs=500, 
               callbacks=get_callbacks(model_run_name, run_sub_log_dir),
               )
    
@@ -149,77 +148,9 @@ def evaluate_model(model, val_examples, val_labels):
     print(model.evaluate(x=val_examples, y=val_labels))   
   
 def prepare_data(binary, model_run_name, saved_mfccs_location, create_data, testing, display_image):
-    # https://www.tensorflow.org/tutorials/load_data/numpy
-#     if binary:
-#         train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels = prepare_data_v4.get_data(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image) 
-#         return train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels 
-#     else:
-#         train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping = prepare_data_v4.get_data(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image) 
-#         return train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping
-    
+    # https://www.tensorflow.org/tutorials/load_data/numpy    
     train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping = prepare_data_v5.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image) 
     return train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping
-
-
-       
-
-# def plot_confusion_matrix_3(predictions_decoded, val_labels_decoded, integer_to_sound_mapping):
-#     predictions_decoded_np = np.array(predictions_decoded)
-#     val_labels_decoded_np = np.array(val_labels_decoded)
-#     
-#     unique_val_labels = np.unique(val_labels_decoded_np)
-# 
-#     labels = []
-#     for value in unique_val_labels:
-#         sound = integer_to_sound_mapping.get(value)
-#         labels.append(sound)        
-#     
-#     val_labels_decoded_names = []
-#     predictions_decoded_names = []    
-# 
-# #     print(labels)   
-#    
-#     for value in predictions_decoded_np:
-#         predictions_decoded_names.append(integer_to_sound_mapping.get(value))        
-#         
-#     for value in val_labels_decoded_np:
-#         val_labels_decoded_names.append(integer_to_sound_mapping.get(value))              
-#     
-#     cm = confusion_matrix(val_labels_decoded_names, predictions_decoded_names)
-#     # https://matplotlib.org/3.1.1/gallery/images_contours_and_fields/image_annotated_heatmap.html
-#     fig, ax = plt.subplots()
-#     im = ax.imshow(cm)
-#     
-#     # We want to show all ticks...
-#     ax.set_xticks(np.arange(len(labels)))
-#     ax.set_yticks(np.arange(len(labels)))
-#     # ... and label them with the respective list entries
-#     ax.set_xticklabels(labels)
-#     ax.set_yticklabels(labels)
-#     
-#     
-#     
-# #     https://stackoverflow.com/questions/51759859/how-to-move-labels-from-bottom-to-top-without-adding-ticks
-#     plt.tick_params(axis='x', which='major', labelsize=10, labelbottom = False, bottom=False, top = False, labeltop=True)
-# 
-#     
-#     # Rotate the tick labels and set their alignment.
-#     plt.setp(ax.get_xticklabels(), rotation=-45, ha="right",
-#              rotation_mode="anchor")
-#     
-#     # Loop over data dimensions and create text annotations.
-#     for i in range(len(labels)):     
-#         for j in range(len(labels)):            
-#             text = ax.text(j, i, cm[i, j], ha="center", va="center", color="w")
-#     
-#     ax.set_title("Confusion Matrix")
-#     fig.tight_layout()
-#     # According to https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html
-#     # Confusion matrix whose i-th row and j-th column entry indicates the number of samples with true label being i-th class and prediced label being j-th class.
-#     ax.xaxis.set_label_position('top')
-#     plt.xlabel("Predicted") 
-#     plt.ylabel("Actual")
-#     plt.show()
 
 def plot_confusion_matrix_3(binary, predictions_decoded, val_labels_decoded, integer_to_sound_mapping):
     predictions_decoded_np = np.array(predictions_decoded)
@@ -234,8 +165,7 @@ def plot_confusion_matrix_3(binary, predictions_decoded, val_labels_decoded, int
     
     val_labels_decoded_names = []
     predictions_decoded_names = []    
-
-#     print(labels)   
+ 
    
     for value in predictions_decoded_np:
         predictions_decoded_names.append(integer_to_sound_mapping.get(value))        
@@ -287,17 +217,17 @@ def load_model(model_location):
     return model
 
 def main():       
-    run_sub_log_dir = "9-binary"
-    model_run_name = "2020_09_01a"    
-    model_name = "model_2"
+    run_sub_log_dir = "10-multi_class"
+    model_run_name = "2020_09_04a"    
+    model_name = "model_1"
     saved_mfccs = "version_1/"
            
-    binary=False       
+    binary=True       
            
-    train_a_model=True # False implies it will load a trained model from disk
+    train_a_model=False # False implies it will load a trained model from disk
     save_model=True # Only applies if model is trained
     create_data=False # If True, creates mfccs from original audio files; if false loads previously saved mfccs files (created for each confirmed training onset)
-    testing=True # Only has an affect if create_data is True
+    testing=False # Only has an affect if create_data is True
     
     if binary:
         model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary/" + model_name  
@@ -310,13 +240,8 @@ def main():
    
     display_image = False # Only has an affect if create_data is True
     
-    print("Started")        
+    print("Started") 
   
-#     if binary:
-#         train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping = prepare_data_no_dataset(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image)
-#     else:
-#         train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping = prepare_data_no_dataset(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image)
-    
     train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping = prepare_data(binary=binary, model_run_name=model_run_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image)
 
     
@@ -349,14 +274,27 @@ def main():
         model = load_model(model_location)
  
     predictions = model(val_examples)
-    predictions_decoded = tf.argmax(predictions, 1) 
+    print(type(predictions))
+    for item in predictions:
+        print(item)
+  
+    
       
     if binary:
-        plot_confusion_matrix_3(binary, predictions_decoded, val_labels, sound_to_integer_mapping)
-    else: 
-        plot_confusion_matrix_3(binary, predictions_decoded, val_labels_decoded, sound_to_integer_mapping)
-
+        # Sorry about the following mess - just trying to get an array of integers in the correct format
+        # for giving to the confusion matrix
+        #  - must be a simpler way
+        rounded_predictions = tf.round(predictions)
+        proto_tensor = tf.make_tensor_proto(rounded_predictions)
+        predictions_np = tf.make_ndarray(proto_tensor)
+        predictions_np_flattened = predictions_np.reshape(-1)
+        predictions_np_flattened_int = predictions_np_flattened.astype(int)
+        # end of the mess
         
+        plot_confusion_matrix_3(binary, predictions_np_flattened_int, val_labels, sound_to_integer_mapping)
+    else: 
+        predictions_decoded = tf.argmax(predictions, 1) 
+        plot_confusion_matrix_3(binary, predictions_decoded, val_labels_decoded, sound_to_integer_mapping)     
 
     print("Finished")
     
