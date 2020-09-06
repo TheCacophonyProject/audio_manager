@@ -150,6 +150,7 @@ def evaluate_model(model, val_examples, val_labels):
 def prepare_data(binary, model_run_name, saved_mfccs_location, create_data, testing, display_image):
     # https://www.tensorflow.org/tutorials/load_data/numpy    
     train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping = prepare_data_v5.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image) 
+
     return train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping
 
 def plot_confusion_matrix_3(binary, predictions_decoded, val_labels_decoded, integer_to_sound_mapping):

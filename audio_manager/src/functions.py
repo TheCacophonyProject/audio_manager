@@ -2864,6 +2864,14 @@ def test_data_analysis_using_version_7_onsets_with_spectrogram_based_prediction(
         cur.execute(sql, (modelRunName, recording_id, model_run_result_startTime, model_run_result_duration, model_run_result_predictedByModel, model_run_result_probability )) 
         get_database_connection().commit()
 
+def get_march_2020_recording_ids():
+    firstDate = parameters.recordings_for_creating_test_data_start_date 
+    lastDate = parameters.recordings_for_creating_test_data_end_date 
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT recording_id FROM recordings WHERE recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' ORDER BY recording_id") 
+    march_recordings_2020 = cur.fetchall() 
+    return march_recordings_2020
+    
 
 def get_march_2020_version_7_onsets():
     firstDate = parameters.recordings_for_creating_test_data_start_date 
@@ -2947,3 +2955,26 @@ def find_matching_onset(recording_id, start_time_seconds):
     march_2020_test_data = cur.fetchall()
     return march_2020_test_data
 
+def insert_model_run_result(model_run_name, recording_id, startTime, duration, predictedByModel, probability):
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT device_name, device_super_name, recordingDateTime, recordingDateTimeNZ FROM recordings WHERE recording_id = ? ", (recording_id,))
+    result = cur.fetchall()
+    
+    device_name = result[0][0]
+    device_super_name = result[0][1]
+    recordingDateTime = result[0][2]
+    recordingDateTimeNZ = result[0][3]
+    
+    try:
+        sql = ''' INSERT INTO model_run_result(modelRunName, recording_id,startTime, duration, predictedByModel, probability, device_name,device_super_name, recordingDateTime, recordingDateTimeNZ)
+                  VALUES(?,?,?,?,?,?,?,?,?,?) '''
+        cur = get_database_connection().cursor()
+        cur.execute(sql, (model_run_name, recording_id, startTime, duration, predictedByModel, probability, device_name, device_super_name, recordingDateTime, recordingDateTimeNZ))
+       
+        get_database_connection().commit()
+    except Exception as e:
+        print(e, '\n')
+        
+    
+    
+    
