@@ -12,6 +12,9 @@ predictedByModel_tag_to_create = 'morepork_more-pork'
 recordings_for_creating_test_data_start_date = '2020-03-01'
 recordings_for_creating_test_data_end_date = '2020-04-01' # Note, this will be interpreted as the first second of the day, so won't include results for this day.
 
+recordings_for_creating_feb_training_data_start_date = '2020-02-01'
+recordings_for_creating_feb_training_data_end_date = '2020-03-01' # Note, this will be interpreted as the first second of the day, so won't include results for this day.
+
 first_test_data_recording_id = 537910
 last_test_data_recording_id = 563200
 

@@ -2871,6 +2871,14 @@ def get_march_2020_recording_ids():
     cur.execute("SELECT recording_id FROM recordings WHERE recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' ORDER BY recording_id") 
     march_recordings_2020 = cur.fetchall() 
     return march_recordings_2020
+
+def get_feb_2020_recording_ids():
+    firstDate = parameters.recordings_for_creating_feb_training_data_start_date 
+    lastDate = parameters.recordings_for_creating_feb_training_data_end_date 
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT recording_id FROM recordings WHERE recordingDateTimeNZ BETWEEN '" + firstDate + "' AND '" + lastDate + "' ORDER BY recording_id") 
+    feb_recordings_2020 = cur.fetchall() 
+    return feb_recordings_2020
     
 
 def get_march_2020_version_7_onsets():
@@ -2975,6 +2983,56 @@ def insert_model_run_result(model_run_name, recording_id, startTime, duration, p
     except Exception as e:
         print(e, '\n')
         
+def insert_model_run_result_into_training_table(model_run_name, recording_id, start_time_seconds, duration_seconds, predicted_by_model, probability):
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT device_name, device_super_name, recordingDateTime, recordingDateTimeNZ FROM recordings WHERE recording_id = ? ", (recording_id,))
+    result = cur.fetchall()
     
+    device_name = result[0][0]
+    device_super_name = result[0][1]
+    recordingDateTime = result[0][2]
+    recordingDateTimeNZ = result[0][3]
     
+    try:
+        sql = ''' INSERT INTO training_data(version, recording_id, start_time_seconds, duration_seconds, predicted_by_model, probability, device_name, device_super_name, recordingDateTime, recordingDateTimeNZ)
+                  VALUES(?,?,?,?,?,?,?,?,?,?) '''
+        cur = get_database_connection().cursor()
+        cur.execute(sql, (model_run_name, recording_id, start_time_seconds, duration_seconds, predicted_by_model, probability, device_name, device_super_name, recordingDateTime, recordingDateTimeNZ))
+       
+        get_database_connection().commit()
+    except Exception as e:
+        print(e, '\n')
+        
+    
+def copy_onset_data_to_training_data_table():
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, actual_confirmed from onsets WHERE version = 5 AND actual_confirmed IS NOT NULL")
+    onsets = cur.fetchall()    
+    
+    number_of_onsets = len(onsets)
+    count = 0
+    for onset in onsets:
+        count+=1
+        print(count)
+        version = onset[0]
+        recording_id = onset[1]
+        start_time_seconds = onset[2]
+        duration_seconds = onset[3]
+        device_super_name = onset[4]
+        device_name = onset[5]
+        recordingDateTime = onset[6]
+        recordingDataTimeNZ = onset[7]
+        actual_confirmed = onset[8]
+        
+        try:
+            sql = ''' INSERT INTO training_data(version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, actual_confirmed)
+                  VALUES(?,?,?,?,?,?,?,?,?) '''
+            cur = get_database_connection().cursor()
+            cur.execute(sql, (version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDataTimeNZ, actual_confirmed))
+       
+            get_database_connection().commit()
+        except Exception as e:
+            print(e, '\n')
+        
+        
     

@@ -1,8 +1,7 @@
 '''
-Created on 4 Sep. 2020
+Created on 8 Sep. 2020
 
-
-
+@author: tim
 
 
 This will take the mel spectrums directly without going via pics
@@ -66,7 +65,9 @@ def get_metrics():
       ]
     return METRICS
 
-def create_model_basic(binary, num_classes):       
+def create_model_basic(binary, num_classes):
+    
+#     run_sub_log_dir_binary = "12" + "_binary"   
     
     model = Sequential()
     model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(32, 32, 1)))
@@ -230,14 +231,15 @@ def load_model(model_location):
     return model
 
 def main():       
-    run_sub_log_dir = "10-multi_class"
-    model_run_name = "2020_09_04a"    
+    run_sub_log_dir_multi_class = "12" + "_multi_class"
+    run_sub_log_dir_binary = "12" + "_binary"
+    model_run_name = "2020_09_08a"    
     model_name = "model_1"
     saved_mfccs = "version_1/"
            
-    binary=False       
+    binary=True       
            
-    train_a_model=False # False implies it will load a trained model from disk
+    train_a_model=True # False implies it will load a trained model from disk
     save_model=True # Only applies if model is trained
     create_data=False # If True, creates mfccs from original audio files; if false loads previously saved mfccs files (created for each confirmed training onset)
     testing=False # Only has an affect if create_data is True
@@ -270,12 +272,14 @@ def main():
 
     
     if train_a_model: 
+        model = create_model_basic(binary, number_of_distinct_labels) 
+        print(model.summary()) 
         if binary:
-            model = create_model_basic(binary, number_of_distinct_labels)  
+            model = train_the_model(model_run_name, run_sub_log_dir_binary, model, train_examples, train_labels, val_examples, val_labels)
         else:
-            model = create_model_basic(binary,number_of_distinct_labels)  
-        print(model.summary())    
-        model = train_the_model(model_run_name, run_sub_log_dir, model, train_examples, train_labels, val_examples, val_labels)
+            model = train_the_model(model_run_name, run_sub_log_dir_multi_class, model, train_examples, train_labels, val_examples, val_labels)
+           
+        
         print("This run used ", len(train_labels), " training examples")
         
         if save_model:
