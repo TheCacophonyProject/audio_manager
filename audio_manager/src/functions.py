@@ -740,9 +740,80 @@ def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, 
     rows = cur.fetchall()
     return rows
 
+def get_training_data(version, actualConfirmedFilter, predictedFilter, predicted_probability_filter, predicted_probability_filter_value_str, location_filter, actual_confirmed_other, predicted_other, recording_id_filter_value):   
+       
+    if location_filter =='Not Used':
+        location_filter ='not_used'
+         
+    sqlBuilding = "SELECT ID FROM training_data WHERE version = '" + version + "'"
+    
+    if actualConfirmedFilter !='not_used':
+        sqlBuilding += " AND "
+        if actualConfirmedFilter == "IS NULL":
+            if actual_confirmed_other == 'off':
+                sqlBuilding += "actual_confirmed IS NULL"
+            else: # Everything other is checked
+                sqlBuilding += "actual_confirmed IS NOT NULL"
+        else:
+            if actual_confirmed_other == 'off':
+                sqlBuilding +=  "actual_confirmed = '" + actualConfirmedFilter + "'"
+            else: # Everything other is checked
+                sqlBuilding +=  "actual_confirmed <> '" + actualConfirmedFilter + "'"
+                
+            
+    if predictedFilter !='not_used':
+        sqlBuilding += " AND "
+        if predictedFilter == "IS NULL":
+            if predicted_other == 'off':
+                sqlBuilding += "predicted_by_model IS NULL"
+            else:
+                sqlBuilding += "predicted_by_model IS NOT NULL"
+        else:
+            if predicted_other == 'off':
+                sqlBuilding +=  "predicted_by_model = '" + predictedFilter + "'"
+            else:
+                sqlBuilding +=  "predicted_by_model <> '" + predictedFilter + "'"
+            
+    if location_filter !='not_used':
+        sqlBuilding += " AND "
+        sqlBuilding +=  "device_super_name = '" + location_filter + "'"
+        
+    if (predicted_probability_filter_value_str == '') or (predicted_probability_filter == 'not_used'):
+        predicted_probability_filter = 'not_used'
+    else:    
+        if predicted_probability_filter == 'greater_than':  
+            probabilty_comparator = '>'
+#             predicted_probability_filter_value = float(predicted_probability_filter_value_str)    
+        elif predicted_probability_filter == 'less_than': 
+            probabilty_comparator = '<'
+#             predicted_probability_filter_value = float(predicted_probability_filter_value_str)    
+        sqlBuilding += " AND "
+#         sqlBuilding += " probability " + probabilty_comparator + " '" + predicted_probability_filter_value + "'"
+        sqlBuilding += " probability " + probabilty_comparator + " '" + predicted_probability_filter_value_str + "'"       
+              
+    if recording_id_filter_value:
+        sqlBuilding += " AND "        
+        sqlBuilding +=  "recording_id = '" + recording_id_filter_value + "'"
+        
+        
+    sqlBuilding += " ORDER BY recording_id DESC, startTime ASC"
+        
+    print("The sql is: ", sqlBuilding)
+    cur = get_database_connection().cursor()
+    cur.execute(sqlBuilding)
+#     cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = '2019_12_11_1' ORDER BY recording_id DESC, startTime ASC")
+    rows = cur.fetchall()
+    return rows
+
 def get_model_run_result(database_ID):        
     cur = get_database_connection().cursor()
     cur.execute("SELECT ID, recording_id, startTime, duration, actual, predictedByModel, actual_confirmed, probability, device_super_name FROM model_run_result WHERE ID = ?", (database_ID,)) 
+    rows = cur.fetchall()
+    return rows[0] 
+
+def get_single_training_data(database_ID):        
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT ID, recording_id, start_time_seconds, duration_seconds, predicted_by_model, actual_confirmed, probability, device_super_name FROM training_data WHERE ID = ?", (database_ID,)) 
     rows = cur.fetchall()
     return rows[0] 
     
@@ -1375,6 +1446,17 @@ def get_unique_model_run_names():
         unique_model_run_names.append(row[0])
         
     return unique_model_run_names  
+
+def get_unique_training_data_runs():   
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT DISTINCT version FROM training_data") 
+    rows = cur.fetchall()  
+    
+    unique_training_data_runs = []
+    for row in rows:
+        unique_training_data_runs.append(row[0])
+        
+    return unique_training_data_runs  
 
 def get_unique_locations(table_name):   
     cur = get_database_connection().cursor()
