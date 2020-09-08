@@ -33,6 +33,7 @@ from keras import metrics
 
 import shutil
 import warnings
+
 # from builtins import True
 
 
@@ -932,6 +933,8 @@ def insert_model_run_result_into_database(modelRunName, recording_id, startTime,
         print('\t\tUnable to insert result' + str(recording_id) + ' ' + str(startTime), '\n')  
     
 def play_clip(recording_id, start_time, duration, applyBandPassFilter, min_freq, max_freq):
+       
+    
     from pathlib import Path
     audio_in_path = getRecordingsFolder() + '/' + recording_id + '.m4a'
     print('audio_in_path ', audio_in_path)

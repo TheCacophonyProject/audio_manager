@@ -715,7 +715,7 @@ class EvaluateWekaModelRunResultPage(tk.Frame):
 
             self.predicted_label_value.set(self.current_training_data_predicted + ' with ' + self.current_training_data_probability + ' probability')
             
-            threading.Thread(target=play_clip(), args=(1,)).start()
+            threading.Thread(target=self.play_clip(), args=(1,)).start()
             threading.Thread(target=display_images(), args=(1,)).start()
             
 class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):    
@@ -962,6 +962,11 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         self.waveform_label = ttk.Label(self, image=None)
         self.waveform_label.grid(column=1, columnspan=1, row=136)
         
+        self.apply_bandpass_filter = StringVar() 
+        apply_bandpass_filter_checkbox = ttk.Checkbutton(self,text='Apply bandpass filter', variable=self.apply_bandpass_filter, onvalue="on", offvalue="off")
+        apply_bandpass_filter_checkbox.grid(column=2, columnspan=1, row=136)
+        self.apply_bandpass_filter.set('off')
+        
        
         actual_label_confirmed = ttk.Label(self, text="SET New Actual Confirmed", font=LARGE_FONT)
         actual_label_confirmed.grid(column=0, columnspan=2, row=240)
@@ -1031,10 +1036,13 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         previous_button = ttk.Button(self, text="Previous", command=lambda: previous_training_data())
         previous_button.grid(column=0, columnspan=1, row=260)
                             
-        play_button = ttk.Button(self, text="Play Again", command=lambda: functions.play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration, True, parameters.morepork_min_freq, parameters.morepork_max_freq))
-        play_button.grid(column=1, columnspan=1, row=260)
-        play_button = ttk.Button(self, text="Play Unfiltered", command=lambda: functions.play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration, False, parameters.morepork_min_freq, parameters.morepork_max_freq))
-        play_button.grid(column=1, columnspan=1, row=261)
+#         play_again_button = ttk.Button(self, text="Play Again", command=lambda: self.play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration, True, parameters.morepork_min_freq, parameters.morepork_max_freq))
+#         play_again_button = ttk.Button(self, text="Play Again", command=lambda: play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration, self.apply_bandpass_filter.get(), parameters.morepork_min_freq, parameters.morepork_max_freq))
+        play_again_button = ttk.Button(self, text="Play Again", command=lambda: play_clip())
+        play_again_button.grid(column=1, columnspan=1, row=260)
+        
+#         play_unfiltered_button = ttk.Button(self, text="Play Unfiltered", command=lambda: self.play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration, False, parameters.morepork_min_freq, parameters.morepork_max_freq))
+#         play_unfiltered_button.grid(column=1, columnspan=1, row=261)
                             
         confirm_next_button = ttk.Button(self, text="Next", command=lambda: next_training_data())
         confirm_next_button.grid(column=2, columnspan=1, row=260)
@@ -1113,7 +1121,17 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
                 load_current_training_data()
                 
         def play_clip():
-            functions.play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration,True, parameters.morepork_min_freq, parameters.morepork_max_freq)
+#             functions.play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration,True, parameters.morepork_min_freq, parameters.morepork_max_freq)
+            applyBandPass = False
+            print(self.apply_bandpass_filter.get())
+            if self.apply_bandpass_filter.get() == "on":
+                applyBandPass = True
+            else:
+                applyBandPass = False
+        
+        
+            functions.play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration, applyBandPass, parameters.morepork_min_freq, parameters.morepork_max_freq)
+            
                      
         def display_images():
             run_folder = parameters.run_folder
