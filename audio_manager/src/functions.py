@@ -796,7 +796,7 @@ def get_training_data(version, actualConfirmedFilter, predictedFilter, predicted
         sqlBuilding +=  "recording_id = '" + recording_id_filter_value + "'"
         
         
-    sqlBuilding += " ORDER BY recording_id DESC, startTime ASC"
+    sqlBuilding += " ORDER BY recording_id DESC, start_time_seconds ASC"
         
     print("The sql is: ", sqlBuilding)
     cur = get_database_connection().cursor()
@@ -858,6 +858,18 @@ def update_local_tags_with_version():
 def update_model_run_result(ID, actual_confirmed):
     cur = get_database_connection().cursor()
     sql = ''' UPDATE model_run_result
+              SET actual_confirmed = ?               
+              WHERE ID = ?'''
+    if (actual_confirmed == 'None') or (actual_confirmed == 'not_used'): # Must not put None into the db as the model breaks - instead convert to Null as descrived here - https://johnmludwig.blogspot.com/2018/01/null-vs-none-in-sqlite3-for-python.html
+        cur.execute(sql, (None, ID))
+    else:
+        cur.execute(sql, (actual_confirmed, ID))
+    
+    get_database_connection().commit() 
+    
+def update_training_data(ID, actual_confirmed):
+    cur = get_database_connection().cursor()
+    sql = ''' UPDATE training_data
               SET actual_confirmed = ?               
               WHERE ID = ?'''
     if (actual_confirmed == 'None') or (actual_confirmed == 'not_used'): # Must not put None into the db as the model breaks - instead convert to Null as descrived here - https://johnmludwig.blogspot.com/2018/01/null-vs-none-in-sqlite3-for-python.html
@@ -935,7 +947,7 @@ def play_clip(recording_id, start_time, duration, applyBandPassFilter, min_freq,
     y, sr = librosa.load(audio_in_path, sr=None) 
     if applyBandPassFilter:
 #         y = apply_band_pass_filter(y, sr)
-        y = butter_bandpass_filter(y, min_freq, max_freq, sr, order=3)    
+        y = butter_bandpass_filter(y, min_freq, max_freq, sr)    
     y_amplified = np.int16(y/np.max(np.abs(y)) * 32767)
     y_amplified_start = sr * start_time
     y_amplified_end = (sr * start_time) + (sr * duration)
