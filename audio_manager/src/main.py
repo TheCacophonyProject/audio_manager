@@ -780,7 +780,7 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         actual_confirmed_filter_radio_button_none.grid(column=0, columnspan=1, row=13)        
         actual_confirmed_filter_radio_button_null = ttk.Radiobutton(self,text='Null Filter (ie nothing in DB table)', variable=self.actual_confirmed_filter, value='IS NULL')
         actual_confirmed_filter_radio_button_null.grid(column=0, columnspan=1, row=14)        
-        actual_confirmed_filter_radio_button_morepork_classic = ttk.Radiobutton(self,text='morepork_more-pork', variable=self.actual_confirmed_filter, value='morepork_more-pork')
+        actual_confirmed_filter_radio_button_morepork_classic = ttk.Radiobutton(self,text='Morepork more-pork', variable=self.actual_confirmed_filter, value='morepork_more-pork')
         actual_confirmed_filter_radio_button_morepork_classic.grid(column=0, columnspan=1, row=15)
         actual_confirmed_filter_radio_button_unknown = ttk.Radiobutton(self,text='Unknown', variable=self.actual_confirmed_filter, value='unknown')
         actual_confirmed_filter_radio_button_unknown.grid(column=0, columnspan=1, row=16) 
@@ -804,6 +804,8 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         actual_confirmed_filter_radio_button_water.grid(column=0, columnspan=1, row=25)
         actual_confirmed_filter_radio_button_hand_saw = ttk.Radiobutton(self,text='Hand saw', variable=self.actual_confirmed_filter, value='hand_saw')
         actual_confirmed_filter_radio_button_hand_saw.grid(column=0, columnspan=1, row=26)
+        actual_confirmed_filter_radio_button_wind = ttk.Radiobutton(self,text='Wind', variable=self.actual_confirmed_filter, value='wind')
+        actual_confirmed_filter_radio_button_wind.grid(column=0, columnspan=1, row=27)
         
         
         actual_confirmed_filter_radio_button_white_noise = ttk.Radiobutton(self,text='White noise', variable=self.actual_confirmed_filter, value='white_noise')
@@ -832,6 +834,8 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         actual_confirmed_filter_radio_button_maybe_morepork_more_pork.grid(column=1, columnspan=1, row=24)
         actual_confirmed_filter_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.actual_confirmed_filter, value='music')
         actual_confirmed_filter_radio_button_music.grid(column=1, columnspan=1, row=25)
+        actual_confirmed_filter_radio_button_morepork_croaking = ttk.Radiobutton(self,text='Morepork croaking', variable=self.actual_confirmed_filter, value='morepork_croaking')
+        actual_confirmed_filter_radio_button_morepork_croaking.grid(column=1, columnspan=1, row=26)
         
         self.actual_confirmed_filter.set('not_used')
         
@@ -870,6 +874,8 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         predicted_filter_radio_button_water.grid(column=2, columnspan=1, row=24)
         predicted_filter_radio_button_hand_saw = ttk.Radiobutton(self,text='Hand saw', variable=self.predicted_filter, value='hand_saw')
         predicted_filter_radio_button_hand_saw.grid(column=2, columnspan=1, row=25) 
+        predicted_filter_radio_button_wind = ttk.Radiobutton(self,text='Wind', variable=self.predicted_filter, value='wind')
+        predicted_filter_radio_button_wind.grid(column=2, columnspan=1, row=26) 
         
         
         predicted_filter_radio_button_white_noise = ttk.Radiobutton(self,text='White noise', variable=self.predicted_filter, value='white_noise')
@@ -898,21 +904,10 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         predicted_filter_radio_button_maybe_morepork_more_pork.grid(column=3, columnspan=1, row=24)  
         predicted_filter_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.predicted_filter, value='music')
         predicted_filter_radio_button_music.grid(column=3, columnspan=1, row=25) 
+        predicted_filter_radio_button_morepork_croaking = ttk.Radiobutton(self,text='Morepork croaking', variable=self.predicted_filter, value='morepork-croaking')
+        predicted_filter_radio_button_morepork_croaking.grid(column=3, columnspan=1, row=26) 
         
-        self.predicted_filter.set('not_used') 
-        
-#         used_to_create_model_label = ttk.Label(self, text="Used to create Model")
-#         used_to_create_model_label.grid(column=0, columnspan=1, row=125)  
-        
-#         self.used_to_create_model_filter = tk.StringVar()
-#         used_to_create_model_filter_radio_button_greater_than = ttk.Radiobutton(self,text='Yes', variable=self.used_to_create_model_filter, value='yes')
-#         used_to_create_model_filter_radio_button_greater_than.grid(column=0, columnspan=1, row=126)
-#         used_to_create_model_filter_radio_button_less_than = ttk.Radiobutton(self,text='No', variable=self.used_to_create_model_filter, value='no')
-#         used_to_create_model_filter_radio_button_less_than.grid(column=1, columnspan=1, row=126) 
-#         used_to_create_model_filter_radio_button_not_used = ttk.Radiobutton(self,text='Not used', variable=self.used_to_create_model_filter, value='not_used',command=lambda: self.predicted_probability_filter_value.set(''))
-#         used_to_create_model_filter_radio_button_not_used.grid(column=1, columnspan=1, row=127)
-#         self.used_to_create_model_filter.set('not_used')
-                 
+        self.predicted_filter.set('not_used')
         
         run_probability_label = ttk.Label(self, text="Probability")
         run_probability_label.grid(column=2, columnspan=1, row=125)  
@@ -997,7 +992,8 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         actual_confirmed_radio_button_water.grid(column=0, columnspan=1, row=252)
         actual_confirmed_radio_button_hand_saw = ttk.Radiobutton(self,text='Hand saw', variable=self.actual_confirmed, value='hand_saw',command=lambda: confirm_actual())
         actual_confirmed_radio_button_hand_saw.grid(column=0, columnspan=1, row=253)
-        
+        actual_confirmed_radio_button_wind = ttk.Radiobutton(self,text='Wind', variable=self.actual_confirmed, value='wind',command=lambda: confirm_actual())
+        actual_confirmed_radio_button_wind.grid(column=0, columnspan=1, row=254)
         
         actual_confirmed_radio_button_white_noise = ttk.Radiobutton(self,text='White noise', variable=self.actual_confirmed, value='white_noise',command=lambda: confirm_actual())
         actual_confirmed_radio_button_white_noise.grid(column=1, columnspan=1, row=242)
@@ -1024,7 +1020,10 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         actual_confirmed_radio_button_maybe_morepork_more_pork = ttk.Radiobutton(self,text='Maybe Morepork more-pork', variable=self.actual_confirmed, value='maybe_morepork_more-pork',command=lambda: confirm_actual())
         actual_confirmed_radio_button_maybe_morepork_more_pork.grid(column=1, columnspan=1, row=253)
         actual_confirmed_radio_button_music = ttk.Radiobutton(self,text='Music', variable=self.actual_confirmed, value='music',command=lambda: confirm_actual())
-        actual_confirmed_radio_button_music.grid(column=1, columnspan=1, row=254)       
+        actual_confirmed_radio_button_music.grid(column=1, columnspan=1, row=254)
+        
+        actual_confirmed_radio_button_morepork_croaking = ttk.Radiobutton(self,text='Morepork croaking', variable=self.actual_confirmed, value='morepork_croaking',command=lambda: confirm_actual())
+        actual_confirmed_radio_button_morepork_croaking.grid(column=2, columnspan=1, row=243)       
        
         predicted_label = ttk.Label(self, text="Predicted by model", font=LARGE_FONT)
         predicted_label.grid(column=2, columnspan=1, row=240)       
@@ -1034,24 +1033,24 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         predicted_label_value_for_value.grid(column=2, columnspan=1, row=241) 
         
         previous_button = ttk.Button(self, text="Previous", command=lambda: previous_training_data())
-        previous_button.grid(column=0, columnspan=1, row=260)
+        previous_button.grid(column=2, columnspan=1, row=250)
                             
 #         play_again_button = ttk.Button(self, text="Play Again", command=lambda: self.play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration, True, parameters.morepork_min_freq, parameters.morepork_max_freq))
 #         play_again_button = ttk.Button(self, text="Play Again", command=lambda: play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration, self.apply_bandpass_filter.get(), parameters.morepork_min_freq, parameters.morepork_max_freq))
         play_again_button = ttk.Button(self, text="Play Again", command=lambda: play_clip())
-        play_again_button.grid(column=1, columnspan=1, row=260)
+        play_again_button.grid(column=2, columnspan=1, row=252)
         
 #         play_unfiltered_button = ttk.Button(self, text="Play Unfiltered", command=lambda: self.play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration, False, parameters.morepork_min_freq, parameters.morepork_max_freq))
 #         play_unfiltered_button.grid(column=1, columnspan=1, row=261)
                             
         confirm_next_button = ttk.Button(self, text="Next", command=lambda: next_training_data())
-        confirm_next_button.grid(column=2, columnspan=1, row=260)
+        confirm_next_button.grid(column=3, columnspan=1, row=250)
         
         unselect_button = ttk.Button(self, text="Unselect", command=lambda: unselect_actual_confirmed())
-        unselect_button.grid(column=2, columnspan=1, row=261)
+        unselect_button.grid(column=3, columnspan=1, row=254)
         
         back_to_home_button = ttk.Button(self, text="Back to Home", command=lambda: controller.show_frame(HomePage))
-        back_to_home_button.grid(column=0, columnspan=1, row=261) 
+        back_to_home_button.grid(column=2, columnspan=1, row=254) 
         
               
         def confirm_actual():
@@ -1121,14 +1120,11 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
                 load_current_training_data()
                 
         def play_clip():
-#             functions.play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration,True, parameters.morepork_min_freq, parameters.morepork_max_freq)
-            applyBandPass = False
-            print(self.apply_bandpass_filter.get())
+
             if self.apply_bandpass_filter.get() == "on":
                 applyBandPass = True
             else:
-                applyBandPass = False
-        
+                applyBandPass = False        
         
             functions.play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration, applyBandPass, parameters.morepork_min_freq, parameters.morepork_max_freq)
             
@@ -1219,6 +1215,10 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
                 self.actual_confirmed.set('maybe_morepork_more-pork')
             elif self.current_training_data_actual_confirmed == 'music':
                 self.actual_confirmed.set('music')
+            elif self.current_training_data_actual_confirmed == 'morepork_croaking':
+                self.actual_confirmed.set('morepork_croaking')
+            elif self.current_training_data_actual_confirmed == 'wind':
+                self.actual_confirmed.set('wind')
             else:
                 self.actual_confirmed.set('not_set')   
 
