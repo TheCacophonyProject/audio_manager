@@ -618,7 +618,6 @@ def get_all_tags_for_all_devices_in_local_database():
             print('recording_id ', recording_id, '\n')
             get_and_store_tag_information_for_recording(str(recording_id), deviceId, device_name, device_super_name)
     print('Finished getting tags from server')
-            
     
      
 def get_unique_devices_stored_locally():
@@ -634,7 +633,6 @@ def get_unique_recording_ids_that_have_been_tagged_with_this_tag_stored_locally(
     rows = cur.fetchall()
     return rows 
 
-
         
 def get_onsets_stored_locally(onset_version):
     global version
@@ -648,17 +646,6 @@ def get_onsets_stored_locally(onset_version):
     rows = cur.fetchall()
     return rows 
 
-# def get_onsets_stored_locally_for_recording_id(onset_version, recording_id):
-#     global version
-#     if onset_version:
-#         version_to_use = onset_version
-#     else:
-#         version_to_use = version
-#         
-#     cur = get_database_connection().cursor()
-#     cur.execute("SELECT version, recording_id, start_time_seconds, duration_seconds FROM onsets WHERE version = ? AND recording_id = ? ORDER BY recording_id", (version_to_use, recording_id)) 
-#     rows = cur.fetchall()
-#     return rows
 
 def get_onsets_stored_locally_for_recording_id(version_to_use, recording_id):
 #     global version
@@ -795,15 +782,7 @@ def get_model_run_results_to_create_feb_2020_training_data(modelRunName, actualC
 #             predicted_probability_filter_value = float(predicted_probability_filter_value_str)    
         sqlBuilding += " AND "
 #         sqlBuilding += " probability " + probabilty_comparator + " '" + predicted_probability_filter_value + "'"
-        sqlBuilding += " probability " + probabilty_comparator + " '" + predicted_probability_filter_value_str + "'"
-        
-#     if used_to_create_model_filter != 'not_used':
-#         sqlBuilding += " AND "
-#         if used_to_create_model_filter == 'yes':
-#             sqlBuilding +=  "used_to_create_model = 1"
-#         else:
-# #             sqlBuilding +=  "used_to_create_model = 0"
-#             sqlBuilding +=  "used_to_create_model IS NULL"
+        sqlBuilding += " probability " + probabilty_comparator + " '" + predicted_probability_filter_value_str + "'"        
             
     if recording_id_filter_value:
         sqlBuilding += " AND "        
@@ -911,8 +890,7 @@ def scan_local_folder_for_recordings_not_in_local_db_and_update(device_name, dev
             filename = recording_id + '.m4a'
             insert_recording_into_database(recording_id,filename, device_name,device_super_name) # The device name will be updated next when getting infor from server
             # Now update this recording with information from server
-            update_recording_information_for_single_recording(recording_id)
-           
+            update_recording_information_for_single_recording(recording_id)           
 
 
     
@@ -946,17 +924,6 @@ def update_model_run_result(ID, actual_confirmed):
     
     get_database_connection().commit() 
     
-# def update_training_data(ID, actual_confirmed):
-#     cur = get_database_connection().cursor()
-#     sql = ''' UPDATE training_data
-#               SET actual_confirmed = ?               
-#               WHERE ID = ?'''
-#     if (actual_confirmed == 'None') or (actual_confirmed == 'not_used'): # Must not put None into the db as the model breaks - instead convert to Null as descrived here - https://johnmludwig.blogspot.com/2018/01/null-vs-none-in-sqlite3-for-python.html
-#         cur.execute(sql, (None, ID))
-#     else:
-#         cur.execute(sql, (actual_confirmed, ID))
-#     
-#     get_database_connection().commit()    
     
 def update_onset(recording_id, start_time_seconds, actual_confirmed):
     cur = get_database_connection().cursor()
@@ -965,19 +932,10 @@ def update_onset(recording_id, start_time_seconds, actual_confirmed):
     else:        
         cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE recording_id = ? AND start_time_seconds = ?", (actual_confirmed, recording_id, start_time_seconds))  
         
-    get_database_connection().commit()  
-    
-# def update_training_data(recording_id, start_time_seconds, actual_confirmed):
+    get_database_connection().commit()      
+
 def update_training_data(model_run_name, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, actual_confirmed):
-#     cur = get_database_connection().cursor()
-#     if (actual_confirmed == 'None') or (actual_confirmed == 'not_used'): # Must not put None into the db as the model breaks - instead convert to Null as descrived here - https://johnmludwig.blogspot.com/2018/01/null-vs-none-in-sqlite3-for-python.html
-#         cur.execute("UPDATE training_data SET actual_confirmed = ? WHERE recording_id = ? AND start_time_seconds = ?", (None, recording_id, start_time_seconds))   
-#     else:        
-#         cur.execute("UPDATE training_data SET actual_confirmed = ? WHERE recording_id = ? AND start_time_seconds = ?", (actual_confirmed, recording_id, start_time_seconds))  
-#         
-#     get_database_connection().commit()   
-    
-    
+        
     sql = ''' REPLACE INTO training_data (version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, actual_confirmed)
               VALUES(?,?,?,?,?,?,?,?,?) ''' 
     cur = get_database_connection().cursor()
@@ -989,11 +947,7 @@ def update_training_data(model_run_name, recording_id, start_time_seconds, durat
     
     get_database_connection().commit() 
     
-    
-    
-    
-       
-  
+      
 def run_model(model_folder):
     # https://stackoverflow.com/questions/21406887/subprocess-changing-directory
     # https://stackoverflow.com/questions/1996518/retrieving-the-output-of-subprocess-call
@@ -1003,9 +957,7 @@ def run_model(model_folder):
     
     result = run(command, stdout=PIPE, stderr=PIPE, text=True)   
     
-    return result
-
-    
+    return result    
 
            
 def get_recording_array(recording_id):
@@ -1014,9 +966,6 @@ def get_recording_array(recording_id):
     audio_in_path = recordings_folder_with_path + "/" + filename
     y, sr = librosa.load(audio_in_path)    
     return y, sr
-    
-    
-
 
     
 def insert_model_run_result_into_database(modelRunName, recording_id, startTime, duration, actual, predictedByModel, probability, actual_confirmed, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ):
@@ -1098,7 +1047,6 @@ def create_arff_file_headder(output_folder, arff_filename, comments, relation, a
         
     f.close()
   
-
         
 def insert_onset_into_database(version, recording_id, start_time_seconds, duration_seconds):
     
