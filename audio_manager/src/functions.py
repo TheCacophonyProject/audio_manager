@@ -3135,12 +3135,9 @@ def copy_onset_data_to_training_data_table():
             print(e, '\n')
     
 def update_training_data_table_with_latest_model_predictions_from_csv():
-#     with open("/home/tim/Work/Cacophony/Audio_Analysis/training_data_10717_recordings.csv", newline='') as csvfile:
-#         data = list(csv.reader(csvfile))
-#         for row in data:
-#             print(row)
    
-    myFile = pd.read_csv('/home/tim/Work/Cacophony/Audio_Analysis/training_data_10717_recordings.csv', sep=',')
+#     myFile = pd.read_csv('/home/tim/Work/Cacophony/Audio_Analysis/training_data_10717_recordings.csv', sep=',')
+    myFile = pd.read_csv('/home/tim/Work/Cacophony/Audio_Analysis/training_data_feb_2020_v2_cleaned_of_v1.csv', sep=',')
     number_or_rows = len(myFile.index)
     count = 0
     for index, row in myFile.iterrows():
@@ -3168,8 +3165,37 @@ def update_training_data_table_with_latest_model_predictions_from_csv():
             print(e, '\n')
         
         
-#         print(row)
-#     print(row['c1'], row['c2'])
+def copy_training_data_to_model_run_result_table():
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, predicted_by_model, actual_confirmed, probability from training_data where version != 5")
+    training_data = cur.fetchall()  
+    row_count = len(training_data)
+    count = 0
+    for row in training_data:
+        count+=1
+        print(count, " of ", row_count)
+        try:
+            version = row[0]
+            recording_id = row[1]
+            start_time_seconds = row[2]
+            duration_seconds = row[3]
+            device_super_name = row[4]
+            device_name = row[5]
+            recordingDateTime = row[6]
+            recordingDateTimeNZ = row[7]
+            predicted_by_model = row[8]
+            actual_confirmed = row[9]        
+            probability = row[10]
+            
+            sql = ''' INSERT INTO model_run_result(modelRunName, recording_id, startTime, duration, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, actual_confirmed, probability, predictedByModel)
+                  VALUES(?,?,?,?,?,?,?,?,?,?,?) '''
+            cur = get_database_connection().cursor()
+            cur.execute(sql, (version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, actual_confirmed, probability, predicted_by_model))                            
+            get_database_connection().commit()
+        except Exception as e:
+            print(e, '\n')
+          
+    
     
     
         
