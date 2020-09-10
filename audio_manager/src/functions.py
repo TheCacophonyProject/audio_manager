@@ -744,6 +744,81 @@ def get_model_run_results(modelRunName, actualConfirmedFilter, predictedFilter, 
     rows = cur.fetchall()
     return rows
 
+def get_model_run_results_to_create_feb_2020_training_data(modelRunName, actualConfirmedFilter, predictedFilter, predicted_probability_filter, predicted_probability_filter_value_str, location_filter, actual_confirmed_other, predicted_other, recording_id_filter_value):   
+       
+    if location_filter =='Not Used':
+        location_filter ='not_used'        
+            
+    sqlBuilding = "SELECT ID FROM model_run_result WHERE modelRunName = '" + modelRunName + "'"
+    
+    sqlBuilding += " AND recordingDateTimeNZ BETWEEN '" + parameters.recordings_for_creating_feb_training_data_start_date + "' AND '" + parameters.recordings_for_creating_feb_training_data_end_date + "'"
+    
+    if actualConfirmedFilter !='not_used':
+        sqlBuilding += " AND "
+        if actualConfirmedFilter == "IS NULL":
+            if actual_confirmed_other == 'off':
+                sqlBuilding += "actual_confirmed IS NULL"
+            else: # Everything other is checked
+                sqlBuilding += "actual_confirmed IS NOT NULL"
+        else:
+            if actual_confirmed_other == 'off':
+                sqlBuilding +=  "actual_confirmed = '" + actualConfirmedFilter + "'"
+            else: # Everything other is checked
+                sqlBuilding +=  "actual_confirmed <> '" + actualConfirmedFilter + "'"
+                
+            
+    if predictedFilter !='not_used':
+        sqlBuilding += " AND "
+        if predictedFilter == "IS NULL":
+            if predicted_other == 'off':
+                sqlBuilding += "predictedByModel IS NULL"
+            else:
+                sqlBuilding += "predictedByModel IS NOT NULL"
+        else:
+            if predicted_other == 'off':
+                sqlBuilding +=  "predictedByModel = '" + predictedFilter + "'"
+            else:
+                sqlBuilding +=  "predictedByModel <> '" + predictedFilter + "'"
+            
+    if location_filter !='not_used':
+        sqlBuilding += " AND "
+        sqlBuilding +=  "device_super_name = '" + location_filter + "'"
+        
+    if (predicted_probability_filter_value_str == '') or (predicted_probability_filter == 'not_used'):
+        predicted_probability_filter = 'not_used'
+    else:    
+        if predicted_probability_filter == 'greater_than':  
+            probabilty_comparator = '>'
+#             predicted_probability_filter_value = float(predicted_probability_filter_value_str)    
+        elif predicted_probability_filter == 'less_than': 
+            probabilty_comparator = '<'
+#             predicted_probability_filter_value = float(predicted_probability_filter_value_str)    
+        sqlBuilding += " AND "
+#         sqlBuilding += " probability " + probabilty_comparator + " '" + predicted_probability_filter_value + "'"
+        sqlBuilding += " probability " + probabilty_comparator + " '" + predicted_probability_filter_value_str + "'"
+        
+#     if used_to_create_model_filter != 'not_used':
+#         sqlBuilding += " AND "
+#         if used_to_create_model_filter == 'yes':
+#             sqlBuilding +=  "used_to_create_model = 1"
+#         else:
+# #             sqlBuilding +=  "used_to_create_model = 0"
+#             sqlBuilding +=  "used_to_create_model IS NULL"
+            
+    if recording_id_filter_value:
+        sqlBuilding += " AND "        
+        sqlBuilding +=  "recording_id = '" + recording_id_filter_value + "'"
+        
+        
+    sqlBuilding += " ORDER BY recording_id DESC, startTime ASC"
+        
+    print("The sql is: ", sqlBuilding)
+    cur = get_database_connection().cursor()
+    cur.execute(sqlBuilding)
+#     cur.execute("SELECT ID FROM model_run_result WHERE modelRunName = '2019_12_11_1' ORDER BY recording_id DESC, startTime ASC")
+    rows = cur.fetchall()
+    return rows
+
 def get_training_data(version, actualConfirmedFilter, predictedFilter, predicted_probability_filter, predicted_probability_filter_value_str, location_filter, actual_confirmed_other, predicted_other, recording_id_filter_value):   
        
     if location_filter =='Not Used':
@@ -811,7 +886,7 @@ def get_training_data(version, actualConfirmedFilter, predictedFilter, predicted
 
 def get_model_run_result(database_ID):        
     cur = get_database_connection().cursor()
-    cur.execute("SELECT ID, recording_id, startTime, duration, actual, predictedByModel, actual_confirmed, probability, device_super_name FROM model_run_result WHERE ID = ?", (database_ID,)) 
+    cur.execute("SELECT ID, recording_id, startTime, duration, predictedByModel, actual_confirmed, probability, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ FROM model_run_result WHERE ID = ?", (database_ID,)) 
     rows = cur.fetchall()
     return rows[0] 
 
@@ -871,17 +946,17 @@ def update_model_run_result(ID, actual_confirmed):
     
     get_database_connection().commit() 
     
-def update_training_data(ID, actual_confirmed):
-    cur = get_database_connection().cursor()
-    sql = ''' UPDATE training_data
-              SET actual_confirmed = ?               
-              WHERE ID = ?'''
-    if (actual_confirmed == 'None') or (actual_confirmed == 'not_used'): # Must not put None into the db as the model breaks - instead convert to Null as descrived here - https://johnmludwig.blogspot.com/2018/01/null-vs-none-in-sqlite3-for-python.html
-        cur.execute(sql, (None, ID))
-    else:
-        cur.execute(sql, (actual_confirmed, ID))
-    
-    get_database_connection().commit()    
+# def update_training_data(ID, actual_confirmed):
+#     cur = get_database_connection().cursor()
+#     sql = ''' UPDATE training_data
+#               SET actual_confirmed = ?               
+#               WHERE ID = ?'''
+#     if (actual_confirmed == 'None') or (actual_confirmed == 'not_used'): # Must not put None into the db as the model breaks - instead convert to Null as descrived here - https://johnmludwig.blogspot.com/2018/01/null-vs-none-in-sqlite3-for-python.html
+#         cur.execute(sql, (None, ID))
+#     else:
+#         cur.execute(sql, (actual_confirmed, ID))
+#     
+#     get_database_connection().commit()    
     
 def update_onset(recording_id, start_time_seconds, actual_confirmed):
     cur = get_database_connection().cursor()
@@ -890,7 +965,34 @@ def update_onset(recording_id, start_time_seconds, actual_confirmed):
     else:        
         cur.execute("UPDATE onsets SET actual_confirmed = ? WHERE recording_id = ? AND start_time_seconds = ?", (actual_confirmed, recording_id, start_time_seconds))  
         
-    get_database_connection().commit()      
+    get_database_connection().commit()  
+    
+# def update_training_data(recording_id, start_time_seconds, actual_confirmed):
+def update_training_data(model_run_name, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, actual_confirmed):
+#     cur = get_database_connection().cursor()
+#     if (actual_confirmed == 'None') or (actual_confirmed == 'not_used'): # Must not put None into the db as the model breaks - instead convert to Null as descrived here - https://johnmludwig.blogspot.com/2018/01/null-vs-none-in-sqlite3-for-python.html
+#         cur.execute("UPDATE training_data SET actual_confirmed = ? WHERE recording_id = ? AND start_time_seconds = ?", (None, recording_id, start_time_seconds))   
+#     else:        
+#         cur.execute("UPDATE training_data SET actual_confirmed = ? WHERE recording_id = ? AND start_time_seconds = ?", (actual_confirmed, recording_id, start_time_seconds))  
+#         
+#     get_database_connection().commit()   
+    
+    
+    sql = ''' REPLACE INTO training_data (version, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, actual_confirmed)
+              VALUES(?,?,?,?,?,?,?,?,?) ''' 
+    cur = get_database_connection().cursor()
+    
+    if (actual_confirmed == 'None') or (actual_confirmed == 'not_used'): # Must not put None into the db as the model breaks - instead convert to Null as descrived here - https://johnmludwig.blogspot.com/2018/01/null-vs-none-in-sqlite3-for-python.html
+        cur.execute(sql, (model_run_name, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, None)) 
+    else:        
+        cur.execute(sql, (model_run_name, recording_id, start_time_seconds, duration_seconds, device_super_name, device_name, recordingDateTime, recordingDateTimeNZ, actual_confirmed))  
+    
+    get_database_connection().commit() 
+    
+    
+    
+    
+       
   
 def run_model(model_folder):
     # https://stackoverflow.com/questions/21406887/subprocess-changing-directory
@@ -1465,16 +1567,16 @@ def get_unique_model_run_names():
         
     return unique_model_run_names  
 
-def get_unique_training_data_runs():   
-    cur = get_database_connection().cursor()
-    cur.execute("SELECT DISTINCT version FROM training_data") 
-    rows = cur.fetchall()  
-    
-    unique_training_data_runs = []
-    for row in rows:
-        unique_training_data_runs.append(row[0])
-        
-    return unique_training_data_runs  
+# def get_unique_training_data_runs():   
+#     cur = get_database_connection().cursor()
+#     cur.execute("SELECT DISTINCT version FROM training_data") 
+#     rows = cur.fetchall()  
+#     
+#     unique_training_data_runs = []
+#     for row in rows:
+#         unique_training_data_runs.append(row[0])
+#         
+#     return unique_training_data_runs  
 
 def get_unique_locations(table_name):   
     cur = get_database_connection().cursor()
@@ -2910,6 +3012,47 @@ def update_model_run_result_actual_confirmed_from_test_data():
     
     print("count_of_true_positives ", count_of_true_positives)
     print("count_of_false_positives ", count_of_false_positives)
+ 
+def update_model_run_result_actual_confirmed_from_training_data(modelRunName):
+    # Use this to update each row in the model_run_table with the actual sound (if there exists one) from the training data
+
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT ID, recording_id, startTime from model_run_result WHERE modelRunName = ? AND actual_confirmed IS NULL ORDER BY recording_id ASC", (modelRunName,))
+
+    model_run_results = cur.fetchall()
+    number_of_model_run_results = len(model_run_results)
+    print("There are ", number_of_model_run_results, " without actual_confirmed values for ", modelRunName)
+    
+    count = 0    
+    
+    for model_run_result in model_run_results:
+        count+=1
+        print(count, " of ", number_of_model_run_results)        
+        
+        model_run_result_ID = model_run_result[0]
+        recording_id = model_run_result[1]
+        prediction_startTime = model_run_result[2]       
+               
+        search_start_time = prediction_startTime - 0.1
+        search_end_time = prediction_startTime + 0.1                
+    
+        # Find if there is a training_data value for this prediction
+        cur.execute("SELECT actual_confirmed from training_data WHERE recording_id = ? AND start_time_seconds BETWEEN ? AND ?", (recording_id, search_start_time, search_end_time))
+        
+        a_training_data_result = cur.fetchone()   # https://stackoverflow.com/questions/2440147/how-to-check-the-existence-of-a-row-in-sqlite-with-python
+                
+        if a_training_data_result is None:
+            continue
+        else:
+            actual_confirmed = a_training_data_result[0]
+            
+            # update model_run_result with this actual_confirmed
+            sql = ''' UPDATE model_run_result
+                        SET actual_confirmed = ?
+                        WHERE id = ?'''
+            cur.execute(sql, (actual_confirmed, model_run_result_ID))        
+            get_database_connection().commit()             
+       
    
             
 def test_data_analysis_using_version_7_onsets_with_spectrogram_based_prediction():
@@ -3026,12 +3169,6 @@ def does_test_data_overlap_a_morepork_prediction(modelRunName, recording_id, tes
         predicted_startTime = sensitivity_specificity_result[3]
         predicted_duration = sensitivity_specificity_result[4]
         predictedByModel = sensitivity_specificity_result[5]
-#         probability = sensitivity_specificity_result[6]
-#         device_super_name = sensitivity_specificity_result[7]
-#         device_name = sensitivity_specificity_result[8]
-#         recordingDateTime = sensitivity_specificity_result[9]
-#         recordingDateTimeNZ = sensitivity_specificity_result[10]
-#         determination  = sensitivity_specificity_result[11]
         
         predicted_endTime = predicted_startTime + predicted_duration
         

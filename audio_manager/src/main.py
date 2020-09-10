@@ -725,27 +725,27 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         
         self.current_training_data_array_pos = 0
-        self.current_training_data_ID = 0        
+        self.current_model_run_result_ID = 0        
         
-        self.unique_training_data_runs = functions.get_unique_training_data_runs() 
+        self.unique_model_run_names = functions.get_unique_model_run_names() 
         self.unique_locations = functions.get_unique_locations('recordings')            
                     
         title_label = ttk.Label(self, text="Create Feb 2020 training data from model predictions", font=LARGE_FONT)
         title_label.grid(column=0, columnspan=1, row=0)           
                 
-        refresh_model_run_names_button = ttk.Button(self, text="Refresh Unique Model Run Names",command=lambda: refresh_unique_training_data_runs())
+        refresh_model_run_names_button = ttk.Button(self, text="Update actual_predicted for select Model Run",command=lambda: update_predicted_from_training_data())
         refresh_model_run_names_button.grid(column=0, columnspan=1, row=3) 
         
-        run_names_label = ttk.Label(self, text="Run Names")
+        run_names_label = ttk.Label(self, text="Model Run Names")
         run_names_label.grid(column=1, columnspan=1, row=2)      
                                     
         self.run_name = StringVar()
-        self.run_names_combo = ttk.Combobox(self, textvariable=self.run_name, values=self.unique_training_data_runs)
+        self.run_names_combo = ttk.Combobox(self, textvariable=self.run_name, values=self.unique_model_run_names)
         
-        if len(self.unique_training_data_runs) > 0:
+        if len(self.unique_model_run_names) > 0:
             self.run_names_combo.current(0)
             self.run_names_combo.grid(column=1, columnspan=1,row=3) 
-            self.run_names_combo.current(len(self.unique_training_data_runs) - 1)       
+            self.run_names_combo.current(len(self.unique_model_run_names) - 1)       
             
         location_filter_label = ttk.Label(self, text="Location Filter")
         location_filter_label.grid(column=2, columnspan=1, row=2)      
@@ -924,7 +924,7 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
        
         self.predicted_probability_filter.set('not_used')        
         
-        load_run_results_button = ttk.Button(self, text="Load Run Results using Filters",command=lambda: get_training_data())
+        load_run_results_button = ttk.Button(self, text="Load Run Results using Filters",command=lambda: get_model_run_result_data())
         load_run_results_button.grid(column=0, columnspan=1, row=133) 
         
         self.number_of_results_label_value = tk.StringVar()
@@ -1032,7 +1032,7 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         predicted_label_value_for_value = ttk.Label(self, textvariable=self.predicted_label_value)
         predicted_label_value_for_value.grid(column=2, columnspan=1, row=241) 
         
-        previous_button = ttk.Button(self, text="Previous", command=lambda: previous_training_data())
+        previous_button = ttk.Button(self, text="Previous", command=lambda: previous_model_run_result())
         previous_button.grid(column=2, columnspan=1, row=250)
                             
 #         play_again_button = ttk.Button(self, text="Play Again", command=lambda: self.play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration, True, parameters.morepork_min_freq, parameters.morepork_max_freq))
@@ -1043,7 +1043,7 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
 #         play_unfiltered_button = ttk.Button(self, text="Play Unfiltered", command=lambda: self.play_clip(str(self.current_training_data_recording_id), float(self.current_training_data_start_time),self.current_training_data_duration, False, parameters.morepork_min_freq, parameters.morepork_max_freq))
 #         play_unfiltered_button.grid(column=1, columnspan=1, row=261)
                             
-        confirm_next_button = ttk.Button(self, text="Next", command=lambda: next_training_data())
+        confirm_next_button = ttk.Button(self, text="Next", command=lambda: next_model_run_result())
         confirm_next_button.grid(column=3, columnspan=1, row=250)
         
         unselect_button = ttk.Button(self, text="Unselect", command=lambda: unselect_actual_confirmed())
@@ -1055,32 +1055,53 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
               
         def confirm_actual():
             print('self.actual_confirmed.get() ', self.actual_confirmed.get())
-            functions.update_training_data(self.current_training_data_ID, self.actual_confirmed.get())
-            functions.update_onset(self.current_training_data_recording_id, self.current_training_data_start_time, self.actual_confirmed.get())
+            functions.update_model_run_result(self.current_model_run_result_ID, self.actual_confirmed.get()) 
+            functions.update_training_data(self.run_names_combo.get(), self.current_training_data_recording_id, self.current_training_data_start_time, self.current_training_data_duration, self.device_super_name, self.device_name, self.recordingDateTime, self.recordingDateTimeNZ, self.actual_confirmed.get())
         
         def unselect_actual_confirmed():
             self.actual_confirmed.set('not_used')
             confirm_actual()
         
-#         def refresh_unique_model_run_names():
-#             self.unique_training_data_runs = functions.get_unique_model_run_names()
-#             self.run_names_combo['values'] = self.unique_training_data_runs  
+#         def update_predicted_from_training_data():
+#             self.unique_model_run_names = functions.get_unique_model_run_names()
+#             self.run_names_combo['values'] = self.unique_model_run_names  
             
-        def refresh_unique_training_data_runs():
-            self.unique_training_data_runs = functions.get_unique_training_data_runs()
-            self.run_names_combo['values'] = self.unique_training_data_runs 
-            
-#         def get_run_result():    
-#             self.run_result = functions.get_model_run_result(int(self.current_model_run_name_ID))   
-#             self.current_model_run_result_array_pos = 0      
-#             load_current_model_run_result() 
+        def update_predicted_from_training_data():            
+            selected_model_run = self.run_names_combo.get()            
+            functions.update_model_run_result_actual_confirmed_from_training_data(selected_model_run)            
+
             
         def get_single_training_data():    
-            self.run_result = functions.get_single_training_data(int(self.current_training_data_ID))   
+            self.run_result = functions.get_single_training_data(int(self.current_model_run_result_ID))   
             self.current_training_data_array_pos = 0      
-            load_current_training_data() 
+            load_current_model_run_result() 
       
-        def get_training_data(): 
+#         def get_training_data(): 
+#              
+#             # Need to check that the user didn't enter a probability without selecting the greater or lessor filter
+#             if (self.predicted_probability_filter.get() == 'not_used'):
+#                 print('self.predicted_probability_filter_value.get() ', self.predicted_probability_filter_value.get())
+#                 if self.predicted_probability_filter_value.get():
+#                     showinfo("Select Probability Sign", "Either clear the probability value, or select a probability radio button")
+#                     return
+#     
+#             print('self.actual_confirmed_other ', self.actual_confirmed_other.get())
+#             print('self.predicted_other ', self.predicted_other.get())
+#             
+# #             self.model_run_result_data = functions.get_training_data(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get(), self.actual_confirmed_other.get(), self.predicted_other.get(), self.recording_id_filter_value.get())
+#             self.model_run_result_data = functions.get_model_run_results_to_create_feb_2020_training_data(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get(), self.actual_confirmed_other.get(), self.predicted_other.get(), self.recording_id_filter_value.get())
+#                                        
+#             number_of_results_returned = len(self.model_run_result_data)
+#             print('number_of_results_returned ', number_of_results_returned)
+#             self.number_of_results_label_value.set("Number of results: " + str(number_of_results_returned))
+#             if number_of_results_returned > 0:
+#                 first_result = self.model_run_result_data[0]
+#                 self.current_model_run_result_ID = first_result[0]
+#                 print('self.current_model_run_result_ID ', self.current_model_run_result_ID) 
+#                 self.current_training_data_array_pos = 0                    
+#                 load_current_model_run_result()
+                
+        def get_model_run_result_data(): 
              
             # Need to check that the user didn't enter a probability without selecting the greater or lessor filter
             if (self.predicted_probability_filter.get() == 'not_used'):
@@ -1092,32 +1113,37 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
             print('self.actual_confirmed_other ', self.actual_confirmed_other.get())
             print('self.predicted_other ', self.predicted_other.get())
             
-            self.training_data = functions.get_training_data(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get(), self.actual_confirmed_other.get(), self.predicted_other.get(), self.recording_id_filter_value.get())
-                                       
-            number_of_results_returned = len(self.training_data)
+#             self.model_run_result_data = functions.get_training_data(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get(), self.actual_confirmed_other.get(), self.predicted_other.get(), self.recording_id_filter_value.get())
+#             self.model_run_result_data = functions.get_model_run_results_to_create_feb_2020_training_data(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get(), self.actual_confirmed_other.get(), self.predicted_other.get(), self.recording_id_filter_value.get())
+#             recording_id_filter = self.recording_id_filter_value.get()
+#             print(recording_id_filter)
+            
+            self.model_run_result_data = functions.get_model_run_results_to_create_feb_2020_training_data(self.run_names_combo.get(), self.actual_confirmed_filter.get(), self.predicted_filter.get(), self.predicted_probability_filter.get(), self.predicted_probability_filter_value.get(), self.location_filter_combo.get(), self.actual_confirmed_other.get(), self.predicted_other.get(), self.recording_id_filter_value.get())
+                                                                 
+            number_of_results_returned = len(self.model_run_result_data)
             print('number_of_results_returned ', number_of_results_returned)
             self.number_of_results_label_value.set("Number of results: " + str(number_of_results_returned))
             if number_of_results_returned > 0:
-                first_result = self.training_data[0]
-                self.current_training_data_ID = first_result[0]
-                print('self.current_training_data_ID ', self.current_training_data_ID) 
+                first_result = self.model_run_result_data[0]
+                self.current_model_run_result_ID = first_result[0]
+                print('self.current_model_run_result_ID ', self.current_model_run_result_ID) 
                 self.current_training_data_array_pos = 0                    
-                load_current_training_data()
+                load_current_model_run_result()       
 
-        def next_training_data():
+        def next_model_run_result():
           
-            if self.current_training_data_array_pos < (len(self.training_data)) -1:
+            if self.current_training_data_array_pos < (len(self.model_run_result_data)) -1:
                 self.current_training_data_array_pos +=1
                 print('current_training_data_array_pos ', self.current_training_data_array_pos)
-                self.current_training_data_ID = self.training_data[self.current_training_data_array_pos][0]
-                load_current_training_data()
+                self.current_model_run_result_ID = self.model_run_result_data[self.current_training_data_array_pos][0]
+                load_current_model_run_result()
              
-        def previous_training_data():
+        def previous_model_run_result():
             if self.current_training_data_array_pos > 0:
                 self.current_training_data_array_pos -=1
                 print('current_training_data_array_pos ', self.current_training_data_array_pos)
-                self.current_training_data_ID = self.training_data[self.current_training_data_array_pos][0]
-                load_current_training_data()
+                self.current_model_run_result_ID = self.model_run_result_data[self.current_training_data_array_pos][0]
+                load_current_model_run_result()
                 
         def play_clip():
 
@@ -1137,9 +1163,12 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
             self.spectrogram_label.config(image=self.spectrogram_image)
             self.waveform_label.config(image=self.waveform_image)
             
-        def load_current_training_data():           
+        def load_current_model_run_result():           
 
-            self.single_training_data = functions.get_single_training_data(int(self.current_training_data_ID)) 
+#             self.single_training_data = functions.get_single_training_data(int(self.current_model_run_result_ID))
+            self.single_training_data = functions.get_model_run_result(int(self.current_model_run_result_ID))
+
+ 
             
             self.current_training_data_recording_id = self.single_training_data[1]    
             
@@ -1157,12 +1186,19 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
 #             self.current_model_run_name_duration = 0.7 # The original length of 1.5 is too long for a morepork  
         
             self.current_training_data_predicted = self.single_training_data[4]             
-            self.current_training_data_actual_confirmed = self.single_training_data[5] 
+            self.current_training_data_actual_confirmed = self.single_training_data[5]  
 
             if self.single_training_data[6]:
                 self.current_training_data_probability = "{0:.2f}".format(self.single_training_data[6])
             else:
                 self.current_training_data_probability = '?'
+                 
+   
+            self.device_super_name = self.single_training_data[7]  
+            self.device_name = self.single_training_data[8]  
+            self.recordingDateTime = self.single_training_data[9]  
+            self.recordingDateTimeNZ = self.single_training_data[10]  
+            
             
             # Set the radio button
             print('current_training_data_actual_confirmed', self.current_training_data_actual_confirmed)
@@ -1221,8 +1257,12 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
                 self.actual_confirmed.set('wind')
             else:
                 self.actual_confirmed.set('not_set')   
-
+                
+                
+                
             self.predicted_label_value.set(self.current_training_data_predicted + ' with ' + self.current_training_data_probability + ' probability')
+
+            
             
             threading.Thread(target=play_clip(), args=(1,)).start()
             threading.Thread(target=display_images(), args=(1,)).start()
