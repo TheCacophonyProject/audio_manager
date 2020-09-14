@@ -812,7 +812,7 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         actual_confirmed_filter_radio_button_white_noise.grid(column=1, columnspan=1, row=13)
         actual_confirmed_filter_radio_button_plane = ttk.Radiobutton(self,text='Plane', variable=self.actual_confirmed_filter, value='plane')
         actual_confirmed_filter_radio_button_plane.grid(column=1, columnspan=1, row=14)
-        actual_confirmed_filter_radio_button_cow = ttk.Radiobutton(self,text='Cow', variable=self.actual_confirmed_filter, value='cow')
+        actual_confirmed_filter_radio_button_cow = ttk.Radiobutton(self,text='Cow or Sheep', variable=self.actual_confirmed_filter, value='cow_sheep')
         actual_confirmed_filter_radio_button_cow.grid(column=1, columnspan=1, row=15)
         actual_confirmed_filter_radio_button_buzzy_insect = ttk.Radiobutton(self,text='Buzzy_insect', variable=self.actual_confirmed_filter, value='buzzy_insect')
         actual_confirmed_filter_radio_button_buzzy_insect.grid(column=1, columnspan=1, row=16)
@@ -882,7 +882,7 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         predicted_filter_radio_button_white_noise.grid(column=3, columnspan=1, row=13)  
         predicted_filter_radio_button_plane = ttk.Radiobutton(self,text='Plane', variable=self.predicted_filter, value='plane')
         predicted_filter_radio_button_plane.grid(column=3, columnspan=1, row=14)
-        predicted_filter_radio_button_cow = ttk.Radiobutton(self,text='Cow', variable=self.predicted_filter, value='cow')
+        predicted_filter_radio_button_cow = ttk.Radiobutton(self,text='Cow or Sheep', variable=self.predicted_filter, value='cow_sheep')
         predicted_filter_radio_button_cow.grid(column=3, columnspan=1, row=15)  
         predicted_filter_radio_button_buzzy_insect = ttk.Radiobutton(self,text='Buzzy insect', variable=self.predicted_filter, value='buzzy_insect')
         predicted_filter_radio_button_buzzy_insect.grid(column=3, columnspan=1, row=16)
@@ -999,7 +999,7 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
         actual_confirmed_radio_button_white_noise.grid(column=1, columnspan=1, row=242)
         actual_confirmed_radio_button_plane = ttk.Radiobutton(self,text='Plane', variable=self.actual_confirmed, value='plane',command=lambda: confirm_actual())
         actual_confirmed_radio_button_plane.grid(column=1, columnspan=1, row=243)
-        actual_confirmed_radio_button_cow = ttk.Radiobutton(self,text='Cow', variable=self.actual_confirmed, value='cow',command=lambda: confirm_actual())
+        actual_confirmed_radio_button_cow = ttk.Radiobutton(self,text='Cow or Sheep', variable=self.actual_confirmed, value='cow_sheep',command=lambda: confirm_actual())
         actual_confirmed_radio_button_cow.grid(column=1, columnspan=1, row=244) 
         actual_confirmed_radio_button_buzzy_insect = ttk.Radiobutton(self,text='Buzzy insect', variable=self.actual_confirmed, value='buzzy_insect',command=lambda: confirm_actual())
         actual_confirmed_radio_button_buzzy_insect.grid(column=1, columnspan=1, row=245) 
@@ -1187,8 +1187,10 @@ class CreateFeb2020TrainingDataFromModelPredictionsPage(tk.Frame):
                 self.actual_confirmed.set('white_noise')
             elif self.current_training_data_actual_confirmed == 'plane':
                 self.actual_confirmed.set('plane')
-            elif self.current_training_data_actual_confirmed == 'cow':
-                self.actual_confirmed.set('cow') 
+#             elif self.current_training_data_actual_confirmed == 'cow':
+#                 self.actual_confirmed.set('cow') 
+            elif self.current_training_data_actual_confirmed == 'cow_sheep':
+                self.actual_confirmed.set('cow_sheep') 
             elif self.current_training_data_actual_confirmed == 'buzzy_insect':
                 self.actual_confirmed.set('buzzy_insect')
             elif self.current_training_data_actual_confirmed == 'morepork_more-pork_part':
@@ -1792,7 +1794,7 @@ class CreateTestDataPage(tk.Frame):
         actual_confirmed_radio_button_plane = ttk.Radiobutton(self,text='Plane', variable=self.actual_confirmed, value='plane',command=lambda: self.confirm_actual())
         actual_confirmed_radio_button_plane.grid(column=6, columnspan=1, row=203)
         
-        actual_confirmed_radio_button_cow = ttk.Radiobutton(self,text='Cow', variable=self.actual_confirmed, value='cow',command=lambda: self.confirm_actual())
+        actual_confirmed_radio_button_cow = ttk.Radiobutton(self,text='Cow or Sheep', variable=self.actual_confirmed, value='cow_sheep',command=lambda: self.confirm_actual())
         actual_confirmed_radio_button_cow.grid(column=0, columnspan=1, row=204) 
         actual_confirmed_radio_button_buzzy_insect = ttk.Radiobutton(self,text='Buzzy insect', variable=self.actual_confirmed, value='buzzy_insect',command=lambda: self.confirm_actual())
         actual_confirmed_radio_button_buzzy_insect.grid(column=1, columnspan=1, row=204) 

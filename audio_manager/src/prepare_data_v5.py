@@ -10,6 +10,7 @@ import librosa
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
@@ -115,9 +116,13 @@ def load_onset_audio(recording_id, start_time):
 
 def get_all_training_onset_data(testing, display_image):
     
-    version_to_use = 5
+#     version_to_use = 5
+#     cur = functions.get_database_connection().cursor()    
+#     cur.execute("select recording_id, start_time_seconds, actual_confirmed FROM onsets WHERE version = ? AND actual_confirmed IS NOT NULL ORDER BY recording_id", (version_to_use, )) 
+#     onsets = cur.fetchall()
+    
     cur = functions.get_database_connection().cursor()    
-    cur.execute("select recording_id, start_time_seconds, actual_confirmed FROM onsets WHERE version = ? AND actual_confirmed IS NOT NULL ORDER BY recording_id", (version_to_use, )) 
+    cur.execute("select recording_id, start_time_seconds, actual_confirmed FROM training_data ORDER BY recording_id") 
     onsets = cur.fetchall()
     
     number_of_onsets = len(onsets)
@@ -169,6 +174,7 @@ def get_all_training_onset_data(testing, display_image):
 
    
 def get_data(binary, saved_mfccs_location, create_data, testing, display_image):
+    Path(saved_mfccs_location).mkdir(parents=True, exist_ok=True)
     
     array_of_mfccs_filename = saved_mfccs_location + 'array_of_mfccs' 
     array_of_labels_filename = saved_mfccs_location + 'array_of_labels'
@@ -188,7 +194,7 @@ def get_data(binary, saved_mfccs_location, create_data, testing, display_image):
     if binary:
         number_of_distinct_labels = 2
      
-    print("number_of_distinct_labels ", number_of_distinct_labels)
+#     print("number_of_distinct_labels ", number_of_distinct_labels)
     
     # Count numbers in each class
     class_count = pd.value_counts(array_of_labels)
@@ -206,7 +212,7 @@ def get_data(binary, saved_mfccs_location, create_data, testing, display_image):
     
 
     
-    return X_train, X_test, y_train, y_test, number_of_distinct_labels, integer_to_sound_mapping
+    return X_train, X_test, y_train, y_test, number_of_distinct_labels, integer_to_sound_mapping, class_count
 
 def run(create_data, testing, display_image):
     print("Started")

@@ -1,14 +1,8 @@
 '''
-Created on 8 Sep. 2020
+File name is what_v14.py
 
-@author: tim
+Created on 11 Sep. 2020
 
-
-This will take the mel spectrums directly without going via pics
-It will not rely on onsets, but instead look at whole recording (or sliding window)
-Train in whole recordings with labels of has morepork / no morepork or maybe how many moreporks
-
-Use this to learn how to input data into Tensorflow from numpy arrays
 @author: tim
 '''
 
@@ -75,21 +69,25 @@ def create_model_basic(binary, num_classes):
     model.add(MaxPooling2D(2,2))  
     model.add(SpatialDropout2D(0.8))           
     
-    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))          
+    model.add(Conv2D(32, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))          
     model.add(MaxPooling2D(2,2))
-    model.add(SpatialDropout2D(0.2))
+    model.add(SpatialDropout2D(0.5))
     
-    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
+    model.add(Conv2D(64, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
     model.add(MaxPooling2D(2,2))
-    model.add(SpatialDropout2D(0.2))
+    model.add(SpatialDropout2D(0.5))
     
-    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
+    model.add(Conv2D(128, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
     model.add(MaxPooling2D(2,2))
-    model.add(SpatialDropout2D(0.2))
+    model.add(SpatialDropout2D(0.5))
     
-    model.add(Conv2D(32, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
+    model.add(Conv2D(256, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
+    model.add(SpatialDropout2D(0.5))
+    
+    model.add(Conv2D(256, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
     model.add(MaxPooling2D(2,2))
-    model.add(SpatialDropout2D(0.2))
+    model.add(SpatialDropout2D(0.5))
+    
             
     model.add(Flatten())    
     
@@ -236,20 +234,20 @@ def load_model(model_location):
     return model
 
 def main():       
-    run_sub_log_dir_multi_class = "13" + "_multi_class"
-    run_sub_log_dir_binary = "13" + "_binary"
-    model_run_name = "2020_09_11a"    
-    model_name = "model_2"
+    run_sub_log_dir_multi_class = "21" + "_multi_class"
+    run_sub_log_dir_binary = "21" + "_binary"
+    model_run_name = "2020_09_12_v21"    
+    model_name = "model_3"
     saved_mfccs = "version_2/"
     
            
     binary=True       
            
-    train_a_model=False # False implies it will load a trained model from disk
+    train_a_model=True # False implies it will load a trained model from disk
     save_model=True # Only applies if model is trained
     create_data=False # If True, creates mfccs from original audio files; if false loads previously saved mfccs files (created for each confirmed training onset)
     testing=False # Only has an affect if create_data is True
-    number_of_training_epochs = 2
+    number_of_training_epochs = 500
     
     if binary:
         model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary/" + model_name          
