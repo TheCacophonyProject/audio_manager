@@ -137,7 +137,7 @@ def load_onset_audio(recording_id, start_time, keras_model_name):
 
     if mfccs_normalized.shape[1] > 128:   # all must be the same size
         print("mfccs_normalized.shape > 128 - will resize", mfccs_normalized.shape)
-        mfccs_normalized = mfccs_normalized[1][0:127]
+        mfccs_normalized = mfccs_normalized[:,:128]
         print("mfccs_normalized.shape 128?", mfccs_normalized.shape)
        
     return mfccs_normalized  
