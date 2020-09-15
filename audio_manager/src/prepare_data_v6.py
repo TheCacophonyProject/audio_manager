@@ -17,6 +17,8 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.utils import to_categorical 
 
+from sklearn import preprocessing
+
 
 BASE_FOLDER = '/home/tim/Work/Cacophony'
 # MODEL_RUN_NAME = "2020_09_02a"
@@ -83,21 +85,45 @@ def get_filtered_recording_for_onset(recording_id, start_time):
     filename = str(recording_id) + ".m4a"
     audio_in_path = recordings_folder_with_path + "/" + filename
 
-    y, sr = librosa.load(audio_in_path, sr=22050, mono=True, offset=start_time, duration=0.7314) # chosen to give a square with the 32 mels
+#     y, sr = librosa.load(audio_in_path, sr=22050, mono=True, offset=start_time, duration=0.7314) # chosen to give a square with the 32 mels
+    y, sr = librosa.load(audio_in_path, sr=48000, mono=True, offset=start_time, duration=1.36533) # chosen to give a square with the 32 mels
         
     y_filtered = functions.butter_bandpass_filter(y, parameters.morepork_min_freq, parameters.morepork_max_freq, sr)    
     
     return y_filtered, sr
 
-def load_onset_audio(recording_id, start_time):
+def load_onset_audio(recording_id, start_time, keras_model_name):
    
   
     y, sr = get_filtered_recording_for_onset(recording_id, start_time)
-    mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=700,fmax=1000, hop_length=512) # https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html
+#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=700,fmax=1000, hop_length=512) # https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html
+    mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, fmin=700,fmax=1100, hop_length=512) # https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html
+    print(mfccs.shape)
     
-    max_value = np.max(mfccs)    
-
-    mfccs_normalized = mfccs / max_value
+    if keras_model_name == "Xception":
+        mfccs_normalized = tf.keras.applications.xception.preprocess_input(mfccs)
+        
+    elif keras_model_name == "VGG16" or keras_model_name == "VGG19":
+        mfccs_normalized = tf.keras.applications.vgg16.preprocess_input(mfccs)
+    
+    elif keras_model_name == "ResNet50" or keras_model_name == "ResNet101" or keras_model_name == "ResNet152":
+        mfccs_normalized = tf.keras.applications.resnet.preprocess_input(mfccs)
+        
+    elif keras_model_name == "ResNet50V2"  or keras_model_name == "ResNet101V2" or keras_model_name == "ResNet152V2":
+        mfccs_normalized = tf.keras.applications.resnet_v2.preprocess_input(mfccs)    
+        
+    elif keras_model_name == "InceptionV3":
+        mfccs_normalized = tf.keras.applications.inception_v3.preprocess_input(mfccs)
+            
+    elif keras_model_name == "InceptionResNetV2":
+        mfccs_normalized = tf.keras.applications.inception_resnet_v2.preprocess_input(mfccs)
+        
+    elif keras_model_name == "NASNetLarge":
+        mfccs_normalized = tf.keras.applications.nasnet.preprocess_input(mfccs)    
+   
+    else:    
+        max_value = np.max(mfccs)
+        mfccs_normalized = mfccs / max_value
     
     # As we are going to use a Conv2d layer in the model, it expects 3 dimensions, so need to expand
 #     https://machinelearningmastery.com/a-gentle-introduction-to-channels-first-and-channels-last-image-formats-for-deep-learning/
@@ -105,16 +131,19 @@ def load_onset_audio(recording_id, start_time):
     mfccs_normalized = np.expand_dims(mfccs_normalized, axis=2)    
     print("mfccs_normalized.shape ", mfccs_normalized.shape)
    
-#     if mfccs_normalized.shape[1] < 2584:   # need to change this to ? 
-    if mfccs_normalized.shape[1] < 32:   # need to change this to ? 
-
+    if mfccs_normalized.shape[1] < 128:   # all must be the same size
+        print("mfccs_normalized.shape is less than 128", mfccs_normalized.shape)
         return None # just throw it away
+
+    if mfccs_normalized.shape[1] > 128:   # all must be the same size
+        print("mfccs_normalized.shape > 128 - will resize", mfccs_normalized.shape)
+        mfccs_normalized = mfccs_normalized[1][0:127]
+        print("mfccs_normalized.shape 128?", mfccs_normalized.shape)
        
-    else:
-        return mfccs_normalized  
+    return mfccs_normalized  
 
 
-def get_all_training_data(testing, display_image):
+def get_all_training_data(testing, display_image, keras_model_name):
     
 #     version_to_use = 5
 #     cur = functions.get_database_connection().cursor()    
@@ -127,7 +156,7 @@ def get_all_training_data(testing, display_image):
     
     number_of_onsets = len(onsets)
     if testing:
-        number_of_onsets = 100
+        number_of_onsets = 50
     
     # https://stackoverflow.com/questions/53135673/how-to-use-numpy-dstack-in-a-loop
     array_of_mfccs = []
@@ -144,7 +173,7 @@ def get_all_training_data(testing, display_image):
         if actual_confirmed == 'maybe_morepork_more-pork' or actual_confirmed == 'morepork_more-pork_part':
             continue # won't use them for training          
                 
-        mfccs = load_onset_audio(recording_id, start_time)
+        mfccs = load_onset_audio(recording_id, start_time, keras_model_name)
         if mfccs is not None:
 
             array_of_mfccs.append(mfccs)
@@ -173,14 +202,14 @@ def get_all_training_data(testing, display_image):
 
 
    
-def get_data(binary, saved_mfccs_location, create_data, testing, display_image):
+def get_data(binary, saved_mfccs_location, create_data, testing, display_image, keras_model_name):
     Path(saved_mfccs_location).mkdir(parents=True, exist_ok=True)
     
     array_of_mfccs_filename = saved_mfccs_location + 'array_of_mfccs' 
     array_of_labels_filename = saved_mfccs_location + 'array_of_labels'
            
     if create_data:
-        array_of_mfccs, array_of_labels = get_all_training_data(testing=testing, display_image=display_image)    
+        array_of_mfccs, array_of_labels = get_all_training_data(testing=testing, display_image=display_image, keras_model_name=keras_model_name)    
         np.save(array_of_mfccs_filename, array_of_mfccs)
         np.save(array_of_labels_filename, array_of_labels)
         
@@ -216,17 +245,17 @@ def get_data(binary, saved_mfccs_location, create_data, testing, display_image):
 
 def run(create_data, testing, display_image):
     print("Started")
-    MODEL_RUN_NAME = "testing"
-    binary=True
-#     X_train, X_test, y_train, y_test, number_of_distinct_labels, sound_to_integer_mapping = get_data(create_data=create_data, testing=testing, display_image=display_image)
-    X_train, X_test, y_train, y_test, number_of_distinct_labels, integer_to_sound_mapping = get_data(MODEL_RUN_NAME, create_data=create_data, testing=testing, display_image=display_image)  
-     
-       
-
-    
-    print("number_of_distinct_labels", number_of_distinct_labels)
-    
-    print("sound_to_integer_mapping ", integer_to_sound_mapping)
+#     MODEL_RUN_NAME = "testing"
+#     binary=True
+# #     X_train, X_test, y_train, y_test, number_of_distinct_labels, sound_to_integer_mapping = get_data(create_data=create_data, testing=testing, display_image=display_image)
+#     X_train, X_test, y_train, y_test, number_of_distinct_labels, integer_to_sound_mapping = get_data(MODEL_RUN_NAME, create_data=create_data, testing=testing, display_image=display_image)  
+#      
+#        
+# 
+#     
+#     print("number_of_distinct_labels", number_of_distinct_labels)
+#     
+#     print("sound_to_integer_mapping ", integer_to_sound_mapping)
        
     print("Finished")
 

@@ -41,7 +41,7 @@ from tensorflow.keras.layers import Concatenate
 
 from sklearn.metrics import confusion_matrix
 
-import prepare_data_v5
+import prepare_data_v6
 
 # BASE_FOLDER = '/home/tim/Work/Cacophony'
 BASE_FOLDER = parameters.base_folder
@@ -65,132 +65,44 @@ def get_metrics():
       ]
     return METRICS
 
-def create_model_Keras_builtin_InceptionResNetV2(binary, number_of_distinct_labels):
-    # https://www.tensorflow.org/api_docs/python/tf/keras/applications/ResNet152
-    IMG_SIZE=32
+def create_keras_builtin_model(keras_model_name, binary, number_of_distinct_labels, IMG_SIZE):
+#     IMG_SIZE=32
     IMG_SHAPE = (IMG_SIZE, IMG_SIZE, 3)
-#     InceptionResNetV2=tf.keras.applications.InceptionResNetV2(input_shape=IMG_SHAPE,
-#                                                               pooling='avg',                                                            
-#                                                               include_top=False,
-#                                                               weights='imagenet',
-#                                                               )
-    builtin_model = tf.keras.applications.InceptionResNetV2(
+    
+    if keras_model_name == "InceptionResNetV2":
+        builtin_model = tf.keras.applications.InceptionResNetV2(
         include_top=False, 
         weights='imagenet', 
         input_shape=IMG_SHAPE) 
-    
-    builtin_model.trainable=False
-#     global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
-#     num_dense_units = len(train_labels)
-    prediction_layer = tf.keras.layers.Dense(number_of_distinct_labels,activation='softmax')
-#     if binary:
-#         prediction_layer = tf.keras.layers.Dense(units=1, activation="sigmoid")      
-#     
-#     else:
-#         prediction_layer = tf.keras.layers.Dense(units=num_classes, activation="softmax")
-
-    model = Sequential([
-        builtin_model,
-#         global_average_layer,
-        prediction_layer
-        ])
-    
-    opt = Adam(lr=0.001)
-
-    if binary:      
-        model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])   
-    else:    
-        model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
-       
-    
-    
-    return model
-
-def create_model_Keras_builtin_NASNetLarge(binary, number_of_distinct_labels):
-    # https://www.tensorflow.org/api_docs/python/tf/keras/applications/ResNet152
-    IMG_SIZE=32
-    IMG_SHAPE = (IMG_SIZE, IMG_SIZE, 3)
-    builtin_model=tf.keras.applications.NASNetLarge(input_shape=IMG_SHAPE,
+        
+        builtin_model.trainable=False # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
+        
+    elif keras_model_name == "NASNetLarge":
+        builtin_model=tf.keras.applications.NASNetLarge(input_shape=IMG_SHAPE,
                                                include_top=False,
                                                weights=None, # Can't use imagenet as docs say input images need to be 331, 331, 3)
                                                )
-#     builtin_model.trainable=False   # As I can't use imagenet weights, it makes sense that we will need to train the NASNetLarge model
-    global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
-    
-    if binary:
-        prediction_layer = tf.keras.layers.Dense(units=1, activation="sigmoid")     
-     
-    else:
-        prediction_layer = tf.keras.layers.Dense(number_of_distinct_labels,activation='softmax')
-
-    model = Sequential([
-        builtin_model,
-        global_average_layer,
-        prediction_layer
-        ])
-    
-    opt = Adam(lr=0.001)
-
-    if binary:      
-        model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])   
-    else:    
-        model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
-       
-    
-    
-    return model
-
-def create_model_Keras_builtin_ResNet152(binary, number_of_distinct_labels):
-    # https://www.tensorflow.org/api_docs/python/tf/keras/applications/ResNet152
-    IMG_SIZE=32
-    IMG_SHAPE = (IMG_SIZE, IMG_SIZE, 3)
-    builtin_model=tf.keras.applications.ResNet152(input_shape=IMG_SHAPE,
+    elif keras_model_name == "ResNet152":
+        builtin_model=tf.keras.applications.ResNet152(input_shape=IMG_SHAPE,
                                                include_top=False,
                                                weights='imagenet',
                                                )
-    builtin_model.trainable=False
-    global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
-
-    prediction_layer = tf.keras.layers.Dense(number_of_distinct_labels,activation='softmax')
-    
-    if binary:
-        prediction_layer = tf.keras.layers.Dense(units=1, activation="sigmoid")     
-     
-    else:
-        prediction_layer = tf.keras.layers.Dense(number_of_distinct_labels,activation='softmax')
-    model = Sequential([
-        builtin_model,
-        global_average_layer,
-        prediction_layer
-        ])
-    
-    opt = Adam(lr=0.001)
-
-    if binary:      
-        model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])   
-    else:    
-        model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
-       
-    
-    
-    return model
-
-def create_model_Keras_builtin_VGG16(binary, number_of_distinct_labels):
-    # https://www.tensorflow.org/api_docs/python/tf/keras/applications/VGG16
-    # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
-
-    IMG_SIZE=32
-    IMG_SHAPE = (IMG_SIZE, IMG_SIZE, 3)
-    builtin_model=tf.keras.applications.VGG16(input_shape=IMG_SHAPE,
+        builtin_model.trainable=False # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
+        
+    elif keras_model_name == "VGG16":
+        builtin_model=tf.keras.applications.VGG16(input_shape=IMG_SHAPE,
                                                include_top=False,
                                                weights='imagenet',
                                                )
-#     builtin_model.trainable=False
-    global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
-#     num_dense_units = len(train_labels)
+        builtin_model.trainable=False # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
+    else:
+        print("No matching model found")
+        return                    
     
+    global_average_layer = tf.keras.layers.GlobalAveragePooling2D() # It looks like I wasn't using this for InceptionResNetV2 - will need to check
+       
     if binary:
-        prediction_layer = tf.keras.layers.Dense(units=1, activation="sigmoid")  
+        prediction_layer = tf.keras.layers.Dense(units=1, activation="sigmoid")          
     else:
         prediction_layer = tf.keras.layers.Dense(number_of_distinct_labels,activation='softmax')
 
@@ -205,12 +117,9 @@ def create_model_Keras_builtin_VGG16(binary, number_of_distinct_labels):
     if binary:      
         model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])   
     else:    
-        model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
-       
+        model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])    
     
-    
-    return model
-    
+    return model   
 
 
 
@@ -259,7 +168,7 @@ def evaluate_model(model, val_examples, val_labels):
   
 def prepare_data(binary, model_name, saved_mfccs_location, create_data, testing, display_image):
     # https://www.tensorflow.org/tutorials/load_data/numpy    
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v5.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image) 
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v6.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, keras_model_name=model_name) 
     
     # save integer to sound mapping - so can use it later in another program eg. when this model is used to do predictions
     if binary:
@@ -344,40 +253,71 @@ def load_model(model_location):
     model.summary()
     return model
 
-def main():       
-
-    run_sub_log_dir_multi_class = "NASNetLarge_3 " + "_multi_class"
-    run_sub_log_dir_binary = "NASNetLarge_3" + "_binary"
+def get_image_size(keras_model_name):
+    # this needs to be updated manually when I create new data_images / sizes
+    if keras_model_name == "Xception":
+        return 32
+        
+    elif keras_model_name == "VGG16" or keras_model_name == "VGG19":
+        return 32
     
-    model_run_name = "2020_09_15_NASNetLarge_v1"    
-    model_name = "NASNetLarge"
-    saved_mfccs = "version_2/"    
+    elif keras_model_name == "ResNet50" or keras_model_name == "ResNet101" or keras_model_name == "ResNet152":
+        return 32
+        
+    elif keras_model_name == "ResNet50V2"  or keras_model_name == "ResNet101V2" or keras_model_name == "ResNet152V2":
+        return 32 
+        
+    elif keras_model_name == "InceptionV3":
+        return 32
+            
+    elif keras_model_name == "InceptionResNetV2":
+        return 128
+        
+    elif keras_model_name == "NASNetLarge":
+        return 32  
+   
+    else:    
+        return 32
+    
+
+def main():       
+    keras_model_name = "InceptionResNetV2" # Input size must be at least 75x75
+#     keras_model_name = "NASNetLarge"
+#     keras_model_name = "ResNet152"
+#     keras_model_name = "VGG16"
+    
+    run_sub_log_dir_multi_class = keras_model_name + "_3 " + "_multi_class"
+    run_sub_log_dir_binary = keras_model_name + "_3" + "_binary"
+    
+    model_run_name = "2020_09_15_" + keras_model_name + "_v2"    
+#     model_name = "NASNetLarge"
+    saved_mfccs = "version_3/"    
            
     binary=False       
     
-    convert_images_to_rgb = True # Needed for off-the-shelf Keras models such as VGG and ResNet
-           
-    train_a_model=True # False implies it will load a trained model from disk
+    convert_images_to_rgb = True # Needed for off-the-shelf Keras models such as VGG and ResNet    
+               
+    train_a_model=False # False implies it will load a trained model from disk
     save_model=True # Only applies if model is trained
-    create_data=False # If True, creates mfccs from original audio files; if false loads previously saved mfccs files (created for each confirmed training onset)
+    create_data=True # If True, creates mfccs from original audio files; if false loads previously saved mfccs files (created for each confirmed training onset)
     testing=False # Only has an affect if create_data is True
     number_of_training_epochs = 100000
     
     if binary:
-        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary/" + model_name          
+        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary/" + keras_model_name          
     else:
-        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class/" + model_name   
+        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class/" + keras_model_name   
               
              
     print("model_location: ",model_location)
-    saved_mfccs_location = BASE_FOLDER + RUNS_FOLDER + SAVED_MFCCS_FOLDER + "/" + saved_mfccs 
+    saved_mfccs_location = BASE_FOLDER + RUNS_FOLDER + SAVED_MFCCS_FOLDER + "/" + saved_mfccs + keras_model_name + "/" 
     print("saved_mfccs_location: ", saved_mfccs_location)  
    
     display_image = False # Only has an affect if create_data is True
     
     print("Started") 
   
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping, class_count = prepare_data(binary=binary, model_name=model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image)
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping, class_count = prepare_data(binary=binary, model_name=keras_model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image)
        
 #     # get one example
 #     one_val_example = val_examples[:1]
@@ -396,15 +336,8 @@ def main():
         print(train_examples.shape)
             
     if train_a_model: 
-#         model = create_model_basic(binary, number_of_distinct_labels) 
-#         model = create_model_vgg16(binary, number_of_distinct_labels) 
-#         model =create_model_basic_vgg16_hybrid_to_find_why_not_training(binary, number_of_distinct_labels)
-#         model = create_model_basic_with_learning_from_vgg16(binary, number_of_distinct_labels)
-#         model = create_model_Keras_builtin_VGG16(binary, number_of_distinct_labels)   
-        model = create_model_Keras_builtin_NASNetLarge(binary, number_of_distinct_labels)    
-#         model = create_model_Keras_builtin_InceptionResNetV2(binary, number_of_distinct_labels)
-#         model = create_model_Keras_builtin_ResNet152(binary, number_of_distinct_labels) 
-
+                
+        model = create_keras_builtin_model(keras_model_name, binary, number_of_distinct_labels, get_image_size(keras_model_name))
         
         print(model.summary()) 
         
