@@ -98,38 +98,41 @@ def load_onset_audio(recording_id, start_time, keras_model_name):
     y, sr = get_filtered_recording_for_onset(recording_id, start_time)
 #     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=700,fmax=1000, hop_length=512) # https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html
     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, fmin=700,fmax=1100, hop_length=512) # https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html
-    print(mfccs.shape)
-    
-    if keras_model_name == "Xception":
-        mfccs = tf.keras.applications.xception.preprocess_input(mfccs)
-        
-    elif keras_model_name == "VGG16" or keras_model_name == "VGG19":
-        mfccs = tf.keras.applications.vgg16.preprocess_input(mfccs)
-    
-    elif keras_model_name == "ResNet50" or keras_model_name == "ResNet101" or keras_model_name == "ResNet152":
-        mfccs = tf.keras.applications.resnet.preprocess_input(mfccs)
-        
-    elif keras_model_name == "ResNet50V2"  or keras_model_name == "ResNet101V2" or keras_model_name == "ResNet152V2":
-        mfccs = tf.keras.applications.resnet_v2.preprocess_input(mfccs)    
-        
-    elif keras_model_name == "InceptionV3":
-        mfccs = tf.keras.applications.inception_v3.preprocess_input(mfccs)
-            
-    elif keras_model_name == "InceptionResNetV2":
-        mfccs = tf.keras.applications.inception_resnet_v2.preprocess_input(mfccs)
-        
-    elif keras_model_name == "NASNetLarge":
-        mfccs = tf.keras.applications.nasnet.preprocess_input(mfccs)    
-    
-    elif keras_model_name == "image_format_0-255_3-channel":
+#     print(mfccs.shape)
+#     
+#     if keras_model_name == "Xception":
+#         mfccs = tf.keras.applications.xception.preprocess_input(mfccs)
+#         
+#     elif keras_model_name == "VGG16" or keras_model_name == "VGG19":
+#         mfccs = tf.keras.applications.vgg16.preprocess_input(mfccs)
+#     
+#     elif keras_model_name == "ResNet50" or keras_model_name == "ResNet101" or keras_model_name == "ResNet152":
+#         mfccs = tf.keras.applications.resnet.preprocess_input(mfccs)
+#         
+#     elif keras_model_name == "ResNet50V2"  or keras_model_name == "ResNet101V2" or keras_model_name == "ResNet152V2":
+#         mfccs = tf.keras.applications.resnet_v2.preprocess_input(mfccs)    
+#         
+#     elif keras_model_name == "InceptionV3":
+#         mfccs = tf.keras.applications.inception_v3.preprocess_input(mfccs)
+#             
+#     elif keras_model_name == "InceptionResNetV2":
+#         mfccs = tf.keras.applications.inception_resnet_v2.preprocess_input(mfccs)
+#         
+#     elif keras_model_name == "NASNetLarge":
+#         mfccs = tf.keras.applications.nasnet.preprocess_input(mfccs)    
+#     
+#     elif keras_model_name == "image_format_0-255_3-channel":
         # Going to create the mfccs as the Keras built-in models expect as input (which they then transform)
-        print("mfccs.max() ", mfccs.max())
-        mfccs *= 255.0/mfccs.max()      # https://stackoverflow.com/questions/1735025/how-to-normalize-a-numpy-array-to-within-a-certain-range
-        print("mfccs.max() ", mfccs.max())
+    print("mfccs.max() ", mfccs.max())
+    mfccs *= 255.0/mfccs.max()      # https://stackoverflow.com/questions/1735025/how-to-normalize-a-numpy-array-to-within-a-certain-range
+    print("mfccs.max() ", mfccs.max())
+        
+        
+        
    
-    else:    
-        max_value = np.max(mfccs)
-        mfccs = mfccs / max_value
+#     else:    
+#         max_value = np.max(mfccs)
+#         mfccs = mfccs / max_value
     
     # As we are going to use a Conv2d layer in the model, it expects 3 dimensions, so need to expand
 #     https://machinelearningmastery.com/a-gentle-introduction-to-channels-first-and-channels-last-image-formats-for-deep-learning/
@@ -148,6 +151,12 @@ def load_onset_audio(recording_id, start_time, keras_model_name):
        
     mfccs = np.expand_dims(mfccs, axis=2)    
     print("mfccs.shape ", mfccs.shape)
+    
+    # Expand to 3 channel to look like rgb:
+        
+    mfccs = tf.image.grayscale_to_rgb(tf.convert_to_tensor(mfccs))
+   
+    print(mfccs.shape)
        
     return mfccs  
 
@@ -209,7 +218,38 @@ def get_all_training_data(testing, display_image, keras_model_name):
           
     return result_mfccs, result_labels
 
-
+def convert_mfccs_to_required_format_for_this_model_type(array_of_mfccs, keras_model_name):
+    
+    if keras_model_name == "Xception":
+        array_of_mfccs = tf.keras.applications.xception.preprocess_input(array_of_mfccs)
+         
+    elif keras_model_name == "VGG16" or keras_model_name == "VGG19":
+        array_of_mfccs = tf.keras.applications.vgg16.preprocess_input(array_of_mfccs)
+     
+    elif keras_model_name == "ResNet50" or keras_model_name == "ResNet101" or keras_model_name == "ResNet152":
+        array_of_mfccs = tf.keras.applications.resnet.preprocess_input(array_of_mfccs)
+         
+    elif keras_model_name == "ResNet50V2"  or keras_model_name == "ResNet101V2" or keras_model_name == "ResNet152V2":
+        array_of_mfccs = tf.keras.applications.resnet_v2.preprocess_input(array_of_mfccs)    
+         
+    elif keras_model_name == "InceptionV3":
+        array_of_mfccs = tf.keras.applications.inception_v3.preprocess_input(array_of_mfccs)
+             
+    elif keras_model_name == "InceptionResNetV2":
+        array_of_mfccs = tf.keras.applications.inception_resnet_v2.preprocess_input(array_of_mfccs)
+         
+    elif keras_model_name == "NASNetLarge":
+        array_of_mfccs = tf.keras.applications.nasnet.preprocess_input(array_of_mfccs)  
+    
+    else:
+        print("Model type not found - so just scaling to 0 - 1.0") # need to check this is working
+        max_value = np.max(array_of_mfccs)
+        array_of_mfccs = array_of_mfccs / max_value
+        
+    print("np.amax(array_of_mfccs) ", np.amax(array_of_mfccs))
+    print("np.amin(array_of_mfccs) ", np.amin(array_of_mfccs))
+    
+    return array_of_mfccs 
    
 def get_data(binary, saved_mfccs_location, create_data, testing, display_image, keras_model_name):
     Path(saved_mfccs_location).mkdir(parents=True, exist_ok=True)
@@ -225,8 +265,14 @@ def get_data(binary, saved_mfccs_location, create_data, testing, display_image, 
     else:
         # read from previously saved data
         array_of_mfccs = np.load(array_of_mfccs_filename + ".npy")
+        print("np.amax(array_of_mfccs) ", np.amax(array_of_mfccs))
+        print("np.amin(array_of_mfccs) ", np.amin(array_of_mfccs))
         array_of_labels = np.load(array_of_labels_filename + ".npy")
         
+    # Convert mfcss to correct format for this model
+    array_of_mfccs = convert_mfccs_to_required_format_for_this_model_type(array_of_mfccs=array_of_mfccs, keras_model_name=keras_model_name)
+    print("np.amax(array_of_mfccs) ", np.amax(array_of_mfccs))
+    print("np.amin(array_of_mfccs) ", np.amin(array_of_mfccs))    
     number_of_distinct_labels = len(np.unique(array_of_labels))
     
     if binary:

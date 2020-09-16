@@ -306,18 +306,18 @@ def get_device_id_using_device_name(device_name):
                 return device_id     
             
 def get_cacophony_user_token():
-    global cacophony_user_token
-    global cacophony_user_name
-    global cacophony_user_password 
-    if cacophony_user_token:
-        return cacophony_user_token
+    parameters.cacophony_user_token
+    parameters.cacophony_user_name
+    parameters.cacophony_user_password 
+    if parameters.cacophony_user_token:
+        return parameters.cacophony_user_token
     
     print('About to get user_token from server')
-    username = cacophony_user_name
-    if cacophony_user_password == '':
-        cacophony_user_password = input("Enter password for Cacophony user " + username + " (or change cacophony_user_name in parameters file): ")
+    username = parameters.cacophony_user_name
+    if parameters.cacophony_user_password == '':
+        parameters.cacophony_user_password = input("Enter password for Cacophony user " + username + " (or change cacophony_user_name in parameters file): ")
            
-    requestBody = {"nameOrEmail": username, "password": cacophony_user_password }
+    requestBody = {"nameOrEmail": username, "password": parameters.cacophony_user_password }
     login_endpoint = parameters.server_endpoint + parameters.login_user_url
     resp = requests.post(login_endpoint, data=requestBody)
     if resp.status_code != 200:
@@ -325,8 +325,8 @@ def get_cacophony_user_token():
         sys.exit('Could not connect to Cacophony Server - exiting')
     
     data = resp.json()
-    cacophony_user_token = data['token']
-    return cacophony_user_token
+    parameters.cacophony_user_token = data['token']
+    return parameters.cacophony_user_token
     
 def load_recordings_from_local_folder(device_name, device_super_name):
     
