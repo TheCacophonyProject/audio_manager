@@ -87,41 +87,55 @@ def get_filtered_recording_for_onset(recording_id, start_time):
 
 #     y, sr = librosa.load(audio_in_path, sr=22050, mono=True, offset=start_time, duration=0.7314) # chosen to give a square with the 32 mels
 #     y, sr = librosa.load(audio_in_path, sr=48000, mono=True, offset=start_time, duration=1.36533) # chosen to give a square with the 128 mels
-    y, sr = librosa.load(audio_in_path, sr=48000, mono=True, offset=start_time, duration=1.36533) # chosen to give a square with the 128 mels
-        
+#     y, sr = librosa.load(audio_in_path, sr=48000, mono=True, offset=start_time, duration=0.9) # chosen to give a square with the 128 mels
+    y, sr = librosa.load(audio_in_path, sr=48000, mono=True, offset=start_time, duration=0.6784) # seems to give a spectrogram size of 64x69 - close enough - will chop to 64x64
+#     y, sr = librosa.load(audio_in_path, sr=None, mono=True, offset=start_time, duration=0.6784) # seems to give a spectrogram size of 64x69 - close enough - will chop to 64x64
+          
     y_filtered = functions.butter_bandpass_filter(y, parameters.morepork_min_freq, parameters.morepork_max_freq, sr)    
     
     return y_filtered, sr
 
 def load_onset_audio(recording_id, start_time, keras_model_name):
    
-  
+#     recording_id = 563200
+#     start_time = 11.6
     y, sr = get_filtered_recording_for_onset(recording_id, start_time)
+#     print(sr, " for recording ", recording_id)
 #     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=700,fmax=1000, hop_length=512) # https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html
 #     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, fmin=700,fmax=1100, hop_length=512) # https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html
-    
     
     # https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html   
     # Trying to improve frequency resolution
     # https://librosa.org/doc/latest/generated/librosa.stft.html#librosa.stft
-    mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=512, win_length = 512) 
+#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=700,fmax=1100, hop_length=512, win_length = 512)
+#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=700,fmax=1100, hop_length=512, win_length = 1024)
+#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=700,fmax=1100, hop_length=512, n_fft=2048)
+#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=512, n_fft=8192) 
+#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, fmin=700,fmax=1100, hop_length=512, n_fft=8192)     
+#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=256, n_fft=8192)  
+#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=256, n_fft=8192)  
+#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, fmin=700,fmax=1100, hop_length=256, n_fft=8192)  
+#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=256, n_fft=8192)  
+#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=256, n_fft=2048)  
+#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=512, n_fft=16384)  
+    mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=512, n_fft=8192)  # 
     print(mfccs.shape)
 
-    # Going to create the mfccs as the Keras built-in models expect as input (which they then transform)
-    print("mfccs.max() ", mfccs.max())
+        # Going to create the mfccs as the Keras built-in models expect as input (which they then transform)
+#     print("mfccs.max() ", mfccs.max())
     mfccs *= 255.0/mfccs.max()      # https://stackoverflow.com/questions/1735025/how-to-normalize-a-numpy-array-to-within-a-certain-range
-    print("mfccs.max() ", mfccs.max())        
+#     print("mfccs.max() ", mfccs.max())
         
-     
+    
    
-    if mfccs.shape[1] < 128:   # all must be the same size
-        print("mfccs.shape is less than 128", mfccs.shape)
+    if mfccs.shape[1] < 64:   # all must be the same size
+        print("mfccs.shape is less than 64", mfccs.shape)
         return None # just throw it away
-
-    if mfccs.shape[1] > 128:   # all must be the same size
-        print("mfccs.shape > 128 - will resize", mfccs.shape)
-        mfccs = mfccs[:,:128]
-        print("mfccs.shape 128?", mfccs.shape)
+ 
+    if mfccs.shape[1] > 64:   # all must be the same size
+        print("mfccs.shape > 64 - will resize", mfccs.shape)
+        mfccs = mfccs[:,:64]
+        print("mfccs.shape 64?", mfccs.shape)
        
     mfccs = np.expand_dims(mfccs, axis=2)    
     print("mfccs.shape ", mfccs.shape)
@@ -132,7 +146,7 @@ def load_onset_audio(recording_id, start_time, keras_model_name):
    
     print(mfccs.shape)
        
-    return mfccs  
+    return mfccs,sr  
 
 
 def get_all_training_data(testing, display_image, keras_model_name):
@@ -143,7 +157,8 @@ def get_all_training_data(testing, display_image, keras_model_name):
 #     onsets = cur.fetchall()
     
     cur = functions.get_database_connection().cursor()    
-    cur.execute("select recording_id, start_time_seconds, actual_confirmed FROM training_data ORDER BY recording_id") 
+#     cur.execute("select recording_id, start_time_seconds, actual_confirmed FROM training_data ORDER BY recording_id") 
+    cur.execute("select recording_id, start_time_seconds, actual_confirmed FROM training_data where actual_confirmed = 'morepork_more-pork' ORDER BY recording_id") 
     onsets = cur.fetchall()
     
     number_of_onsets = len(onsets)
@@ -165,7 +180,7 @@ def get_all_training_data(testing, display_image, keras_model_name):
         if actual_confirmed == 'maybe_morepork_more-pork' or actual_confirmed == 'morepork_more-pork_part':
             continue # won't use them for training          
                 
-        mfccs = load_onset_audio(recording_id, start_time, keras_model_name)
+        mfccs, sr = load_onset_audio(recording_id, start_time, keras_model_name)
         if mfccs is not None:
 
             array_of_mfccs.append(mfccs)
@@ -182,8 +197,9 @@ def get_all_training_data(testing, display_image, keras_model_name):
     
                 plt.matshow(result)
                 plt.title(actual_confirmed)
-    #             plt.show()
-                plt.savefig("/home/tim/Temp/" + str(count) + ".jpg")
+#                 plt.show()
+#                 plt.savefig("/home/tim/Temp/" + str(count) + ".jpg")
+                plt.savefig("/home/tim/Temp/" + str(count) + "-" + str(sr) + ".jpg")
             except:
                 pass
             

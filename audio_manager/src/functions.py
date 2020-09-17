@@ -3282,6 +3282,124 @@ def copy_training_data_to_model_run_result_table():
           
     
     
+def get_original_recording_sample_rate(recording_id):   
+    recordings_folder_with_path = parameters.base_folder + '/' + parameters.downloaded_recordings_folder
+    filename = str(recording_id) + ".m4a"
+    audio_in_path = recordings_folder_with_path + "/" + filename
+
+
+    y, sr = librosa.load(audio_in_path, sr=None, mono=True, duration=1) 
     
+    return sr
+
+def update_database_recordings_with_original_sample_rate():
+    cur = get_database_connection().cursor()
+    cur.execute("SELECT recording_id from recordings WHERE sample_rate IS NULL")
+    recordings = cur.fetchall()  
+    row_count = len(recordings)
+    count = 0
+    for row in recordings:
+        count+=1
+        print(count, " of ", row_count)
         
+        recording_id = row[0]
+        try:
+            sample_rate = get_original_recording_sample_rate(recording_id)
+        except:
+            print("Problem with recording " + str(recording_id))
+            continue
+        print("sample_rate is ", sample_rate)
+        
+        try:
+         
+            sql = ''' UPDATE recordings 
+                      SET sample_rate = ?                      
+                      WHERE recording_id = ? '''
+
+            cur.execute(sql, (sample_rate, recording_id))
+            get_database_connection().commit()
+            
+            sql2 = ''' UPDATE training_data 
+                      SET sample_rate = ?                      
+                      WHERE recording_id = ? '''
+
+            cur.execute(sql2, (sample_rate, recording_id))
+            get_database_connection().commit()
+            
+            sql2 = ''' UPDATE model_run_result 
+                      SET sample_rate = ?                      
+                      WHERE recording_id = ? '''
+#             cur = get_database_connection().cursor()
+            cur.execute(sql2, (sample_rate, recording_id))
+            get_database_connection().commit()
+            
+            sql3 = ''' UPDATE test_data 
+                      SET sample_rate = ?                      
+                      WHERE recording_id = ? '''
+#             cur = get_database_connection().cursor()
+            cur.execute(sql3, (sample_rate, recording_id))
+            get_database_connection().commit()
+            
+            
+        except Exception as e:
+            print(e, '\n')
+            print('\t\tUnable to update recording ' + str(recording_id), '\n')
+            
+        
+            
+def compare_spectrograms_of_different_recording_sample_rates():
+    
+    recordings = [563200]
+    start_time = 11.6 
+    
+    for recording_id in recordings:
+    
+        slices_per_second = 10
+        num_mels = 64
+        frequency_min = 700
+        frequency_max = 1100
+        
+#         recording_id = 305417
+        recording_fp = "/home/tim/Work/Cacophony/downloaded_recordings/all_recordings/" + str(recording_id) + ".m4a"
+        
+        frames, rate = librosa.load(recording_fp, sr=None, offset=start_time, duration=0.8)
+        
+        # generate spectrogram
+        nfft = int(rate / slices_per_second)
+        print("nfft ", nfft)
+        specgram = librosa.feature.melspectrogram(
+            y=frames,
+            sr=rate,
+            n_fft=nfft,
+            hop_length=int(nfft / 2),
+            n_mels=num_mels,
+            fmin=frequency_min,
+            fmax=frequency_max)
+        
+        
+        
+         
+        print(specgram.shape)
+        print("rate ", rate)
+    
+        plt.matshow(specgram)
+        
+  
+                    
+        plt.savefig("/home/tim/Temp/" + str(recording_id) + "_" + str(rate) + "_" + str(slices_per_second) + "_" + str(nfft) + ".jpg")
+        
+        nfft2=8192
+        frames, rate = librosa.load(recording_fp, sr=48000, offset=start_time, duration=0.8)
+        mfccs = librosa.feature.melspectrogram(y=frames, sr=48000, n_mels=64, fmin=700,fmax=1100, hop_length=512, n_fft=nfft2)
+        
+        print(mfccs.shape)
+        print("rate ", rate)
+    
+        plt.matshow(mfccs)
+        
+    #     plt.show()
+                    
+        plt.savefig("/home/tim/Temp/" + str(recording_id) + "_" + str(rate)  +  "_" + str(nfft2) + ".jpg")
+    
+    
     

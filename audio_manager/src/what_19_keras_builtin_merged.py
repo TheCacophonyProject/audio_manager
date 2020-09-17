@@ -380,13 +380,26 @@ def get_image_size(keras_model_name):
     
 
 def main():   
+#     https://keras.io/api/applications/densenet/#densenet121-function
 #     keras_model_name = "my_model" 
-    keras_model_name = "Xception"      
+#     keras_model_name = "Xception"              # Min image size is 71x71
+    keras_model_name = "VGG16"                 # Min image size is 32x32
+#     keras_model_name = "VGG19"                 # Min image size is 32x32
+#     keras_model_name = "ResNet50"              # Min image size is 32x32
+#     keras_model_name = "ResNet101"             # Min image size is 32x32
+#     keras_model_name = "ResNet152"             # Min image size is 32x32
+#     keras_model_name = "ResNet50V2"            # Min image size is 32x32
+#     keras_model_name = "ResNet101V2"           # Min image size is 32x32
+#     keras_model_name = "ResNet152V2"           # Min image size is 32x32
+#     keras_model_name = "InceptionV3"           # Min image size is 75x75
+#     keras_model_name = "InceptionResNetV2"     # Min image size is 75x75
+#     keras_model_name = "DenseNet121"           # Min image size is 32x32
+#     keras_model_name = "DenseNet169"           # Min image size is 32x32
+#     keras_model_name = "DenseNet201"           # Min image size is 32x32
+#     keras_model_name = "NASNetLarge"           # Min image size is 32x32
 
-#     keras_model_name = "InceptionResNetV2" # Input size must be at least 75x75
-#     keras_model_name = "NASNetLarge"
-#     keras_model_name = "ResNet152"
-#     keras_model_name = "VGG16"
+
+
 #     keras_model_name = "image_format_0-255_3-channel" # Input size must be at least 75x75
     
 #     run_sub_log_dir_multi_class = keras_model_name + "_4 " + "_multi_class"
@@ -425,7 +438,7 @@ def main():
     saved_mfccs_location = BASE_FOLDER + RUNS_FOLDER + SAVED_MFCCS_FOLDER + "/" + saved_mfccs  
     print("saved_mfccs_location: ", saved_mfccs_location)  
    
-    display_image = True # Only has an affect if create_data is True
+    display_image = False # Only has an affect if create_data is True
     
     print("Started") 
   
