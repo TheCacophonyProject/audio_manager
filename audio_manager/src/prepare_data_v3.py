@@ -88,7 +88,7 @@ def get_filtered_recording_for_onset(recording_id, start_time):
 
 
 
-def load_onset_audio(recording_id, start_time):
+def load_training_data_audio(recording_id, start_time):
    
   
     y, sr = get_filtered_recording_for_onset(recording_id, start_time)
@@ -146,7 +146,7 @@ def get_all_training_onset_data(testing, display_image):
         
         
         
-        mfccs = load_onset_audio(recording_id, start_time)
+        mfccs = load_training_data_audio(recording_id, start_time)
         if mfccs is not None:
 
             array_of_mfccs.append(mfccs)

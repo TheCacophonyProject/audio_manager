@@ -85,40 +85,57 @@ def get_filtered_recording_for_onset(recording_id, start_time):
     filename = str(recording_id) + ".m4a"
     audio_in_path = recordings_folder_with_path + "/" + filename
 
-#     y, sr = librosa.load(audio_in_path, sr=22050, mono=True, offset=start_time, duration=0.7314) # chosen to give a square with the 32 mels
-#     y, sr = librosa.load(audio_in_path, sr=48000, mono=True, offset=start_time, duration=1.36533) # chosen to give a square with the 128 mels
-#     y, sr = librosa.load(audio_in_path, sr=48000, mono=True, offset=start_time, duration=0.9) # chosen to give a square with the 128 mels
+
     y, sr = librosa.load(audio_in_path, sr=48000, mono=True, offset=start_time, duration=0.6784) # seems to give a spectrogram size of 64x69 - close enough - will chop to 64x64
-#     y, sr = librosa.load(audio_in_path, sr=None, mono=True, offset=start_time, duration=0.6784) # seems to give a spectrogram size of 64x69 - close enough - will chop to 64x64
-          
+         
     y_filtered = functions.butter_bandpass_filter(y, parameters.morepork_min_freq, parameters.morepork_max_freq, sr)    
     
     return y_filtered, sr
 
-def load_training_data_audio(recording_id, start_time, keras_model_name):
+def get_filtered_recording(recording_id):
+    recordings_folder_with_path = parameters.base_folder + '/' + parameters.downloaded_recordings_folder
+    filename = str(recording_id) + ".m4a"
+    audio_in_path = recordings_folder_with_path + "/" + filename
+
+
+    y, sr = librosa.load(audio_in_path, sr=48000, mono=True) # seems to give a spectrogram size of 64x69 - close enough - will chop to 64x64
+         
+    y_filtered = functions.butter_bandpass_filter(y, parameters.morepork_min_freq, parameters.morepork_max_freq, sr)    
+    
+    return y_filtered, sr
+
+def load_training_data_audio(recording_id, start_time, y_full_recording, sr):
    
 #     recording_id = 563200
 #     start_time = 11.6
-    y, sr = get_filtered_recording_for_onset(recording_id, start_time)
-#     print(sr, " for recording ", recording_id)
-#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=700,fmax=1000, hop_length=512) # https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html
-#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, fmin=700,fmax=1100, hop_length=512) # https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html
+
+    if y_full_recording is None:  
+        print(f"Recording {recording_id} has changed - going to load from file - start time is {start_time}")      
+        y_full_recording, sr = get_filtered_recording(recording_id)
+    else:
+        print(f"Recording id is still {recording_id} and start time is now {start_time}")      
+        
+    duration_secs = 0.6784 # seems to give a spectrogram size of 64x69 - close enough - will chop to 64x64
+#     frame_start_position = start_time * sr
+#     frame_end_position = (start_time + duration_secs) * sr 
     
-    # https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html   
-    # Trying to improve frequency resolution
-    # https://librosa.org/doc/latest/generated/librosa.stft.html#librosa.stft
-#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=700,fmax=1100, hop_length=512, win_length = 512)
-#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=700,fmax=1100, hop_length=512, win_length = 1024)
-#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=32, fmin=700,fmax=1100, hop_length=512, n_fft=2048)
-#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=512, n_fft=8192) 
-#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, fmin=700,fmax=1100, hop_length=512, n_fft=8192)     
-#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=256, n_fft=8192)  
-#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=256, n_fft=8192)  
-#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, fmin=700,fmax=1100, hop_length=256, n_fft=8192)  
-#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=256, n_fft=8192)  
-#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=256, n_fft=2048)  
-#     mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=512, n_fft=16384)  
-    mfccs = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=512, n_fft=8192)  # 
+    print(y_full_recording.shape)
+    
+    start_time_seconds_float = float(start_time)            
+            
+    start_position_array = int(sr * start_time_seconds_float)              
+                       
+    end_position_array = start_position_array + int((sr * duration_secs))
+                       
+    if end_position_array > y_full_recording.shape[0]:
+        print('Clip would end after end of recording')
+        return None, None, None # not sure if you have to return 3 Nones !
+                
+    y_part = y_full_recording[start_position_array:end_position_array]  
+        
+#     y_part = y_full_recording[frame_start_position:frame_end_position]
+
+    mfccs = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=64, fmin=700,fmax=1100, hop_length=512, n_fft=8192)  # 
     print(mfccs.shape)
 
         # Going to create the mfccs as the Keras built-in models expect as input (which they then transform)
@@ -146,63 +163,71 @@ def load_training_data_audio(recording_id, start_time, keras_model_name):
    
     print(mfccs.shape)
        
-    return mfccs,sr  
+    return mfccs ,sr , y_full_recording 
 
 
-def get_all_training_data(testing, display_image, keras_model_name):
+def get_all_training_data(testing, display_image, testing_number):    
+    cur = functions.get_database_connection().cursor()   
+    cur.execute("select recording_id, start_time_seconds, actual_confirmed FROM training_data ORDER BY recording_id") 
+    training_data = cur.fetchall()
     
-#     version_to_use = 5
-#     cur = functions.get_database_connection().cursor()    
-#     cur.execute("select recording_id, start_time_seconds, actual_confirmed FROM onsets WHERE version = ? AND actual_confirmed IS NOT NULL ORDER BY recording_id", (version_to_use, )) 
-#     onsets = cur.fetchall()
-    
-    cur = functions.get_database_connection().cursor()    
-#     cur.execute("select recording_id, start_time_seconds, actual_confirmed FROM training_data ORDER BY recording_id") 
-    cur.execute("select recording_id, start_time_seconds, actual_confirmed FROM training_data where actual_confirmed = 'morepork_more-pork' ORDER BY recording_id") 
-    onsets = cur.fetchall()
-    
-    number_of_onsets = len(onsets)
+    number_of_training_examples = len(training_data)
     if testing:
-        number_of_onsets = 50
+        number_of_training_examples = testing_number
     
     # https://stackoverflow.com/questions/53135673/how-to-use-numpy-dstack-in-a-loop
     array_of_mfccs = []
     array_of_labels = []
 
     count = 0
-    for onset in onsets:
+    previous_recording_id = -1 # used to keep track if recording has changed, so can just load new recordings.
+    for row in training_data:
         count+=1
-        print("Processing ", count, " of ", number_of_onsets)
-        recording_id = onset[0]
-        start_time = onset[1]
-        actual_confirmed = onset[2]
+        print("Processing ", count, " of ", number_of_training_examples)
+        recording_id = row[0]
+        start_time = row[1]
+        actual_confirmed = row[2]
         
         if actual_confirmed == 'maybe_morepork_more-pork' or actual_confirmed == 'morepork_more-pork_part':
             continue # won't use them for training          
-                
-        mfccs, sr = load_training_data_audio(recording_id, start_time, keras_model_name)
-        if mfccs is not None:
-
-            array_of_mfccs.append(mfccs)
-            array_of_labels.append(actual_confirmed)
-              
-        if testing:
-            if count >= number_of_onsets:
-                break
-                    
-        if display_image:
-            try:
-                result = mfccs[:, :, 0]
-                print(result.shape)
-    
-                plt.matshow(result)
-                plt.title(actual_confirmed)
-#                 plt.show()
-#                 plt.savefig("/home/tim/Temp/" + str(count) + ".jpg")
-                plt.savefig("/home/tim/Temp/" + str(count) + "-" + str(sr) + ".jpg")
-            except:
-                pass
+        
+        if recording_id != previous_recording_id:
+            y_full_recording = None
+            sr = None
             
+        previous_recording_id = recording_id
+        
+#         # test error catching
+#         recording_id = -2
+        
+        try:
+                
+            mfccs, sr, y_full_recording = load_training_data_audio(recording_id, start_time, y_full_recording, sr)
+            if mfccs is not None:
+    
+                array_of_mfccs.append(mfccs)
+                array_of_labels.append(actual_confirmed)
+                  
+            if testing:
+                if count >= number_of_training_examples:
+                    break
+                        
+            if display_image:
+                try:
+                    result = mfccs[:, :, 0]
+                    print(result.shape)
+        
+                    plt.matshow(result)
+                    plt.title(actual_confirmed)
+    #                 plt.show()
+    #                 plt.savefig("/home/tim/Temp/" + str(count) + ".jpg")
+                    plt.savefig("/home/tim/Temp/" + str(count) + "-" + str(sr) + ".jpg")
+                except:
+                    pass
+        except Exception as e:
+            print(e, '\n')
+            print(f'An error occurred creating spectrogram for recording: {recording_id} at start time: {start_time}')   
+            continue
            
  
     result_mfccs = np.stack(array_of_mfccs, axis=0)
@@ -246,14 +271,14 @@ def convert_mfccs_to_required_format_for_this_model_type(array_of_mfccs, keras_m
     
     return array_of_mfccs 
    
-def get_data(binary, saved_mfccs_location, create_data, testing, display_image, keras_model_name):
+def get_data(binary, saved_mfccs_location, create_data, testing, display_image, keras_model_name, testing_number):
     Path(saved_mfccs_location).mkdir(parents=True, exist_ok=True)
     
     array_of_mfccs_filename = saved_mfccs_location + 'array_of_mfccs' 
     array_of_labels_filename = saved_mfccs_location + 'array_of_labels'
            
     if create_data:
-        array_of_mfccs, array_of_labels = get_all_training_data(testing=testing, display_image=display_image, keras_model_name=keras_model_name)    
+        array_of_mfccs, array_of_labels = get_all_training_data(testing=testing, display_image=display_image, testing_number=testing_number)    
         np.save(array_of_mfccs_filename, array_of_mfccs)
         np.save(array_of_labels_filename, array_of_labels)
         

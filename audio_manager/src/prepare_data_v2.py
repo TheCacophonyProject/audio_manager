@@ -139,7 +139,7 @@ def get_labels_for_recording_count_morepork(recording_id):
     print("count_of_moreporks ", count_of_moreporks)
     return count_of_moreporks
 
-def load_onset_audio(recording_id, start_time):
+def load_training_data_audio(recording_id, start_time):
    
   
     y, sr = get_filtered_recording_for_onset(recording_id, start_time)
@@ -231,7 +231,7 @@ def get_all_training_onset_data(testing, display_image):
         
         
         
-        mfccs = load_onset_audio(recording_id, start_time)
+        mfccs = load_training_data_audio(recording_id, start_time)
         if mfccs is not None:
 #         print("mfccs.shape ", mfccs.shape)
             array_of_mfccs.append(mfccs)

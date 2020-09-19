@@ -92,7 +92,7 @@ def get_filtered_recording_for_onset(recording_id, start_time):
     
     return y_filtered, sr
 
-def load_onset_audio(recording_id, start_time, keras_model_name):
+def load_training_data_audio(recording_id, start_time, keras_model_name):
    
   
     y, sr = get_filtered_recording_for_onset(recording_id, start_time)
@@ -182,7 +182,7 @@ def get_all_training_data(testing, display_image, keras_model_name):
         if actual_confirmed == 'maybe_morepork_more-pork' or actual_confirmed == 'morepork_more-pork_part':
             continue # won't use them for training          
                 
-        mfccs = load_onset_audio(recording_id, start_time, keras_model_name)
+        mfccs = load_training_data_audio(recording_id, start_time, keras_model_name)
         if mfccs is not None:
 
             array_of_mfccs.append(mfccs)
