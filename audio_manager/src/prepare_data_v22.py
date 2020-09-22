@@ -75,7 +75,50 @@ def encode_labels(sounds, binary):
     
     integer_to_sound_mapping = create_integer_to_sound_mapping(sound_to_integer_mapping)
 #     return one_hot_encode, mapping
-    return sounds, integer_to_sound_mapping            
+    return sounds, integer_to_sound_mapping   
+
+def encode_labels_using_sound_to_integer_mapping(sounds, binary, sound_to_integer_mapping):
+    # https://www.educative.io/edpresso/how-to-perform-one-hot-encoding-using-keras
+    
+    if binary:
+        sounds = group_non_morepork(sounds)
+    
+#     total_sounds = np.unique(sounds)
+    print("len(total_sounds) ", len(sounds))
+
+#     # map each sound to an integer
+#     sound_to_integer_mapping = {}
+#     for x in range(len(total_sounds)):
+#         sound_to_integer_mapping[total_sounds[x]] = x
+    
+    # integer representation
+    for x in range(len(sounds)):
+        sounds[x] = sound_to_integer_mapping[sounds[x]]
+    
+    if binary:
+        sounds = np.array(sounds)
+        sounds = sounds.astype(np.float)
+    else:                
+        sounds = to_categorical(sounds)  # one hot encoded
+    
+#     integer_to_sound_mapping = create_integer_to_sound_mapping(sound_to_integer_mapping)
+#     return one_hot_encode, mapping
+#     return sounds, integer_to_sound_mapping   
+    return sounds   
+
+def create_sound_to_integer_mapping(sounds, binary):
+    if binary:
+        sounds = group_non_morepork(sounds)
+    
+    total_sounds = np.unique(sounds)
+    print("len(total_sounds) ", len(sounds))
+
+    # map each sound to an integer
+    sound_to_integer_mapping = {}
+    for x in range(len(total_sounds)):
+        sound_to_integer_mapping[total_sounds[x]] = x
+        
+    return sound_to_integer_mapping                 
 
 # def get_onsets_stored_locally_for_recording_id(version_to_use, recording_id):
 #     cur = functions.get_database_connection().cursor()    
@@ -259,116 +302,126 @@ def get_all_training_data(testing, display_image, testing_number):
           
     return result_mfccs, result_labels
 
-def convert_mfccs_to_required_format_for_this_model_type(array_of_mfccs, keras_model_name):
+def scale_mfccs(array_of_mfccs):
     
-    if keras_model_name == "Xception":
-        array_of_mfccs = tf.keras.applications.xception.preprocess_input(array_of_mfccs)
-         
-    elif keras_model_name == "VGG16" or keras_model_name == "VGG19":
-        array_of_mfccs = tf.keras.applications.vgg16.preprocess_input(array_of_mfccs)
-     
-    elif keras_model_name == "ResNet50" or keras_model_name == "ResNet101" or keras_model_name == "ResNet152":
-        array_of_mfccs = tf.keras.applications.resnet.preprocess_input(array_of_mfccs)
-         
-    elif keras_model_name == "ResNet50V2"  or keras_model_name == "ResNet101V2" or keras_model_name == "ResNet152V2":
-        array_of_mfccs = tf.keras.applications.resnet_v2.preprocess_input(array_of_mfccs)    
-         
-    elif keras_model_name == "InceptionV3":
-        array_of_mfccs = tf.keras.applications.inception_v3.preprocess_input(array_of_mfccs)
-             
-    elif keras_model_name == "InceptionResNetV2":
-        array_of_mfccs = tf.keras.applications.inception_resnet_v2.preprocess_input(array_of_mfccs)
-         
-    elif keras_model_name == "NASNetLarge":
-        array_of_mfccs = tf.keras.applications.nasnet.preprocess_input(array_of_mfccs)  
-        
-    elif keras_model_name == "DenseNet121" or keras_model_name == "DenseNet169" or keras_model_name == "DenseNet201":
-        array_of_mfccs = tf.keras.applications.densenet.preprocess_input(array_of_mfccs)  
-        
-    elif keras_model_name == "my_model":
-        print("my_model") # need to check this is working
-        max_value = np.max(array_of_mfccs)
-        array_of_mfccs = array_of_mfccs / max_value 
-    
-    else:
-        print("Model type not found - so just scaling to 0 - 1.0") # need to check this is working
-        max_value = np.max(array_of_mfccs)
-        array_of_mfccs = array_of_mfccs / max_value
-        
-    print("np.amax(array_of_mfccs) ", np.amax(array_of_mfccs))
-    print("np.amin(array_of_mfccs) ", np.amin(array_of_mfccs))
-    
+    print("Scaling to 0 - 1.0") # need to check this is working
+    max_value = np.max(array_of_mfccs)
+    array_of_mfccs = array_of_mfccs / max_value    
+       
     return array_of_mfccs 
    
-def get_data(binary, saved_mfccs_location, create_data, testing, display_image, keras_model_name, testing_number, use_augmented_data, create_augmented_data):
+def get_data(binary, saved_mfccs_location, create_data, testing, display_image, testing_number, use_augmented_data, create_augmented_data):
     Path(saved_mfccs_location).mkdir(parents=True, exist_ok=True)
     
-    array_of_mfccs_filename = saved_mfccs_location + 'array_of_mfccs' 
-    array_of_labels_filename = saved_mfccs_location + 'array_of_labels'
+    array_of_all_possible_labels_filename = saved_mfccs_location + "array_of_all_possible_labels.npy"
     
-    array_of_augmented_mfccs_filename = saved_mfccs_location + 'array_of_augmented_mfccs' 
-    array_of_labels_for_augmented_filename = saved_mfccs_location + 'array_of_labels_for_augmented'
+    array_of_mfccs_training_filename = saved_mfccs_location + "array_of_mfccs_training.npy"
+    array_of_labels_training_filename = saved_mfccs_location + "array_of_labels_training.npy"
+    
+    array_of_mfccs_validation_filename = saved_mfccs_location + "array_of_mfccs_validation.npy"
+    array_of_labels_validation_filename = saved_mfccs_location + "array_of_labels_validation.npy"
+    
+    array_of_mfccs_training_augmented_filename = saved_mfccs_location + "array_of_mfccs_training_augmented.npy"
+    array_of_labels_training_augmented_filename = saved_mfccs_location + "array_of_labels_training_augmented.npy"
+    
+#     sound_to_integer_mapping_filename = saved_mfccs_location + "sound_to_integer_mapping.npy"
+      
+   
            
     if create_data:
-        array_of_mfccs, array_of_labels = get_all_training_data(testing=testing, display_image=display_image, testing_number=testing_number)    
-               
-        np.save(array_of_mfccs_filename, array_of_mfccs)
-        np.save(array_of_labels_filename, array_of_labels)
+        array_of_mfccs, array_of_labels = get_all_training_data(testing=testing, display_image=display_image, testing_number=testing_number) 
+        
+        
+        # Before splitting the data, create a sound_to_integer_mapping. Doing this before splitting, will ensure that any sounds
+        # that only occur in one of training or validation, still occur in the mapping
+        unique_labels = np.unique(array_of_labels)
+        np.save(array_of_all_possible_labels_filename, unique_labels)
+#         sound_to_integer_mapping = create_sound_to_integer_mapping(array_of_labels)
+#         np.save(sound_to_integer_mapping_filename, sound_to_integer_mapping)
+        
+        # Now split it into training and validation   
+        # According to https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
+        # setting random_state to an integer (same each time) will result in the same data in the train and test each time this is called
+        # An example used 42 - presumably as it's the answer to the meaning of life       
+                
+        array_of_mfccs_training, array_of_mfccs_validation, array_of_labels_training, array_of_labels_validation = train_test_split(array_of_mfccs,
+                                                    array_of_labels,
+                                                    test_size=0.33,
+                                                    random_state=42)           
+                       
+        np.save(array_of_mfccs_training_filename, array_of_mfccs_training)
+        np.save(array_of_labels_training_filename, array_of_labels_training)
+        np.save(array_of_mfccs_validation_filename, array_of_mfccs_validation)
+        np.save(array_of_labels_validation_filename, array_of_labels_validation)        
         
     if create_augmented_data:        
         
-        array_of_mfccs = np.load(array_of_mfccs_filename + ".npy")
-        array_of_labels = np.load(array_of_labels_filename + ".npy")        
+        array_of_mfccs_training = np.load(array_of_mfccs_training_filename)
+        array_of_labels_training = np.load(array_of_labels_training_filename)        
         
-        array_of_augmented_mfccs, array_of_labels_for_augmented_mfccs = augment_mfccs(array_of_mfccs, array_of_labels)
-        np.save(array_of_augmented_mfccs_filename, array_of_augmented_mfccs)
-        np.save(array_of_labels_for_augmented_filename, array_of_labels_for_augmented_mfccs)
-            
+        array_of_mfccs_training_augmented, array_of_labels_training_augmented = augment_mfccs(array_of_mfccs_training, array_of_labels_training)
         
-    
+        np.save(array_of_mfccs_training_augmented_filename, array_of_mfccs_training_augmented)
+        np.save(array_of_labels_training_augmented_filename, array_of_labels_training_augmented)   
+        
     if use_augmented_data:
         # read from previously saved augmented data
-        array_of_mfccs = np.load(array_of_augmented_mfccs_filename + ".npy")
-        print("np.amax(array_of_mfccs) ", np.amax(array_of_mfccs))
-        print("np.amin(array_of_mfccs) ", np.amin(array_of_mfccs))
-        array_of_labels = np.load(array_of_labels_for_augmented_filename + ".npy")
+        array_of_mfccs_training_to_use = np.load(array_of_mfccs_training_augmented_filename)        
+        array_of_labels_training_to_use = np.load(array_of_labels_training_augmented_filename)
         
     else:
         # read from previously saved non-augmented data
-        array_of_mfccs = np.load(array_of_mfccs_filename + ".npy")
-        print("np.amax(array_of_mfccs) ", np.amax(array_of_mfccs))
-        print("np.amin(array_of_mfccs) ", np.amin(array_of_mfccs))
-        array_of_labels = np.load(array_of_labels_filename + ".npy")
+        array_of_mfccs_training_to_use = np.load(array_of_mfccs_training_filename)       
+        array_of_labels_training_to_use = np.load(array_of_labels_training_filename)
             
+    array_of_mfccs_validation_to_use = np.load(array_of_mfccs_validation_filename)       
+    array_of_labels_validation_to_use = np.load(array_of_labels_validation_filename)       
         
     # Convert mfcss to correct format for this model
-    array_of_mfccs = convert_mfccs_to_required_format_for_this_model_type(array_of_mfccs=array_of_mfccs, keras_model_name=keras_model_name)
-    print("np.amax(array_of_mfccs) ", np.amax(array_of_mfccs))
-    print("np.amin(array_of_mfccs) ", np.amin(array_of_mfccs))    
-    number_of_distinct_labels = len(np.unique(array_of_labels))
+    array_of_mfccs_training_to_use_scaled = scale_mfccs(array_of_mfccs_training_to_use)
+    array_of_mfccs_validation_to_use_scaled = scale_mfccs(array_of_mfccs_validation_to_use)
+    
+    print("np.amax(array_of_mfccs) ", np.amax(array_of_mfccs_training_to_use_scaled))
+    print("np.amin(array_of_mfccs) ", np.amin(array_of_mfccs_training_to_use_scaled))  
+    print("np.amax(array_of_mfccs) ", np.amax(array_of_mfccs_validation_to_use_scaled))
+    print("np.amin(array_of_mfccs) ", np.amin(array_of_mfccs_validation_to_use_scaled))  
+    
+    # Create sound_to_integer_mapping
+    unique_labels = np.load(array_of_all_possible_labels_filename)
+    sound_to_integer_mapping  = create_sound_to_integer_mapping(unique_labels, binary)
+    integer_to_sound_mapping = create_integer_to_sound_mapping(sound_to_integer_mapping)
+      
+    
+    
     
     if binary:
         number_of_distinct_labels = 2
-     
-#     print("number_of_distinct_labels ", number_of_distinct_labels)
-    
-    # Count numbers in each class
-    class_count = pd.value_counts(array_of_labels)
-    print(class_count)       
-
-    array_of_labels, integer_to_sound_mapping = encode_labels(array_of_labels, binary)
+    else:
+#         number_of_distinct_labels = len(np.unique(array_of_labels_training_to_use)) 
+        number_of_distinct_labels = len(unique_labels)  
    
-    # According to https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
-    # setting random_state to an integer (same each time) will result in the same data in the train and test each time this is called
-    # An example used 42 - presumably as it's the answer to the meaning of life
-    X_train, X_test, y_train, y_test = train_test_split(array_of_mfccs,
-                                                    array_of_labels,
-                                                    test_size=0.33,
-                                                    random_state=42)    
     
-      
+    # Count numbers in each class (training)
+#     class_count = pd.value_counts(array_of_labels_training_to_use)
+#     print(class_count)       
+
+#     array_of_labels, integer_to_sound_mapping = encode_labels(array_of_labels, binary)  
     
-    return X_train, X_test, y_train, y_test, number_of_distinct_labels, integer_to_sound_mapping, class_count
+    array_of_labels_training_to_use_encoded  = encode_labels_using_sound_to_integer_mapping(array_of_labels_training_to_use, binary, sound_to_integer_mapping)
+    array_of_labels_validation_to_use_encoded  = encode_labels_using_sound_to_integer_mapping(array_of_labels_validation_to_use, binary, sound_to_integer_mapping)
+    
+    
+   
+#     # According to https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
+#     # setting random_state to an integer (same each time) will result in the same data in the train and test each time this is called
+#     # An example used 42 - presumably as it's the answer to the meaning of life
+#     X_train, X_test, y_train, y_test = train_test_split(array_of_mfccs,
+#                                                     array_of_labels,
+#                                                     test_size=0.33,
+#                                                     random_state=42)    
+    
+          
+    return array_of_mfccs_training_to_use_scaled, array_of_mfccs_validation_to_use_scaled, array_of_labels_training_to_use_encoded, array_of_labels_validation_to_use_encoded, number_of_distinct_labels, integer_to_sound_mapping, class_count
 
 
 def augment_mfccs(X_train, y_train):

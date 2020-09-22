@@ -41,7 +41,7 @@ from tensorflow.keras.layers import Concatenate
 
 from sklearn.metrics import confusion_matrix
 
-import prepare_data_v21
+import prepare_data_v22
 
 # BASE_FOLDER = '/home/tim/Work/Cacophony'
 BASE_FOLDER = parameters.base_folder
@@ -283,7 +283,7 @@ def evaluate_model(model, val_examples, val_labels):
   
 def prepare_data(binary, model_name, saved_mfccs_location, create_data, testing, display_image, testing_number, use_augmented_data, create_augmented_data):
     # https://www.tensorflow.org/tutorials/load_data/numpy    
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v21.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, keras_model_name=model_name, testing_number=testing_number, use_augmented_data=use_augmented_data, create_augmented_data=create_augmented_data) 
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v22.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_data=use_augmented_data, create_augmented_data=create_augmented_data) 
     
     # save integer to sound mapping - so can use it later in another program eg. when this model is used to do predictions
     if binary:
@@ -297,9 +297,9 @@ def prepare_data(binary, model_name, saved_mfccs_location, create_data, testing,
         
     print(integer_to_sound_mapping)
     # https://pythonspot.com/save-a-dictionary-to-a-file/
-    f = open(mapping_file_path_name,"wb")
-    pickle.dump(integer_to_sound_mapping,f)
-    f.close()
+#     f = open(mapping_file_path_name,"wb")
+#     pickle.dump(integer_to_sound_mapping,f)
+#     f.close()
     
    
     return train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count
@@ -418,28 +418,28 @@ def get_image_size(keras_model_name):
 
 def main():   
 #     https://keras.io/api/applications/densenet/#densenet121-function
-    keras_model_name = "my_model_v21" 
-#     keras_model_name = "Xception"              # Min image size is 71x71
-#     keras_model_name = "VGG16"                 # Min image size is 32x32
-#     keras_model_name = "VGG19"                 # Min image size is 32x32
-#     keras_model_name = "ResNet50"              # Min image size is 32x32
-#     keras_model_name = "ResNet101"             # Min image size is 32x32
-#     keras_model_name = "ResNet152"             # Min image size is 32x32
-#     keras_model_name = "ResNet50V2"            # Min image size is 32x32
-#     keras_model_name = "ResNet101V2"           # Min image size is 32x32
-#     keras_model_name = "ResNet152V2"           # Min image size is 32x32
-#     keras_model_name = "InceptionV3"           # Min image size is 75x75
-#     keras_model_name = "InceptionResNetV2"     # Min image size is 75x75
-#     keras_model_name = "DenseNet121"           # Min image size is 32x32
-#     keras_model_name = "DenseNet169"           # Min image size is 32x32
-#     keras_model_name = "DenseNet201"           # Min image size is 32x32
-#     keras_model_name = "NASNetLarge"           # Min image size is 32x32
+    model_name = "my_model_v22" 
+#     model_name = "Xception"              # Min image size is 71x71
+#     model_name = "VGG16"                 # Min image size is 32x32
+#     model_name = "VGG19"                 # Min image size is 32x32
+#     model_name = "ResNet50"              # Min image size is 32x32
+#     model_name = "ResNet101"             # Min image size is 32x32
+#     model_name = "ResNet152"             # Min image size is 32x32
+#     model_name = "ResNet50V2"            # Min image size is 32x32
+#     model_name = "ResNet101V2"           # Min image size is 32x32
+#     model_name = "ResNet152V2"           # Min image size is 32x32
+#     model_name = "InceptionV3"           # Min image size is 75x75
+#     model_name = "InceptionResNetV2"     # Min image size is 75x75
+#     model_name = "DenseNet121"           # Min image size is 32x32
+#     model_name = "DenseNet169"           # Min image size is 32x32
+#     model_name = "DenseNet201"           # Min image size is 32x32
+#     model_name = "NASNetLarge"           # Min image size is 32x32
 
     builtin_model_trainable = True # This refers to whether to keep Keras builtin model weights or train model from scratch - builtin_model_trainable = False means keep weights
-#     model_run_name = "2020_09_20_" + keras_model_name + "_v3"  # Set image imput to 64x64 (it was 128x128, for the previous run of this model
-    model_run_name = "2020_09_21_" + keras_model_name + "_augment_data_1"  # Set image imput to 64x64 (it was 128x128, for the previous run of this model
+#     model_run_name = "2020_09_20_" + model_name + "_v3"  # Set image imput to 64x64 (it was 128x128, for the previous run of this model
+    model_run_name = "2020_09_22_" + model_name + "_augment_data_1"  # Set image imput to 64x64 (it was 128x128, for the previous run of this model
     
-    saved_mfccs = "version_5_32x32_greyscale/"    
+    saved_mfccs = "version_6_32x32_greyscale/"    
            
     binary=False    
                        
@@ -447,35 +447,35 @@ def main():
     load_model_from_checkpoints = True # If train_a_model is False, and this is True, model will load from check_point, otherwise from a saved_model
     save_model=True # Only applies if model is trained
     create_data=False # If True, creates mfccs from original audio files; if false loads previously saved mfccs files (created for each confirmed training onset)
-    testing=False # Only has an affect if create_data is True
-    testing_number = 10 # Only has an affect if create_data is True
-    use_augmented_data = True
+    testing=True # Only has an affect if create_data is True
+    testing_number = 1000 # Only has an affect if create_data is True
+    use_augmented_data = False
     create_augmented_data = False # Only has an effect if use_augmented_data = True: Then if create_augmented_data = True, creates and saves augmented data from the loaded original mfccs, or if create_augmented_data = False, it will attempt to load saved augmented data
     
     
-    number_of_training_epochs = 300
+    number_of_training_epochs = 3
     
     display_image = False # Only has an affect if create_data is True
     
     if builtin_model_trainable:
         if binary:
-            model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary_trainable/" + keras_model_name 
+            model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary_trainable/" + model_name 
             checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/binary_trainable/training/cp.ckpt" 
-            log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + keras_model_name + "_binary_trainable/"            
+            log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_binary_trainable/"            
         else:
-            model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class_trainable/" + keras_model_name   
+            model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class_trainable/" + model_name   
             checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/multi_class_trainable/training/cp.ckpt"  
-            log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + keras_model_name + "_multi_class_trainable/"   
+            log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_multi_class_trainable/"   
             
     else:        
         if binary:
-            model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary_not_trainable/" + keras_model_name 
+            model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary_not_trainable/" + model_name 
             checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/binary_not_trainable/training/cp.ckpt" 
-            log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + keras_model_name + "_binary_not_trainable/"            
+            log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_binary_not_trainable/"            
         else:
-            model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class_not_trainable/" + keras_model_name   
+            model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class_not_trainable/" + model_name   
             checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/multi_class_not_trainable/training/cp.ckpt"  
-            log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + keras_model_name + "_multi_class_not_trainable/"   
+            log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_multi_class_not_trainable/"   
               
              
     print("model_location: ",model_location)
@@ -484,7 +484,7 @@ def main():
        
     print("Started") 
   
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping, class_count = prepare_data(binary=binary, model_name=keras_model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_data=use_augmented_data, create_augmented_data=create_augmented_data)
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping, class_count = prepare_data(binary=binary, model_name=model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_data=use_augmented_data, create_augmented_data=create_augmented_data)
     print("train_examples.shape ", train_examples.shape) 
     print("val_examples.shape ", val_examples.shape)  
     print("train_labels.shape ", train_labels.shape)  
@@ -500,7 +500,7 @@ def main():
         val_labels_decoded = tf.argmax(val_labels, 1) # Returns the index with the largest value across axes of a tensor. - https://www.tensorflow.org/api_docs/python/tf/math/argmax
         print("val_labels", val_labels)
             
-#     model = create_keras_builtin_model(keras_model_name, binary, number_of_distinct_labels, get_image_size(keras_model_name), builtin_model_trainable)
+#     model = create_keras_builtin_model(model_name, binary, number_of_distinct_labels, get_image_size(model_name), builtin_model_trainable)
     
     model = create_model_basic(binary, number_of_distinct_labels)
     
