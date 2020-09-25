@@ -42,6 +42,7 @@ devices_endpoint = '/api/v1/devices'
 #downloaded_recordings_folder = '/home/tim/Work/Cacophony/downloaded_recordings/all_recordings'
 
 base_folder = '/home/tim/Work/Cacophony'
+base_folder_for_recordings = '/media/tim/HDD1/Work/Cacophony'
 
 
 downloaded_recordings_folder = 'downloaded_recordings/all_recordings' # All the recordings

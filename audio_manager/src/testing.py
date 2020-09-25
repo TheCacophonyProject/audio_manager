@@ -5,6 +5,7 @@ Created on 26 Aug. 2020
 '''
 
 import functions
+import prepare_data_v24
 
 # functions.copy_onset_data_to_training_data_table()
 
@@ -13,4 +14,6 @@ import functions
 # functions.copy_training_data_to_model_run_result_table()
 # functions.update_database_recordings_with_original_sample_rate()
 
-functions.compare_spectrograms_of_different_recording_sample_rates()
+# functions.compare_spectrograms_of_different_recording_sample_rates()
+
+prepare_data_v24.test_augment_data_with_noise()

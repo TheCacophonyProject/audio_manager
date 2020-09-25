@@ -41,7 +41,8 @@ from tensorflow.keras.layers import Concatenate
 
 from sklearn.metrics import confusion_matrix
 
-import prepare_data_v22
+import prepare_data_v23
+# from builtins import True
 
 # BASE_FOLDER = '/home/tim/Work/Cacophony'
 BASE_FOLDER = parameters.base_folder
@@ -281,9 +282,9 @@ def train_the_model(model, train_x, train_y, val_x, val_y, number_of_training_ep
 def evaluate_model(model, val_examples, val_labels):
     print(model.evaluate(x=val_examples, y=val_labels))   
   
-def prepare_data(binary, model_name, saved_mfccs_location, create_data, testing, display_image, testing_number, use_augmented_data, create_augmented_time_freq_data):
+def prepare_data(binary, model_name, saved_mfccs_location, create_data, testing, display_image, testing_number, use_augmented_data, create_augmented_time_freq_data, create_augmented_noise_data, use_augmented_noise_data):
     # https://www.tensorflow.org/tutorials/load_data/numpy    
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v22.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_time_freq_data=use_augmented_data, create_augmented_time_freq_data=create_augmented_time_freq_data) 
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v23.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_time_freq_data=use_augmented_data, create_augmented_time_freq_data=create_augmented_time_freq_data, create_augmented_noise_data=create_augmented_noise_data, use_augmented_noise_data=use_augmented_noise_data) 
     
     # save integer to sound mapping - so can use it later in another program eg. when this model is used to do predictions
     if binary:
@@ -436,9 +437,10 @@ def main():
     testing=False # Only has an affect if create_data is True
     testing_number = 1000 # Only has an affect if create_data is True
     use_augmented_data = True
-    create_augmented_data = True # Only has an effect if use_augmented_data = True: Then if create_augmented_data = True, creates and saves augmented data from the loaded original mfccs, or if create_augmented_data = False, it will attempt to load saved augmented data
-        
-    number_of_training_epochs = 100
+    create_augmented_time_freq_data = False # Only has an effect if use_augmented_data = True: Then if create_augmented_time_freq_data = True, creates and saves augmented data from the loaded original mfccs, or if create_augmented_time_freq_data = False, it will attempt to load saved augmented data
+    create_augmented_noise_data=True
+    use_augmented_noise_data=True   
+    number_of_training_epochs = 3
     
     display_image = False # Only has an affect if create_data is True
     
@@ -469,7 +471,7 @@ def main():
        
     print("Started") 
   
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping, class_count = prepare_data(binary=binary, model_name=model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_data=use_augmented_data, create_augmented_time_freq_data=create_augmented_data)
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping, class_count = prepare_data(binary=binary, model_name=model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_data=use_augmented_data, create_augmented_time_freq_data=create_augmented_time_freq_data, create_augmented_noise_data=create_augmented_noise_data, use_augmented_noise_data=use_augmented_noise_data)
     print("train_examples.shape ", train_examples.shape) 
     print("val_examples.shape ", val_examples.shape)  
     print("train_labels.shape ", train_labels.shape)  

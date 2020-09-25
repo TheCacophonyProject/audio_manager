@@ -317,7 +317,7 @@ def get_all_training_data(testing, display_image, testing_number):
 #        
 #     return array_of_mfccs 
    
-def get_data(binary, saved_mfccs_location, create_data, testing, display_image, testing_number, use_augmented_time_freq_data, create_augmented_data):
+def get_data(binary, saved_mfccs_location, create_data, testing, display_image, testing_number, use_augmented_time_freq_data, create_augmented_time_freq_data, create_augmented_noise_data, use_augmented_noise_data):
     Path(saved_mfccs_location).mkdir(parents=True, exist_ok=True)
     
     array_of_all_possible_labels_filename = saved_mfccs_location + "array_of_all_possible_labels.npy"
@@ -328,8 +328,20 @@ def get_data(binary, saved_mfccs_location, create_data, testing, display_image, 
     array_of_mfccs_validation_filename = saved_mfccs_location + "array_of_mfccs_validation.npy"
     array_of_labels_validation_filename = saved_mfccs_location + "array_of_labels_validation.npy"
     
-    array_of_mfccs_training_augmented_filename = saved_mfccs_location + "array_of_mfccs_training_augmented_noise.npy"
-    array_of_labels_training_augmented_filename = saved_mfccs_location + "array_of_labels_training_augmented_noise.npy"
+    array_of_mfccs_training_augmented_time_freq_filename = saved_mfccs_location + "array_of_mfccs_training_augmented_time_freq.npy"
+    array_of_labels_training_augmented_time_freq_filename = saved_mfccs_location + "array_of_labels_training_augmented_time_freq.npy"
+    
+    array_of_mfccs_training_augmented_gaussian_filename = saved_mfccs_location + "array_of_mfccs_training_augmented_gaussian.npy"
+    array_of_labels_training_augmented_gaussian_filename = saved_mfccs_location + "array_of_labels_training_augmented_gaussian.npy"
+    
+    array_of_mfccs_training_augmented_salt_filename = saved_mfccs_location + "array_of_mfccs_training_augmented_salt.npy"
+    array_of_labels_training_augmented_salt_filename = saved_mfccs_location + "array_of_labels_training_augmented_salt.npy"
+    
+    array_of_mfccs_training_augmented_pepper_filename = saved_mfccs_location + "array_of_mfccs_training_augmented_pepper.npy"
+    array_of_labels_training_augmented_pepper_filename = saved_mfccs_location + "array_of_labels_training_augmented_pepper.npy"
+    
+    array_of_mfccs_training_augmented_sp_filename = saved_mfccs_location + "array_of_mfccs_training_augmented_sp.npy"
+    array_of_labels_training_augmented_sp_filename = saved_mfccs_location + "array_of_labels_training_augmented_sp.npy"
     
 #     sound_to_integer_mapping_filename = saved_mfccs_location + "sound_to_integer_mapping.npy"
       
@@ -361,20 +373,49 @@ def get_data(binary, saved_mfccs_location, create_data, testing, display_image, 
         np.save(array_of_mfccs_validation_filename, array_of_mfccs_validation)
         np.save(array_of_labels_validation_filename, array_of_labels_validation)        
         
-    if create_augmented_data:        
+    if create_augmented_time_freq_data:        
         
         array_of_mfccs_training = np.load(array_of_mfccs_training_filename)
         array_of_labels_training = np.load(array_of_labels_training_filename)        
         
-        array_of_mfccs_training_augmented, array_of_labels_training_augmented = augment_mfccs(array_of_mfccs_training, array_of_labels_training)
+        array_of_mfccs_training_augmented_time_freq, array_of_labels_training_augmented_time_freq = augment_data_with_freq_time_shifts(array_of_mfccs_training, array_of_labels_training)
+               
+        np.save(array_of_mfccs_training_augmented_time_freq_filename, array_of_mfccs_training_augmented_time_freq)
+        np.save(array_of_labels_training_augmented_time_freq_filename, array_of_labels_training_augmented_time_freq)
+     
+    if create_augmented_noise_data:
+        # Needs augmented_time_freq_data to have been created
         
-        np.save(array_of_mfccs_training_augmented_filename, array_of_mfccs_training_augmented)
-        np.save(array_of_labels_training_augmented_filename, array_of_labels_training_augmented)   
+        array_of_mfccs_training_augmented_time_freq = np.load(array_of_mfccs_training_augmented_time_freq_filename)
+        array_of_labels_training_augmented_time_freq = np.load(array_of_labels_training_augmented_time_freq_filename)  
+            
+        # Do each noise type separately
+        # 1) gaussian
+        array_of_mfccs_training_augmented_gaussian, array_of_labels_training_augmented_gaussian = augment_data_with_noise(array_of_mfccs_training_augmented_time_freq, array_of_labels_training_augmented_time_freq, "gaussian")            
+        np.save(array_of_mfccs_training_augmented_gaussian_filename, array_of_mfccs_training_augmented_gaussian)
+        np.save(array_of_labels_training_augmented_gaussian_filename, array_of_labels_training_augmented_gaussian)   
         
     if use_augmented_time_freq_data:
         # read from previously saved augmented data
-        array_of_mfccs_training_to_use = np.load(array_of_mfccs_training_augmented_filename)        
-        array_of_labels_training_to_use = np.load(array_of_labels_training_augmented_filename)
+        array_of_mfccs_training_to_use = np.load(array_of_mfccs_training_augmented_time_freq_filename) 
+        print(array_of_mfccs_training_to_use.shape)        
+        array_of_labels_training_to_use = np.load(array_of_labels_training_augmented_time_freq_filename)
+        print(array_of_labels_training_to_use.shape)   
+        
+        if use_augmented_noise_data:
+            
+            # 1) gaussian
+            array_of_mfccs_training_augmented_gaussian = np.load(array_of_mfccs_training_augmented_gaussian_filename)   
+            print(array_of_mfccs_training_augmented_gaussian.shape)     
+            array_of_labels_training_augmented_gaussian = np.load(array_of_labels_training_augmented_gaussian_filename)
+            print(array_of_labels_training_augmented_gaussian.shape)     
+#             array_of_mfccs_training_to_use.append(array_of_mfccs_training_augmented_gaussian)
+#             array_of_labels_training_to_use.append(array_of_labels_training_augmented_gaussian)
+            
+            array_of_mfccs_training_to_use = np.append(array_of_mfccs_training_to_use, array_of_mfccs_training_augmented_gaussian, axis=0)
+            print(array_of_mfccs_training_to_use.shape) 
+            array_of_labels_training_to_use = np.append(array_of_labels_training_to_use, array_of_labels_training_augmented_gaussian, axis=0)
+            print(array_of_labels_training_to_use.shape) 
         
     else:
         # read from previously saved non-augmented data
@@ -384,15 +425,7 @@ def get_data(binary, saved_mfccs_location, create_data, testing, display_image, 
     array_of_mfccs_validation_to_use = np.load(array_of_mfccs_validation_filename)       
     array_of_labels_validation_to_use = np.load(array_of_labels_validation_filename)       
         
-    # Convert mfcss to correct format for this model
-#     array_of_mfccs_training_to_use_scaled = scale_mfccs(array_of_mfccs_training_to_use)
-#     array_of_mfccs_validation_to_use_scaled = scale_mfccs(array_of_mfccs_validation_to_use)
-    
-#     print("np.amax(array_of_mfccs) ", np.amax(array_of_mfccs_training_to_use_scaled))
-#     print("np.amin(array_of_mfccs) ", np.amin(array_of_mfccs_training_to_use_scaled))  
-#     print("np.amax(array_of_mfccs) ", np.amax(array_of_mfccs_validation_to_use_scaled))
-#     print("np.amin(array_of_mfccs) ", np.amin(array_of_mfccs_validation_to_use_scaled))  
-    
+        
     # Create sound_to_integer_mapping
     unique_labels = np.load(array_of_all_possible_labels_filename)
     sound_to_integer_mapping  = create_sound_to_integer_mapping(unique_labels, binary)
@@ -417,56 +450,50 @@ def get_data(binary, saved_mfccs_location, create_data, testing, display_image, 
     array_of_labels_training_to_use_encoded  = encode_labels_using_sound_to_integer_mapping(array_of_labels_training_to_use, binary, sound_to_integer_mapping)
     array_of_labels_validation_to_use_encoded  = encode_labels_using_sound_to_integer_mapping(array_of_labels_validation_to_use, binary, sound_to_integer_mapping)
     
-    
-   
-#     # According to https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation
-#     # setting random_state to an integer (same each time) will result in the same data in the train and test each time this is called
-#     # An example used 42 - presumably as it's the answer to the meaning of life
-#     X_train, X_test, y_train, y_test = train_test_split(array_of_mfccs,
-#                                                     array_of_labels,
-#                                                     test_size=0.33,
-#                                                     random_state=42)    
-    
+       
           
     return array_of_mfccs_training_to_use, array_of_mfccs_validation_to_use, array_of_labels_training_to_use_encoded, array_of_labels_validation_to_use_encoded, number_of_distinct_labels, integer_to_sound_mapping, class_count
 
 
-def augment_mfccs(X_train, y_train, ):
-    
-    X_train, y_train = augment_data_with_freq_time_shifts(X_train, y_train)
-    X_train, y_train = augment_data_with_noise(X_train, y_train)
-    
-#     array_of_augmented_mfccs = []
-#     array_of_labels_for_augmented_mfccs = []    
+# def augment_mfccs(X_train, y_train):
 #     
-#     # load each mfccs
-#     # For each mfccs
-#     count = 0 # Keep track of what label to use for augmented data
-#     count_of_samples_to_augment = len(X_train)
-#     for non_shifted_sample in X_train:  
-#         print(f"Augmenting {count} of {count_of_samples_to_augment}")
-# 
+#     X_train, y_train = augment_data_with_freq_time_shifts(X_train, y_train)
+#     
+#     for mfccs, label in zip(X_train, y_train):
 #         
-#         for frequency_shift in range(-5, 5, 1):
-#             for time_shift in range(-10, 10, 1):
-#  
-#                 shifted_sample = shift(non_shifted_sample, [frequency_shift,time_shift,0], mode='constant', cval=0) # https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.shift.html?highlight=shift
-#                
-#                 # Uncomment next few lines to display and save images if you want to check them out.
-# #                 result = shifted_sample[:, :, 0]
-# #                 print(result.shape)                 
-# #                 plt.matshow(result)
-# #                 plt.title(f"{count}_2x2_shift_{frequency_shift}_{time_shift}")       
-# #                 plt.savefig(f"/home/tim/Temp/{count}_2x2_shift_{frequency_shift}_{time_shift}.jpg")                
-#                 # End of display and save images if you want to check them out.
-#                 
-#                 array_of_augmented_mfccs.append(shifted_sample)
-#                 array_of_labels_for_augmented_mfccs.append(y_train[count])
+#     X_train, y_train = augment_data_with_noise(X_train, y_train)
+#     
+# #     array_of_augmented_mfccs = []
+# #     array_of_labels_for_augmented_mfccs = []    
+# #     
+# #     # load each mfccs
+# #     # For each mfccs
+# #     count = 0 # Keep track of what label to use for augmented data
+# #     count_of_samples_to_augment = len(X_train)
+# #     for non_shifted_sample in X_train:  
+# #         print(f"Augmenting {count} of {count_of_samples_to_augment}")
+# # 
+# #         
+# #         for frequency_shift in range(-5, 5, 1):
+# #             for time_shift in range(-10, 10, 1):
+# #  
+# #                 shifted_sample = shift(non_shifted_sample, [frequency_shift,time_shift,0], mode='constant', cval=0) # https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.shift.html?highlight=shift
+# #                
+# #                 # Uncomment next few lines to display and save images if you want to check them out.
+# # #                 result = shifted_sample[:, :, 0]
+# # #                 print(result.shape)                 
+# # #                 plt.matshow(result)
+# # #                 plt.title(f"{count}_2x2_shift_{frequency_shift}_{time_shift}")       
+# # #                 plt.savefig(f"/home/tim/Temp/{count}_2x2_shift_{frequency_shift}_{time_shift}.jpg")                
+# #                 # End of display and save images if you want to check them out.
+# #                 
+# #                 array_of_augmented_mfccs.append(shifted_sample)
+# #                 array_of_labels_for_augmented_mfccs.append(y_train[count])
+# #         
+# #         count+=1
 #         
-#         count+=1
-        
-#     return array_of_augmented_mfccs, array_of_labels_for_augmented_mfccs
-    return X_train, y_train
+# #     return array_of_augmented_mfccs, array_of_labels_for_augmented_mfccs
+#     return X_train, y_train
 
 def augment_data_with_freq_time_shifts(X_train, y_train):
     array_of_augmented_mfccs = []
@@ -500,7 +527,8 @@ def augment_data_with_freq_time_shifts(X_train, y_train):
         
     return array_of_augmented_mfccs, array_of_labels_for_augmented_mfccs
  
-def augment_data_with_noise(X_train, y_train):
+# def augment_data_with_noise(X_train, y_train):
+def augment_data_with_noise(X_train, y_train, noise_mode): 
     # https://scikit-image.org/docs/stable/api/skimage.util.html?highlight=random_noise#skimage.util.random_noise
     
 #     mfccs_before_noise, sr, y_full_recording = load_training_data_audio(535833, 40.8, None, None)  
@@ -508,49 +536,37 @@ def augment_data_with_noise(X_train, y_train):
     array_of_noisy_mfccs = []
     array_of_labels_for_noisy_mfccs = []     
     
+    print(X_train.shape)
+    
     count_of_X_train = len(X_train)
     count=0
-    for mfccs_before_noise, label in zip(X_train, y_train):  
+    for mfccs_before_noise, label in zip(X_train, y_train): 
+        print(mfccs_before_noise.shape) 
+        
+        if count > 1000:
+            break
+        
         count+=1
-        print(f"Adding noise to {count} of {count_of_X_train}")  
-    
-#     print("np.max(mfccs_before_noise) ", np.max(mfccs_before_noise))
-     
-#         plt.matshow(mfccs_before_noise[:, :, 0])
-#         plt.title(f"noisy_before_noise")       
-#         plt.savefig(f"/home/tim/Temp/noisy_before_noise.jpg") 
-#         
-#         
-#         label = "testing"
-        
-#         array_of_noisy_mfccs = []
-#         array_of_labels_for_noisy_mfccs = []           
-        
-        for noise_mode in ["gaussian", "salt", "pepper", "s&p", "speckle"]:
+        print(f"Adding noise to {count} of {count_of_X_train}")          
    
-            mfccs = mfccs_before_noise[:, :, 0]       
-            noisy_mfccs = random_noise(mfccs, mode=noise_mode)               
-#                         
-#             print("np.max(noisy_mfccs) ", np.max(noisy_mfccs))
-#             print("np.min(noisy_mfccs) ", np.min(noisy_mfccs))              
-                                  
-            plt.matshow(noisy_mfccs)    
-            plt.title(f"noisy_variance_{noise_mode}")       
-            plt.savefig(f"/home/tim/Temp/noisy_variance_{noise_mode}.jpg")    
+        mfccs = mfccs_before_noise[:, :, 0]  
+        print(mfccs.shape)      
+        noisy_mfccs = random_noise(mfccs, mode=noise_mode)
+        print(noisy_mfccs.shape)               
+        
+        noisy_mfccs = np.expand_dims(noisy_mfccs, axis=2)
+        print(noisy_mfccs.shape) 
+        
+        
+        array_of_noisy_mfccs.append(noisy_mfccs)
+#         print(array_of_noisy_mfccs.shape) 
+        array_of_labels_for_noisy_mfccs.append(label) 
+#         print(array_of_labels_for_noisy_mfccs.shape) 
             
-            noisy_mfccs = np.expand_dims(noisy_mfccs, axis=2)
-            
-#             print("noisy_mfccs_normalized.shape ", noisy_mfccs.shape)   
-            
-            array_of_noisy_mfccs.append(noisy_mfccs)
-            array_of_labels_for_noisy_mfccs.append(label) 
-            
-    X_train.append(array_of_noisy_mfccs) 
-    y_train.append(array_of_labels_for_noisy_mfccs) 
-    
+#     X_train.append(array_of_noisy_mfccs) 
+#     y_train.append(array_of_labels_for_noisy_mfccs) 
 
-            
-   
+    return array_of_noisy_mfccs, array_of_labels_for_noisy_mfccs
     
    
     

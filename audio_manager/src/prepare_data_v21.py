@@ -300,7 +300,7 @@ def convert_mfccs_to_required_format_for_this_model_type(array_of_mfccs, keras_m
     
     return array_of_mfccs 
    
-def get_data(binary, saved_mfccs_location, create_data, testing, display_image, keras_model_name, testing_number, use_augmented_data, create_augmented_data):
+def get_data(binary, saved_mfccs_location, create_data, testing, display_image, keras_model_name, testing_number, use_augmented_time_freq_data, create_augmented_data):
     Path(saved_mfccs_location).mkdir(parents=True, exist_ok=True)
     
     array_of_mfccs_filename = saved_mfccs_location + 'array_of_mfccs' 
@@ -326,7 +326,7 @@ def get_data(binary, saved_mfccs_location, create_data, testing, display_image, 
             
         
     
-    if use_augmented_data:
+    if use_augmented_time_freq_data:
         # read from previously saved augmented data
         array_of_mfccs = np.load(array_of_augmented_mfccs_filename + ".npy")
         print("np.amax(array_of_mfccs) ", np.amax(array_of_mfccs))

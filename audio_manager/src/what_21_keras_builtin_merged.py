@@ -281,9 +281,9 @@ def train_the_model(model, train_x, train_y, val_x, val_y, number_of_training_ep
 def evaluate_model(model, val_examples, val_labels):
     print(model.evaluate(x=val_examples, y=val_labels))   
   
-def prepare_data(binary, model_name, saved_mfccs_location, create_data, testing, display_image, testing_number, use_augmented_data, create_augmented_data):
+def prepare_data(binary, model_name, saved_mfccs_location, create_data, testing, display_image, testing_number, use_augmented_data, create_augmented_time_freq_data):
     # https://www.tensorflow.org/tutorials/load_data/numpy    
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v21.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, keras_model_name=model_name, testing_number=testing_number, use_augmented_data=use_augmented_data, create_augmented_data=create_augmented_data) 
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v21.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, keras_model_name=model_name, testing_number=testing_number, use_augmented_time_freq_data=use_augmented_data, create_augmented_time_freq_data=create_augmented_time_freq_data) 
     
     # save integer to sound mapping - so can use it later in another program eg. when this model is used to do predictions
     if binary:
@@ -484,7 +484,7 @@ def main():
        
     print("Started") 
   
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping, class_count = prepare_data(binary=binary, model_name=keras_model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_data=use_augmented_data, create_augmented_data=create_augmented_data)
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping, class_count = prepare_data(binary=binary, model_name=keras_model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_data=use_augmented_data, create_augmented_time_freq_data=create_augmented_data)
     print("train_examples.shape ", train_examples.shape) 
     print("val_examples.shape ", val_examples.shape)  
     print("train_labels.shape ", train_labels.shape)  

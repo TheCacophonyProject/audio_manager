@@ -1,5 +1,5 @@
 '''
-Created on 15 Sep. 2020
+Created on 23 Sep. 2020
 
 @author: tim
 '''
@@ -36,12 +36,14 @@ from tensorflow.keras.layers import GlobalAveragePooling2D
 from tensorflow.keras.layers import Activation
 from tensorflow.keras.layers import Input
 from tensorflow.keras.layers import Concatenate
-
+from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.keras import layers
 
 
 from sklearn.metrics import confusion_matrix
 
-import prepare_data_v22
+import prepare_data_v24
+# from builtins import True
 
 # BASE_FOLDER = '/home/tim/Work/Cacophony'
 BASE_FOLDER = parameters.base_folder
@@ -200,6 +202,7 @@ def create_keras_builtin_model(keras_model_name, binary, number_of_distinct_labe
 def create_model_basic(binary, num_classes):   
     
     model = Sequential()
+        
     model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(32, 32, 1)))
     model.add(MaxPooling2D(2,2))  
     model.add(SpatialDropout2D(0.8))           
@@ -236,6 +239,51 @@ def create_model_basic(binary, num_classes):
         
     return model
 
+def create_functional_model_basic(binary, num_classes):
+    # https://keras.io/guides/functional_api/
+#  https://keras.io/guides/preprocessing_layers/
+    input_shape = (32, 32, 1)
+    inputs = keras.Input(shape=input_shape)
+    
+#     x = keras.Input(shape=input_shape)
+   # x = preprocessing.Rescaling(1.0 / 255)(x) # I think this was breaking it - so now reshape before
+    
+    conv2d = Conv2D(64, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')
+    x = conv2d(inputs)
+    x = MaxPooling2D(2,2)(x) 
+    x = SpatialDropout2D(0.8)(x)           
+    
+    x = Conv2D(32, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')(x)          
+    x = MaxPooling2D(2,2)(x)
+    x = SpatialDropout2D(0.2)(x)
+    
+    x = Conv2D(64, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')(x)            
+    x = MaxPooling2D(2,2)(x)
+    x = SpatialDropout2D(0.2)(x)
+    
+    x = Conv2D(128, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')(x)            
+    x = MaxPooling2D(2,2)(x)
+    x = SpatialDropout2D(0.2)(x)
+    
+    x = Conv2D(256, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')(x)            
+    x = MaxPooling2D(2,2)(x)
+    x = SpatialDropout2D(0.2)(x)
+                
+    x = Flatten()(x)    
+    
+    x = Dense(64, activation='relu')(x)  
+    
+    if binary:
+        outputs = Dense(1, activation="sigmoid")(x) 
+        model = keras.Model(inputs, outputs, name="functional_model_basic")
+        model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='binary_crossentropy',  metrics=['accuracy'])
+    else:
+        outputs = Dense(num_classes, activation="softmax")(x) 
+        model = keras.Model(inputs, outputs, name="functional_model_basic")
+        model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='categorical_crossentropy',  metrics=['accuracy'])  
+        
+    return model    
+    
 
 def get_callbacks(checkpoint_path, log_dir):
     
@@ -281,9 +329,9 @@ def train_the_model(model, train_x, train_y, val_x, val_y, number_of_training_ep
 def evaluate_model(model, val_examples, val_labels):
     print(model.evaluate(x=val_examples, y=val_labels))   
   
-def prepare_data(binary, model_name, saved_mfccs_location, create_data, testing, display_image, testing_number, use_augmented_data, create_augmented_time_freq_data):
+def prepare_data(binary, model_name, saved_mfccs_location, create_data, testing, display_image, testing_number, use_augmented_time_freq_data, create_augmented_time_freq_data, create_augmented_noise_data, use_augmented_noise_data):
     # https://www.tensorflow.org/tutorials/load_data/numpy    
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v22.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_time_freq_data=use_augmented_data, create_augmented_time_freq_data=create_augmented_time_freq_data) 
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v24.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_time_freq_data=use_augmented_time_freq_data, create_augmented_time_freq_data=create_augmented_time_freq_data, create_augmented_noise_data=create_augmented_noise_data, use_augmented_noise_data=use_augmented_noise_data) 
     
     # save integer to sound mapping - so can use it later in another program eg. when this model is used to do predictions
     if binary:
@@ -385,47 +433,19 @@ def load_model(model_location):
     model.summary()
     return model
 
-# def get_image_size(keras_model_name):
-#     # this needs to be updated manually when I create new data_images / sizes
-#     # 20/9/20 I was thinking that some models required a different image size...
-#     if keras_model_name == "Xception":
-#         return 64
-#         
-#     elif keras_model_name == "VGG16" or keras_model_name == "VGG19":
-#         return 64
-#     
-#     elif keras_model_name == "ResNet50" or keras_model_name == "ResNet101" or keras_model_name == "ResNet152":
-#         return 64
-#         
-#     elif keras_model_name == "ResNet50V2"  or keras_model_name == "ResNet101V2" or keras_model_name == "ResNet152V2":
-#         return 64 
-#         
-#     elif keras_model_name == "InceptionV3":
-#         return 64
-#             
-#     elif keras_model_name == "InceptionResNetV2":
-#         return 64
-#     
-#     elif keras_model_name == "DenseNet121" or keras_model_name == "DenseNet169" or keras_model_name == "DenseNet201":
-#         return 64
-#         
-#     elif keras_model_name == "NASNetLarge":
-#         return 64  
-#    
-#     else:    
-#         return 64
+
     
 
 def main():   
 #     https://keras.io/api/applications/densenet/#densenet121-function
-    model_name = "my_model_v22" 
+    model_name = "my_model_v23" 
 
 
 #     builtin_model_trainable = True # This refers to whether to keep Keras builtin model weights or train model from scratch - builtin_model_trainable = False means keep weights
 #     model_run_name = "2020_09_20_" + model_name + "_v3"  # Set image imput to 64x64 (it was 128x128, for the previous run of this model
-    model_run_name = "2020_09_23_" + model_name + "_augment_data_inc_noise_1"  # Set image input to 32x32 
+    model_run_name = "2020_09_25_" + model_name + "_2"  # Set image input to 32x32 
     
-    saved_mfccs = "version_7_added_noise/"    
+    saved_mfccs = "version_8_with_separate_noise_files_255x255_unit/"    
            
     binary=False    
                        
@@ -434,11 +454,12 @@ def main():
     save_model=True # Only applies if model is trained
     create_data=False # If True, creates mfccs from original audio files; if false loads previously saved mfccs files (created for each confirmed training onset)
     testing=False # Only has an affect if create_data is True
-    testing_number = 1000 # Only has an affect if create_data is True
-    use_augmented_data = True
-    create_augmented_data = True # Only has an effect if use_augmented_data = True: Then if create_augmented_data = True, creates and saves augmented data from the loaded original mfccs, or if create_augmented_data = False, it will attempt to load saved augmented data
-        
-    number_of_training_epochs = 100
+    testing_number = 100 # Only has an affect if create_data is True
+    create_augmented_time_freq_data = False # Only has an effect if use_augmented_data = True: Then if create_augmented_time_freq_data = True, creates and saves augmented data from the loaded original mfccs, or if create_augmented_time_freq_data = False, it will attempt to load saved augmented data
+    use_augmented_time_freq_data = True
+    create_augmented_noise_data=False
+    use_augmented_noise_data=True   
+    number_of_training_epochs = 10
     
     display_image = False # Only has an affect if create_data is True
     
@@ -469,7 +490,7 @@ def main():
        
     print("Started") 
   
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping, class_count = prepare_data(binary=binary, model_name=model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_data=use_augmented_data, create_augmented_time_freq_data=create_augmented_data)
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping, class_count = prepare_data(binary=binary, model_name=model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_time_freq_data=use_augmented_time_freq_data, create_augmented_time_freq_data=create_augmented_time_freq_data, create_augmented_noise_data=create_augmented_noise_data, use_augmented_noise_data=use_augmented_noise_data)
     print("train_examples.shape ", train_examples.shape) 
     print("val_examples.shape ", val_examples.shape)  
     print("train_labels.shape ", train_labels.shape)  
@@ -487,7 +508,9 @@ def main():
             
 #     model = create_keras_builtin_model(model_name, binary, number_of_distinct_labels, get_image_size(model_name), builtin_model_trainable)
     
-    model = create_model_basic(binary, number_of_distinct_labels)
+#     model = create_model_basic(binary, number_of_distinct_labels)
+    
+    model = create_functional_model_basic(binary, number_of_distinct_labels)
     
     
     print(model.summary()) 
