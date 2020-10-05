@@ -443,7 +443,7 @@ def main():
 
 #     builtin_model_trainable = True # This refers to whether to keep Keras builtin model weights or train model from scratch - builtin_model_trainable = False means keep weights
 #     model_run_name = "2020_09_20_" + model_name + "_v3"  # Set image imput to 64x64 (it was 128x128, for the previous run of this model
-    model_run_name = "2020_09_25_" + model_name + "_2"  # Set image input to 32x32 
+    model_run_name = "2020_09_29_" + model_name + "_1"  # Set image input to 32x32 
     
     saved_mfccs = "version_8_with_separate_noise_files_255x255_unit/"    
            
@@ -459,7 +459,7 @@ def main():
     use_augmented_time_freq_data = True
     create_augmented_noise_data=False
     use_augmented_noise_data=True   
-    number_of_training_epochs = 10
+    number_of_training_epochs = 150
     
     display_image = False # Only has an affect if create_data is True
     

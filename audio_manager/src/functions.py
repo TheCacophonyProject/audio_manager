@@ -738,7 +738,7 @@ def get_model_run_results_to_create_feb_2020_training_data(modelRunName, actualC
             
     sqlBuilding = "SELECT ID FROM model_run_result WHERE modelRunName = '" + modelRunName + "'"
     
-    sqlBuilding += " AND recordingDateTimeNZ BETWEEN '" + parameters.recordings_for_creating_feb_training_data_start_date + "' AND '" + parameters.recordings_for_creating_feb_training_data_end_date + "'"
+    sqlBuilding += " AND recordingDateTimeNZ BETWEEN '" + parameters.feb_2020_training_data_start_date + "' AND '" + parameters.feb_2020_training_data_end_date + "'"
     
     if actualConfirmedFilter !='not_used':
         sqlBuilding += " AND "

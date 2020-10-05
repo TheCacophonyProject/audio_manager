@@ -1,8 +1,10 @@
+
 '''
-Created on 15 Sep. 2020
+Created on 29 Sep. 2020
 
 @author: tim
 '''
+
 
 import parameters
 import numpy as np
@@ -36,12 +38,14 @@ from tensorflow.keras.layers import GlobalAveragePooling2D
 from tensorflow.keras.layers import Activation
 from tensorflow.keras.layers import Input
 from tensorflow.keras.layers import Concatenate
-
+from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.keras import layers
 
 
 from sklearn.metrics import confusion_matrix
 
-import prepare_data_v20
+import prepare_data_v28
+# from builtins import True
 
 # BASE_FOLDER = '/home/tim/Work/Cacophony'
 BASE_FOLDER = parameters.base_folder
@@ -65,116 +69,168 @@ def get_metrics():
       ]
     return METRICS
 
-def create_keras_builtin_model(keras_model_name, binary, number_of_distinct_labels, IMG_SIZE):
-#     IMG_SIZE=32
-    IMG_SHAPE = (IMG_SIZE, IMG_SIZE, 3)
+def create_model_basic(binary, num_classes):       
     
-    if keras_model_name == "InceptionResNetV2":
-        builtin_model = tf.keras.applications.InceptionResNetV2(
-        include_top=False, 
-        weights='imagenet', 
-        input_shape=IMG_SHAPE) 
-        
-        builtin_model.trainable=False # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
-        
-    elif keras_model_name == "Xception":
-        builtin_model=tf.keras.applications.Xception(input_shape=IMG_SHAPE,
-                                               include_top=False,
-                                               weights='imagenet', 
-                                               )
-        builtin_model.trainable=False # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
-        
-    elif keras_model_name == "VGG16":
-        builtin_model=tf.keras.applications.VGG16(input_shape=IMG_SHAPE,
-                                               include_top=False,
-                                               weights='imagenet',
-                                               )
-        builtin_model.trainable=False # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
-        
-    elif keras_model_name == "VGG19":
-        builtin_model=tf.keras.applications.VGG19(input_shape=IMG_SHAPE,
-                                               include_top=False,
-                                               weights='imagenet',
-                                               )
-        builtin_model.trainable=False # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
+    model = Sequential()
+    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(32, 32, 1)))
+    model.add(MaxPooling2D(2,2))  
+    model.add(SpatialDropout2D(0.8))           
+    
+    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))          
+    model.add(MaxPooling2D(2,2))
+    model.add(SpatialDropout2D(0.2))
+    
+    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
+    model.add(MaxPooling2D(2,2))
+    model.add(SpatialDropout2D(0.2))
+    
+    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
+    model.add(MaxPooling2D(2,2))
+    model.add(SpatialDropout2D(0.2))
+    
+    model.add(Conv2D(32, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
+    model.add(MaxPooling2D(2,2))
+    model.add(SpatialDropout2D(0.2))
             
-    elif keras_model_name == "ResNet50":
-        builtin_model=tf.keras.applications.ResNet50(input_shape=IMG_SHAPE,
-                                               include_top=False,
-                                               weights='imagenet',
-                                               )
-        builtin_model.trainable=False # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
-        
-    elif keras_model_name == "ResNet101":
-        builtin_model=tf.keras.applications.ResNet101(input_shape=IMG_SHAPE,
-                                               include_top=False,
-                                               weights='imagenet',
-                                               )
-        builtin_model.trainable=False # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
-        
-    elif keras_model_name == "ResNet152":
-        builtin_model=tf.keras.applications.ResNet152(input_shape=IMG_SHAPE,
-                                               include_top=False,
-                                               weights='imagenet',
-                                               )
-        builtin_model.trainable=False # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
-        
-    elif keras_model_name == "ResNet50V2":
-        builtin_model=tf.keras.applications.ResNet50V2(input_shape=IMG_SHAPE,
-                                               include_top=False,
-                                               weights='imagenet',
-                                               )
-        builtin_model.trainable=False # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
-        
-    elif keras_model_name == "ResNet101V2":
-        builtin_model=tf.keras.applications.ResNet101V2(input_shape=IMG_SHAPE,
-                                               include_top=False,
-                                               weights='imagenet',
-                                               )
-        builtin_model.trainable=False # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
-        
-    elif keras_model_name == "ResNet152V2":
-        builtin_model=tf.keras.applications.ResNet152V2(input_shape=IMG_SHAPE,
-                                               include_top=False,
-                                               weights='imagenet',
-                                               )
-        builtin_model.trainable=False # https://androidkt.com/how-to-use-vgg-model-in-tensorflow-keras/
-        
-    elif keras_model_name == "NASNetLarge":
-        builtin_model=tf.keras.applications.NASNetLarge(input_shape=IMG_SHAPE,
-                                               include_top=False,
-                                               weights=None, # Can't use imagenet as docs say input images need to be 331, 331, 3)
-                                               )
+    model.add(Flatten())    
     
-        
+    model.add(Dense(64, activation='relu'))  
     
-    else:
-        print("No matching model found")
-        return                    
-    
-    global_average_layer = tf.keras.layers.GlobalAveragePooling2D() # It looks like I wasn't using this for InceptionResNetV2 - will need to check
-       
     if binary:
-        prediction_layer = tf.keras.layers.Dense(units=1, activation="sigmoid")          
+        model.add(Dense(1, activation="sigmoid"))
+        model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='binary_crossentropy',  metrics=['accuracy'])
     else:
-        prediction_layer = tf.keras.layers.Dense(number_of_distinct_labels,activation='softmax')
-
-    model = Sequential([
-        builtin_model,
-        global_average_layer,
-        prediction_layer
-        ])
+        model.add(Dense(num_classes, activation="softmax"))
+        model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='categorical_crossentropy',  metrics=['accuracy'])       
     
-    opt = Adam(lr=0.001)
+        
+    return model
 
-    if binary:      
-        model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])   
-    else:    
-        model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])    
+def create_functional_model_basic(binary, num_classes):
+    # https://keras.io/guides/functional_api/
+#  https://keras.io/guides/preprocessing_layers/
+    input_shape = (32, 32, 1)
+    inputs = keras.Input(shape=input_shape)
     
-    return model   
+#     x = keras.Input(shape=input_shape)
+   # x = preprocessing.Rescaling(1.0 / 255)(x) # I think this was breaking it - so now reshape before
+    
+    conv2d = Conv2D(64, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')
+    x = conv2d(inputs)
+    x = MaxPooling2D(2,2)(x) 
+    x = SpatialDropout2D(0.8)(x)           
+    
+    x = Conv2D(32, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')(x)          
+    x = MaxPooling2D(2,2)(x)
+    x = SpatialDropout2D(0.2)(x)
+    
+    x = Conv2D(64, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')(x)            
+    x = MaxPooling2D(2,2)(x)
+    x = SpatialDropout2D(0.2)(x)
+    
+    x = Conv2D(128, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')(x)            
+    x = MaxPooling2D(2,2)(x)
+    x = SpatialDropout2D(0.2)(x)
+    
+    x = Conv2D(256, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')(x)            
+    x = MaxPooling2D(2,2)(x)
+    x = SpatialDropout2D(0.2)(x)
+                
+    x = Flatten()(x)    
+    
+    x = Dense(64, activation='relu')(x)  
+    
+    if binary:
+        outputs = Dense(1, activation="sigmoid")(x) 
+        model = keras.Model(inputs, outputs, name="functional_model_basic")
+        model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='binary_crossentropy',  metrics=['accuracy'])
+    else:
+        outputs = Dense(num_classes, activation="softmax")(x) 
+        model = keras.Model(inputs, outputs, name="functional_model_basic")
+        model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='categorical_crossentropy',  metrics=['accuracy'])  
+        
+    return model    
 
+def create_model_vgg16(binary, num_classes):
+    
+    # build the VGG16 network with ImageNet weights
+    # https://towardsdatascience.com/step-by-step-vgg16-implementation-in-keras-for-beginners-a833c686ae6c
+    model = Sequential()
+    
+    # vgg16 layer 1
+#     model.add(Conv2D(input_shape=(224,224,3),filters=64,kernel_size=(3,3),padding="same", activation="relu"))
+    model.add(Conv2D(input_shape=(32,32,1),filters=64,kernel_size=(3,3),padding="same", activation="relu"))
+    
+#     # vgg16 layer 2
+#     model.add(Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
+#     model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
+    
+#     # vgg16 layer 3
+#     model.add(Conv2D(filters=128, kernel_size=(3,3), padding="same", activation="relu"))
+#     
+#     # vgg16 layer 4
+#     model.add(Conv2D(filters=128, kernel_size=(3,3), padding="same", activation="relu"))
+#     model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
+    
+#     # vgg16 layer 5
+#     model.add(Conv2D(filters=256, kernel_size=(3,3), padding="same", activation="relu"))
+#     
+#     # vgg16 layer 6
+#     model.add(Conv2D(filters=256, kernel_size=(3,3), padding="same", activation="relu"))
+#     
+#     # vgg16 layer 7
+#     model.add(Conv2D(filters=256, kernel_size=(3,3), padding="same", activation="relu"))
+#     model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
+    
+#     # vgg16 layer 8
+#     model.add(Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
+#     
+#     # vgg16 layer 9
+#     model.add(Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
+#      
+#     # vgg16 layer 10
+#     model.add(Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
+#     model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
+     
+#     # vgg16 layer 11
+#     model.add(Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
+#      
+#     # vgg16 layer 12
+#     model.add(Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
+#      
+#     # vgg16 layer 13
+#     model.add(Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
+#     model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
+     
+    model.add(Flatten())
+    
+    
+#     # vgg16 layer 14
+#     model.add(Dense(units=4096,activation="relu"))
+#      
+#     # vgg16 layer 15
+#     model.add(Dense(units=4096,activation="relu"))
 
+#     model.add(Dense(64, activation='relu'))
+
+    model.add(Dense(4, activation='relu')) # trying to work out why I keep getting similar results when I have been removing layers
+    
+#     opt = Adam(lr=0.001)
+    opt = Adam(lr=0.0001)
+
+    if binary:
+        model.add(Dense(units=1, activation="sigmoid"))
+#         model.compile(optimizer=opt, loss=keras.losses.categorical_crossentropy, metrics=['accuracy'])
+        model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])
+       
+    
+    else:
+        model.add(Dense(units=num_classes, activation="softmax"))
+#         model.compile(optimizer=opt, loss=keras.losses.categorical_crossentropy, metrics=['accuracy'])
+        model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+       
+    return model
+    
 
 def get_callbacks(checkpoint_path, log_dir):
     
@@ -197,7 +253,7 @@ def get_callbacks(checkpoint_path, log_dir):
     # https://machinelearningmastery.com/how-to-stop-training-deep-neural-networks-at-the-right-time-using-early-stopping/
     # es_val_loss_callback = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
 #     earlystop_train_loss_callback = keras.callbacks.EarlyStopping(monitor='loss', mode='min', verbose=1, patience=30)
-    earlystop_train_loss_callback = keras.callbacks.EarlyStopping(monitor='loss', mode='min', verbose=1, patience=100)      
+    earlystop_train_loss_callback = keras.callbacks.EarlyStopping(monitor='loss', mode='min', verbose=1, patience=10)      
     
     return [checkpoint_callback, earlystop_train_loss_callback,tensorboard_callback]
 #     return [earlystop_train_loss_callback,tensorboard_callback]
@@ -220,25 +276,25 @@ def train_the_model(model, train_x, train_y, val_x, val_y, number_of_training_ep
 def evaluate_model(model, val_examples, val_labels):
     print(model.evaluate(x=val_examples, y=val_labels))   
   
-def prepare_data(binary, model_name, saved_mfccs_location, create_data, testing, display_image, testing_number):
+def prepare_data(binary, model_name, saved_mfccs_location, create_data, testing, display_image, testing_number, use_augmented_time_freq_data, create_augmented_time_freq_data, create_augmented_noise_data, use_augmented_noise_data):
     # https://www.tensorflow.org/tutorials/load_data/numpy    
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v20.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, keras_model_name=model_name, testing_number=testing_number) 
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v28.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_time_freq_data=use_augmented_time_freq_data, create_augmented_time_freq_data=create_augmented_time_freq_data, create_augmented_noise_data=create_augmented_noise_data, use_augmented_noise_data=use_augmented_noise_data) 
     
     # save integer to sound mapping - so can use it later in another program eg. when this model is used to do predictions
     if binary:
         binary_model_folder = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary/" + model_name + "/"
         Path(binary_model_folder).mkdir(parents=True, exist_ok=True) 
-        mapping_file_path_name = binary_model_folder + "integer_to_sound_mapping.pkl"
+#         mapping_file_path_name = binary_model_folder + "integer_to_sound_mapping.pkl"
     else:
         multi_class_model_folder = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class/" + model_name + "/"
         Path(multi_class_model_folder).mkdir(parents=True, exist_ok=True) 
-        mapping_file_path_name =  multi_class_model_folder + "integer_to_sound_mapping.pkl"
+#         mapping_file_path_name =  multi_class_model_folder + "integer_to_sound_mapping.pkl"
         
     print(integer_to_sound_mapping)
     # https://pythonspot.com/save-a-dictionary-to-a-file/
-    f = open(mapping_file_path_name,"wb")
-    pickle.dump(integer_to_sound_mapping,f)
-    f.close()
+#     f = open(mapping_file_path_name,"wb")
+#     pickle.dump(integer_to_sound_mapping,f)
+#     f.close()
     
    
     return train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count
@@ -248,40 +304,17 @@ def plot_confusion_matrix_3(binary, predictions_decoded, val_labels_decoded, int
     # occur in the data to be plotted - so did a big rigmarole to get the unique labels from a union
     # of predictions and actual values.
     print("About to plot confusion matrix")
-#     print("type(predictions_decoded) ", type(predictions_decoded))
+
     predictions_decoded_np = np.array(predictions_decoded)    
-#     print("type(predictions_decoded_np) ", type(predictions_decoded_np))
     predictions_decoded_list = predictions_decoded_np.tolist()
-#     print("predictions_decoded_list ", predictions_decoded_list)
-    
-        
+
     val_labels_decoded_np = np.array(val_labels_decoded)
     val_labels_decoded_list = val_labels_decoded_np.tolist()
-#     print("val_labels_decoded_list ", val_labels_decoded_list)
     
     concatenated_lists = predictions_decoded_list + val_labels_decoded_list
-#     print("concatenated_lists ", concatenated_lists)
     
-    concatenated_lists_unique = np.unique(np.array(concatenated_lists))
-    
-#     print("concatenated_lists_unique ", concatenated_lists_unique)
-    
-    
-#     unique_predictions = np.unique(predictions_decoded_np) 
-#     print("unique_predictions ", unique_predictions)
-#     print(type(unique_predictions))
-#     unique_val_labels = np.unique(val_labels_decoded_np)
-#     print("unique_val_labels ", unique_val_labels)
-#     
-#     merged_unique_labels = np.concatenate([unique_predictions,unique_val_labels])
-#     
-#     print(merged_unique_labels)
-       
-#     labels = []
-#   
-#     for value in integer_to_sound_mapping:
-#         sound = integer_to_sound_mapping.get(value)
-#         labels.append(sound)    
+    concatenated_lists_unique = np.unique(np.array(concatenated_lists))    
+
         
     val_labels_decoded_names = []
     predictions_decoded_names = []  
@@ -298,12 +331,7 @@ def plot_confusion_matrix_3(binary, predictions_decoded, val_labels_decoded, int
     
  
     print(cm)
-#     print("len(cm) ", len(cm))
-#     print("cm.shape ", cm.shape)
-#     print("cm[0].shape[0] ", cm[0].shape[0])
-#     print("cm.ndim ", cm.ndim)
-#     print("len(predictions_decoded_names) ", len(predictions_decoded_names))
-#     print("len(val_labels_decoded_names) ", len(val_labels_decoded_names))
+
     # https://matplotlib.org/3.1.1/gallery/images_contours_and_fields/image_annotated_heatmap.html
     fig, ax = plt.subplots()
     im = ax.imshow(cm)
@@ -352,78 +380,52 @@ def load_model(model_location):
     model.summary()
     return model
 
-def get_image_size(keras_model_name):
-    # this needs to be updated manually when I create new data_images / sizes
-    if keras_model_name == "Xception":
-        return 128
-        
-    elif keras_model_name == "VGG16" or keras_model_name == "VGG19":
-        return 128
-    
-    elif keras_model_name == "ResNet50" or keras_model_name == "ResNet101" or keras_model_name == "ResNet152":
-        return 128
-        
-    elif keras_model_name == "ResNet50V2"  or keras_model_name == "ResNet101V2" or keras_model_name == "ResNet152V2":
-        return 128 
-        
-    elif keras_model_name == "InceptionV3":
-        return 128
-            
-    elif keras_model_name == "InceptionResNetV2":
-        return 128
-        
-    elif keras_model_name == "NASNetLarge":
-        return 128  
-   
-    else:    
-        return 128
+
     
 
 def main():   
 #     https://keras.io/api/applications/densenet/#densenet121-function
-#     keras_model_name = "my_model" 
-#     keras_model_name = "Xception"              # Min image size is 71x71
-#     keras_model_name = "VGG16"                 # Min image size is 32x32
-#     keras_model_name = "VGG19"                 # Min image size is 32x32
-    keras_model_name = "ResNet50"              # Min image size is 32x32
-#     keras_model_name = "ResNet101"             # Min image size is 32x32
-#     keras_model_name = "ResNet152"             # Min image size is 32x32
-#     keras_model_name = "ResNet50V2"            # Min image size is 32x32
-#     keras_model_name = "ResNet101V2"           # Min image size is 32x32
-#     keras_model_name = "ResNet152V2"           # Min image size is 32x32
-#     keras_model_name = "InceptionV3"           # Min image size is 75x75
-#     keras_model_name = "InceptionResNetV2"     # Min image size is 75x75
-#     keras_model_name = "DenseNet121"           # Min image size is 32x32
-#     keras_model_name = "DenseNet169"           # Min image size is 32x32
-#     keras_model_name = "DenseNet201"           # Min image size is 32x32
-#     keras_model_name = "NASNetLarge"           # Min image size is 32x32
+    model_name = "vgg16_lr0.0004_last_Dense-64_removed_layers_11_12_13_8_9_10_5_6_7_3_4_2_altered_last_layer_4" 
 
-
-    model_run_name = "2020_09_29_" + keras_model_name + "_v1"  
-    saved_mfccs = "version_4/"    
+    model_run_name = "2020_10_03_" + model_name + "_1"  # Set image input to 32x32 
+    
+    saved_mfccs = "version_8_with_separate_noise_files_255x255_unit/"    
            
-    binary=False  
-                   
+    binary=True    
+                       
     train_a_model=True # False implies it will load a trained model from disk
     load_model_from_checkpoints = True # If train_a_model is False, and this is True, model will load from check_point, otherwise from a saved_model
     save_model=True # Only applies if model is trained
     create_data=False # If True, creates mfccs from original audio files; if false loads previously saved mfccs files (created for each confirmed training onset)
     testing=False # Only has an affect if create_data is True
-    testing_number = 200 # Only has an affect if create_data is True
-    
-    number_of_training_epochs = 500
+    testing_number = 100 # Only has an affect if create_data is True
+    create_augmented_time_freq_data = False # Only has an effect if use_augmented_data = True: Then if create_augmented_time_freq_data = True, creates and saves augmented data from the loaded original mfccs, or if create_augmented_time_freq_data = False, it will attempt to load saved augmented data
+    use_augmented_time_freq_data = True
+    create_augmented_noise_data=False
+    use_augmented_noise_data=True   
+    number_of_training_epochs = 40
     
     display_image = False # Only has an affect if create_data is True
     
-    
+#     if builtin_model_trainable:
     if binary:
-        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary/" + keras_model_name 
-        checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/binary/training/cp.ckpt" 
-        log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + keras_model_name + "_binary/"            
+        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary_trainable/" + model_name 
+        checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/binary_trainable/training/cp.ckpt" 
+        log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_binary_trainable/"            
     else:
-        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class/" + keras_model_name   
-        checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/multi_class/training/cp.ckpt"  
-        log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + keras_model_name + "_multi_class/"   
+        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class_trainable/" + model_name   
+        checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/multi_class_trainable/training/cp.ckpt"  
+        log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_multi_class_trainable/"   
+            
+#     else:        
+#         if binary:
+#             model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary_not_trainable/" + model_name 
+#             checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/binary_not_trainable/training/cp.ckpt" 
+#             log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_binary_not_trainable/"            
+#         else:
+#             model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class_not_trainable/" + model_name   
+#             checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/multi_class_not_trainable/training/cp.ckpt"  
+#             log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_multi_class_not_trainable/"   
               
              
     print("model_location: ",model_location)
@@ -432,7 +434,7 @@ def main():
        
     print("Started") 
   
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping, class_count = prepare_data(binary=binary, model_name=keras_model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number)
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping, class_count = prepare_data(binary=binary, model_name=model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_time_freq_data=use_augmented_time_freq_data, create_augmented_time_freq_data=create_augmented_time_freq_data, create_augmented_noise_data=create_augmented_noise_data, use_augmented_noise_data=use_augmented_noise_data)
     print("train_examples.shape ", train_examples.shape) 
     print("val_examples.shape ", val_examples.shape)  
     print("train_labels.shape ", train_labels.shape)  
@@ -448,7 +450,12 @@ def main():
         val_labels_decoded = tf.argmax(val_labels, 1) # Returns the index with the largest value across axes of a tensor. - https://www.tensorflow.org/api_docs/python/tf/math/argmax
         print("val_labels", val_labels)
             
-    model = create_keras_builtin_model(keras_model_name, binary, number_of_distinct_labels, get_image_size(keras_model_name))
+#     model = create_model_basic(binary, number_of_distinct_labels)
+    model = create_model_vgg16(binary, number_of_distinct_labels)
+#     model = create_functional_model_basic(binary, number_of_distinct_labels)
+    
+    
+    
     print(model.summary()) 
     
      

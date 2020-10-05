@@ -612,14 +612,14 @@ def main():
     
     if train_a_model: 
 #         model = create_model_basic(binary, number_of_distinct_labels) 
-#         model = create_model_vgg16(binary, number_of_distinct_labels) 
+        model = create_model_vgg16(binary, number_of_distinct_labels) 
 #         model =create_model_basic_vgg16_hybrid_to_find_why_not_training(binary, number_of_distinct_labels)
 #         model = create_model_basic_with_learning_from_vgg16(binary, number_of_distinct_labels)
 #         model = create_model_Keras_builtin_VGG16(binary, number_of_distinct_labels)  
 
       
             
-        model = create_model_Keras_builtin_ResNet152(binary, number_of_distinct_labels)  
+#         model = create_model_Keras_builtin_ResNet152(binary, number_of_distinct_labels)  
         print("checkpoint_path is: ", checkpoint_path)
 #         if os.path.exists(checkpoint_path + ".index"):
         checkpoint_dir = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs/tensorflow_runs/2020_09_14_keras_builtin_ResNet152_v1/training_1"
