@@ -44,7 +44,7 @@ from tensorflow.keras import layers
 
 from sklearn.metrics import confusion_matrix
 
-import prepare_data_v26
+import prepare_data_v29
 # from builtins import True
 
 # BASE_FOLDER = '/home/tim/Work/Cacophony'
@@ -55,101 +55,6 @@ MODELS_FOLDER = "saved_models"
 SAVED_MFCCS_FOLDER = "saved_mfccs"
 
 
-def get_metrics():
-    # https://www.tensorflow.org/tutorials/structured_data/imbalanced_data
-    METRICS = [
-      keras.metrics.TruePositives(name='tp'),
-      keras.metrics.FalsePositives(name='fp'),
-      keras.metrics.TrueNegatives(name='tn'),
-      keras.metrics.FalseNegatives(name='fn'), 
-      keras.metrics.BinaryAccuracy(name='accuracy'),
-      keras.metrics.Precision(name='precision'),
-      keras.metrics.Recall(name='recall'),
-      keras.metrics.AUC(name='auc'),
-      ]
-    return METRICS
-
-def create_model_basic(binary, num_classes):       
-    
-    model = Sequential()
-    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu', input_shape=(32, 32, 1)))
-    model.add(MaxPooling2D(2,2))  
-    model.add(SpatialDropout2D(0.8))           
-    
-    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))          
-    model.add(MaxPooling2D(2,2))
-    model.add(SpatialDropout2D(0.2))
-    
-    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
-    model.add(MaxPooling2D(2,2))
-    model.add(SpatialDropout2D(0.2))
-    
-    model.add(Conv2D(16, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
-    model.add(MaxPooling2D(2,2))
-    model.add(SpatialDropout2D(0.2))
-    
-    model.add(Conv2D(32, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu'))            
-    model.add(MaxPooling2D(2,2))
-    model.add(SpatialDropout2D(0.2))
-            
-    model.add(Flatten())    
-    
-    model.add(Dense(64, activation='relu'))  
-    
-    if binary:
-        model.add(Dense(1, activation="sigmoid"))
-        model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='binary_crossentropy',  metrics=['accuracy'])
-    else:
-        model.add(Dense(num_classes, activation="softmax"))
-        model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='categorical_crossentropy',  metrics=['accuracy'])       
-    
-        
-    return model
-
-def create_functional_model_basic(binary, num_classes):
-    # https://keras.io/guides/functional_api/
-#  https://keras.io/guides/preprocessing_layers/
-    input_shape = (32, 32, 1)
-    inputs = keras.Input(shape=input_shape)
-    
-#     x = keras.Input(shape=input_shape)
-   # x = preprocessing.Rescaling(1.0 / 255)(x) # I think this was breaking it - so now reshape before
-    
-    conv2d = Conv2D(64, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')
-    x = conv2d(inputs)
-    x = MaxPooling2D(2,2)(x) 
-    x = SpatialDropout2D(0.8)(x)           
-    
-    x = Conv2D(32, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')(x)          
-    x = MaxPooling2D(2,2)(x)
-    x = SpatialDropout2D(0.2)(x)
-    
-    x = Conv2D(64, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')(x)            
-    x = MaxPooling2D(2,2)(x)
-    x = SpatialDropout2D(0.2)(x)
-    
-    x = Conv2D(128, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')(x)            
-    x = MaxPooling2D(2,2)(x)
-    x = SpatialDropout2D(0.2)(x)
-    
-    x = Conv2D(256, (3, 3), padding = "same", kernel_regularizer=regularizers.l2(0.0001), activation='relu')(x)            
-    x = MaxPooling2D(2,2)(x)
-    x = SpatialDropout2D(0.2)(x)
-                
-    x = Flatten()(x)    
-    
-    x = Dense(64, activation='relu')(x)  
-    
-    if binary:
-        outputs = Dense(1, activation="sigmoid")(x) 
-        model = keras.Model(inputs, outputs, name="functional_model_basic")
-        model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='binary_crossentropy',  metrics=['accuracy'])
-    else:
-        outputs = Dense(num_classes, activation="softmax")(x) 
-        model = keras.Model(inputs, outputs, name="functional_model_basic")
-        model.compile(optimizer=tf.keras.optimizers.Adam(1e-3), loss='categorical_crossentropy',  metrics=['accuracy'])  
-        
-    return model    
 
 def create_model_vgg16(binary, num_classes):
     
@@ -228,39 +133,28 @@ def create_model_vgg16(binary, num_classes):
         model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
        
     return model
-    
 
-def get_callbacks(checkpoint_path, log_dir):
-    
-                
-#     tensorflow_run_folder = BASE_FOLDER + RUNS_FOLDER + model_run_name
-#     print("tensorflow_run_folder ", tensorflow_run_folder)
-#     checkpoint_path = tensorflow_run_folder + "/training_1/cp.ckpt"
+def get_callbacks(checkpoint_path, log_dir):                   
     
     checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
                                                  save_weights_only=True,
                                                  save_best_only=True,
                                                  mode='auto',
                                                  verbose=1)
-    
-#     log_dir = tensorflow_run_folder + "/logs/fit/" + run_sub_log_dir + "/"
-    
+       
     
     tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1, profile_batch=0) 
     
-    # https://machinelearningmastery.com/how-to-stop-training-deep-neural-networks-at-the-right-time-using-early-stopping/
-    # es_val_loss_callback = keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=30)
-#     earlystop_train_loss_callback = keras.callbacks.EarlyStopping(monitor='loss', mode='min', verbose=1, patience=30)
+    # https://machinelearningmastery.com/how-to-stop-training-deep-neural-networks-at-the-right-time-using-early-stopping/   
     earlystop_train_loss_callback = keras.callbacks.EarlyStopping(monitor='loss', mode='min', verbose=1, patience=10)      
     
     return [checkpoint_callback, earlystop_train_loss_callback,tensorboard_callback]
-#     return [earlystop_train_loss_callback,tensorboard_callback]
+
 
 
 def train_the_model(model, train_x, train_y, val_x, val_y, number_of_training_epochs, checkpoint_path, log_dir):
     print("Training started")
     
-
 #     https://keras.io/api/models/model_training_apis/
     model.fit(x=train_x, y=train_y, 
               validation_data=(val_x, val_y),
@@ -276,9 +170,8 @@ def evaluate_model(model, val_examples, val_labels):
   
 def prepare_data(binary, model_name, saved_mfccs_location, create_data, testing, display_image, testing_number, use_augmented_time_freq_data, create_augmented_time_freq_data, create_augmented_noise_data, use_augmented_noise_data):
     # https://www.tensorflow.org/tutorials/load_data/numpy    
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v26.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_time_freq_data=use_augmented_time_freq_data, create_augmented_time_freq_data=create_augmented_time_freq_data, create_augmented_noise_data=create_augmented_noise_data, use_augmented_noise_data=use_augmented_noise_data) 
-    
-    # save integer to sound mapping - so can use it later in another program eg. when this model is used to do predictions
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data_v29.get_data(binary=binary, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_time_freq_data=use_augmented_time_freq_data, create_augmented_time_freq_data=create_augmented_time_freq_data, create_augmented_noise_data=create_augmented_noise_data, use_augmented_noise_data=use_augmented_noise_data) 
+     # save integer to sound mapping - so can use it later in another program eg. when this model is used to do predictions
     if binary:
         binary_model_folder = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary/" + model_name + "/"
         Path(binary_model_folder).mkdir(parents=True, exist_ok=True) 
@@ -382,12 +275,12 @@ def load_model(model_location):
     
 
 def main():   
-#     https://keras.io/api/applications/densenet/#densenet121-function
     model_name = "vgg16_lr0.0004" 
 
     model_run_name = "2020_10_01_" + model_name + "_1"  # Set image input to 32x32 
     
     saved_mfccs = "version_8_with_separate_noise_files_255x255_unit/"    
+           
            
     binary=False    
                        
@@ -401,38 +294,29 @@ def main():
     use_augmented_time_freq_data = True
     create_augmented_noise_data=False
     use_augmented_noise_data=True   
-    number_of_training_epochs = 40
+    number_of_training_epochs = 10
     
     display_image = False # Only has an affect if create_data is True
     
 #     if builtin_model_trainable:
     if binary:
-        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary_trainable/" + model_name 
-        checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/binary_trainable/training/cp.ckpt" 
-        log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_binary_trainable/"            
+        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary/" + model_name 
+        checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/binary/training/cp.ckpt" 
+        log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_binary/"            
     else:
-        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class_trainable/" + model_name   
-        checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/multi_class_trainable/training/cp.ckpt"  
-        log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_multi_class_trainable/"   
-            
-#     else:        
-#         if binary:
-#             model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/binary_not_trainable/" + model_name 
-#             checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/binary_not_trainable/training/cp.ckpt" 
-#             log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_binary_not_trainable/"            
-#         else:
-#             model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class_not_trainable/" + model_name   
-#             checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/multi_class_not_trainable/training/cp.ckpt"  
-#             log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_multi_class_not_trainable/"   
-              
-             
+        model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class/" + model_name   
+        checkpoint_path = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/checkpoints/multi_class/training/cp.ckpt"  
+        log_dir = BASE_FOLDER + RUNS_FOLDER + model_run_name + "/logs/fit/" + model_name + "_multi_class/"   
+         
     print("model_location: ",model_location)
+    integer_to_sound_mapping_file_path_name = model_location + "/integer_to_sound_mapping.pkl"
     saved_mfccs_location = BASE_FOLDER + RUNS_FOLDER + SAVED_MFCCS_FOLDER + "/" + saved_mfccs  
     print("saved_mfccs_location: ", saved_mfccs_location)  
        
     print("Started") 
   
-    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, sound_to_integer_mapping, class_count = prepare_data(binary=binary, model_name=model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_time_freq_data=use_augmented_time_freq_data, create_augmented_time_freq_data=create_augmented_time_freq_data, create_augmented_noise_data=create_augmented_noise_data, use_augmented_noise_data=use_augmented_noise_data)
+    train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count = prepare_data(binary=binary, model_name=model_name, saved_mfccs_location=saved_mfccs_location, create_data=create_data, testing=testing, display_image=display_image, testing_number=testing_number, use_augmented_time_freq_data=use_augmented_time_freq_data, create_augmented_time_freq_data=create_augmented_time_freq_data, create_augmented_noise_data=create_augmented_noise_data, use_augmented_noise_data=use_augmented_noise_data)
+#     train_examples, val_examples, train_labels, val_labels, number_of_distinct_labels, integer_to_sound_mapping, class_count
     print("train_examples.shape ", train_examples.shape) 
     print("val_examples.shape ", val_examples.shape)  
     print("train_labels.shape ", train_labels.shape)  
@@ -448,9 +332,7 @@ def main():
         val_labels_decoded = tf.argmax(val_labels, 1) # Returns the index with the largest value across axes of a tensor. - https://www.tensorflow.org/api_docs/python/tf/math/argmax
         print("val_labels", val_labels)
             
-#     model = create_model_basic(binary, number_of_distinct_labels)
-    model = create_model_vgg16(binary, number_of_distinct_labels)
-#     model = create_functional_model_basic(binary, number_of_distinct_labels)
+        model = create_model_vgg16(binary, number_of_distinct_labels)
     
     
     
@@ -466,9 +348,6 @@ def main():
         
         print("This run used ", len(train_labels), " training examples")
         
-        if save_model:
-            #https://keras.io/guides/serialization_and_saving/
-            model.save(model_location)
         
     else:  # https://www.tensorflow.org/tutorials/keras/save_and_load
         if load_model_from_checkpoints:
@@ -477,9 +356,14 @@ def main():
             # Load model from fully saved model
             model = load_model(model_location)
             
-        if save_model:
-            #https://keras.io/guides/serialization_and_saving/
-            model.save(model_location)
+    if save_model:
+        #https://keras.io/guides/serialization_and_saving/
+        model.save(model_location)
+        # Save the integer to sound mapping here also
+        # https://pythonspot.com/save-a-dictionary-to-a-file/
+        f = open(integer_to_sound_mapping_file_path_name,"wb")
+        pickle.dump(integer_to_sound_mapping,f)
+        f.close()
         
 
     predictions = model.predict(val_examples)
@@ -498,12 +382,12 @@ def main():
         predictions_np_flattened_int = predictions_np_flattened.astype(int)
         # end of the mess         
 
-        plot_confusion_matrix_3(binary, predictions_np_flattened_int, val_labels, sound_to_integer_mapping)
+        plot_confusion_matrix_3(binary, predictions_np_flattened_int, val_labels, integer_to_sound_mapping)
   
     else: 
         predictions_decoded = tf.argmax(predictions, 1)          
 
-        plot_confusion_matrix_3(binary, predictions_decoded, val_labels_decoded, sound_to_integer_mapping)
+        plot_confusion_matrix_3(binary, predictions_decoded, val_labels_decoded, integer_to_sound_mapping)
 
                
     print(model.summary())

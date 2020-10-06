@@ -24,17 +24,23 @@ import tensorflow as tf
 
 
 BASE_FOLDER = '/home/tim/Work/Cacophony'
-RUNS_FOLDER = '/Audio_Analysis/audio_classifier_runs/tensorflow_runs/' 
+BASE_FOLDER = parameters.base_folder
 
+RUNS_FOLDER = '/Audio_Analysis/audio_classifier_runs/tensorflow_runs/' 
 MODELS_FOLDER = "saved_models"
 SAVED_MFCCS_FOLDER = "saved_mfccs"
 
+
+
 def update_database(model_run_name, recording_id, start_time_seconds, probability, prediction):      
-    functions.insert_model_run_result_into_training_table(model_run_name, recording_id, start_time_seconds, parameters.morepork_more_pork_call_duration, prediction, probability)
+    functions.save_prediction(model_run_name, recording_id, start_time_seconds, parameters.morepork_more_pork_call_duration, prediction, probability)
     
 
 def get_filtered_recording_for_onset(recording_id):
-    recordings_folder_with_path = parameters.base_folder + '/' + parameters.downloaded_recordings_folder
+#     recordings_folder_with_path = parameters.base_folder + '/' + parameters.downloaded_recordings_folder
+    
+    recordings_folder_with_path = parameters.base_folder_for_recordings + '/' + parameters.downloaded_recordings_folder
+        
     filename = str(recording_id) + ".m4a"
     audio_in_path = recordings_folder_with_path + "/" + filename
 
@@ -50,28 +56,50 @@ def get_array_of_mfcss_windows_for_recording(recording_id):
     # A window is 32 bins long, and slides by 0.2 seconds
     # So will have just under 60 / 0.2 = 300 windows for a 60 sec recording (just under as last start position has to be 0.8 secs before end of recording
     # This was used to create spectrogram for training model: y, sr = librosa.load(audio_in_path, sr=22050, mono=True, offset=start_time, duration=0.7314) 
-    y, sr = get_filtered_recording_for_onset(recording_id)
+    
+    recordings_folder_with_path = parameters.base_folder_for_recordings + '/' + parameters.downloaded_recordings_folder       
+    filename = str(recording_id) + ".m4a"
+    audio_in_path = recordings_folder_with_path + "/" + filename
+    
+#     y, sr = get_filtered_recording_for_onset(recording_id)    
+    
+    y, sr = librosa.load(audio_in_path, sr=None, mono=True)
+    
+    # Using Dennis's approach for calculating nfft
+    slices_per_second = 13 # chosen to give a spectrogram length of 32 as have 32 mels and want a square image
+    
+    nfft = int(sr / slices_per_second)
+#     print("nfft ", nfft)
+    hop_length=int(nfft / 2)
+#     print("hop_length ", hop_length)
     
     current_start_position_in_seconds = 0    
     
     while True:
         current_start_position_in_sample_frames = current_start_position_in_seconds * sr
-        current_end_position_in_sample_frames = current_start_position_in_sample_frames + 0.7314 * sr
+        current_end_position_in_sample_frames = current_start_position_in_sample_frames + 1.2 * sr
         y_part = y[int(current_start_position_in_sample_frames):int(current_end_position_in_sample_frames)]
          
-        mfccs = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=700,fmax=1000, hop_length=512) # https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html
-            
-        max_value = np.max(mfccs)    
-    
-        mfccs_normalized = mfccs / max_value
-        
-        # As we are going to use a Conv2d layer in the model, it expects 3 dimensions, so need to expand
-    #     https://machinelearningmastery.com/a-gentle-introduction-to-channels-first-and-channels-last-image-formats-for-deep-learning/
-    
-        mfccs_normalized = np.expand_dims(mfccs_normalized, axis=2)    
-       
+        mfccs = librosa.feature.melspectrogram(y=y_part, sr=sr, n_mels=32, fmin=600,fmax=1100, hop_length=hop_length, n_fft=nfft) # https://librosa.org/doc/latest/generated/librosa.feature.melspectrogram.html
+#         print(mfccs.shape)    
+#         max_value = np.max(mfccs)    
+#     
+#         mfccs_normalized = mfccs / max_value
+#         
+#         # As we are going to use a Conv2d layer in the model, it expects 3 dimensions, so need to expand
+#     #     https://machinelearningmastery.com/a-gentle-introduction-to-channels-first-and-channels-last-image-formats-for-deep-learning/
+#     
+#         mfccs_normalized = np.expand_dims(mfccs_normalized, axis=2)    
+#        
+
+
+        # Have been having memory issues - so will save spectrogram as 0-255 integer values
+        mfccs *= 255.0/mfccs.max()
+        mfccs = np.uint8(mfccs)
+#         print(mfccs[0])
+#         print(type(mfccs[0]))
     #     if mfccs_normalized.shape[1] < 2584:   # need to change this to ? 
-        if mfccs_normalized.shape[1] < 32:   # need to change this to ? 
+        if mfccs.shape[1] < 32:   # need to change this to ? 
     
             # got to end of recording
             break
@@ -79,7 +107,7 @@ def get_array_of_mfcss_windows_for_recording(recording_id):
         else:
             
 #             return mfccs_normalized          
-            list_of_mfccs.append(mfccs_normalized)
+            list_of_mfccs.append(mfccs)
             list_of_start_times.append(round(current_start_position_in_seconds, 2))
         
         current_start_position_in_seconds+=0.2
@@ -87,18 +115,33 @@ def get_array_of_mfcss_windows_for_recording(recording_id):
     return list_of_mfccs, list_of_start_times
 
 def main():
+    binary_or_multi_class = "multi_class"
+    modelName = "vgg16_lr0.0004"
+    model_run_name = "2020_10_06a" + "_" + modelName + "_" + binary_or_multi_class
+#     model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class_trainable/" + model_name 
+#     model_run_name_base = "2020_09_04a" 
+#     model_name = "model_1"   
     
-    model_run_name_base = "2020_09_04a" 
-    model_name = "model_1"     
+#     model_run_name_base = "vgg16_lr0.0004" 
+#     model_name = "_1"    
     
-    multi_class_model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class/" + model_name        
-    multi_class_mapping_file_path_name = multi_class_model_location + "/integer_to_sound_mapping.pkl"   
+#     model_name = "vgg16_lr0.0004" 
+# 
+#     model_run_name = "2020_10_01_" + model_name + "_1"  # Set image input to 32x32 
+#     
+#     saved_mfccs = "version_8_with_separate_noise_files_255x255_unit/"    
     
-    with open(multi_class_mapping_file_path_name,"rb") as f:
+#     multi_class_model_location = BASE_FOLDER + RUNS_FOLDER + MODELS_FOLDER + "/multi_class/" + model_name    
+    model_location = "/home/tim/Work/Cacophony/Audio_Analysis/audio_classifier_runs/tensorflow_runs/saved_models/" + binary_or_multi_class + "/" + modelName +"/"
+    print("model_location is ", model_location)    
+    class_mapping_file_path_name = model_location + "integer_to_sound_mapping.pkl"   
+    print("multi_class_mapping_file_path_name is ", class_mapping_file_path_name)
+    
+    with open(class_mapping_file_path_name,"rb") as f:
         multi_class_integer_to_sound_mapping =  pickle.load(f)        
     print(multi_class_integer_to_sound_mapping)
     
-    multi_class_model = tf.keras.models.load_model(multi_class_model_location)
+    multi_class_model = tf.keras.models.load_model(model_location)
     # Check its architecture
     multi_class_model.summary()
              
@@ -112,13 +155,20 @@ def main():
 #         recording_id = "319256" # for testing
         print("Processing recording id ", recording_id, "which is ", recording_count, " of ", number_of_recordings)               
 
-        list_of_mfccs, list_of_start_times = get_array_of_mfcss_windows_for_recording(recording_id)
+#         list_of_mfccs, list_of_start_times = get_array_of_mfcss_windows_for_recording(recording_id)
         
+        list_of_mfccs, list_of_start_times = get_array_of_mfcss_windows_for_recording(recording_id)
+                
         # now create prediction for each step
+        
+        
         array_of_mfccs = np.array(list_of_mfccs) 
+        
+        # mfccs are stored as 0-255 integers, but model needs 0 - 1 floats
+        array_of_mfccs = array_of_mfccs/255. 
             
-        # Use multi-class model
-        model_run_name = model_run_name_base + "_multi_class" 
+        
+#         model_run_name = model_run_name_base + "_multi_class" 
         predictions = multi_class_model(array_of_mfccs)
         predictions_decoded_int = tf.argmax(predictions, 1) 
         predictions_np_array = predictions_decoded_int.numpy()

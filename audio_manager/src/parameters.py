@@ -15,8 +15,8 @@ march_2020_test_data_end_date = '2020-04-01' # Note, this will be interpreted as
 feb_2020_training_data_start_date = '2020-02-01'
 feb_2020_training_data_end_date = '2020-03-01' # Note, this will be interpreted as the first second of the day, so won't include results for this day.
 
-first_test_data_recording_id = 537910
-last_test_data_recording_id = 563200
+# first_test_data_recording_id = 537910
+# last_test_data_recording_id = 563200
 
 #### Cacophony Server Configuration
 server_endpoint = 'https://api.cacophony.org.nz' # Production
@@ -56,8 +56,8 @@ single_spectrogram_for_classification_folder = 'images'
 temp_folder = 'Temp'
 # arff_folder_for_next_run = 'arff_folder_for_next_run'
 
-relation_name = model_run_name
-class_names = 'morepork_more-pork,unknown,siren,dog,duck,dove,human,bird,car,rumble,white_noise,cow,buzzy_insect,plane,hammering,frog,morepork_more-pork_part,chainsaw,crackle,car_horn,water,fire_work,maybe_morepork_more-pork,music,hand_saw'
+# relation_name = model_run_name
+# class_names = 'morepork_more-pork,unknown,siren,dog,duck,dove,human,bird,car,rumble,white_noise,cow,buzzy_insect,plane,hammering,frog,morepork_more-pork_part,chainsaw,crackle,car_horn,water,fire_work,maybe_morepork_more-pork,music,hand_saw'
 
 
 onset_pairs_folder = 'onset_pairs'
@@ -65,7 +65,7 @@ onset_pairs_folder = 'onset_pairs'
 temp_display_images_folder = 'temp_display_images'
 spectrograms_for_model_creation_folder = 'spectrograms_for_model_creation'
 spectrograms_for_model_testing_folder = 'spectrograms_for_model_testing'
-arff_file_for_weka_model_creation = 'arff_file_for_weka_model_creation.arff'
+
 csv_file_for_keeping_track_of_onsets_used_to_create_model = 'csv_file_for_keeping_track_of_onsets_used_to_create_model.csv'
 arff_file_for_weka_model_testing = 'arff_file_for_weka_model_testing.arff'
 filtered_recordings_folder = 'filtered_recordings'
@@ -103,16 +103,10 @@ name_of_file_containing_list_of_tags = ''
 hop_length = 256
 
 
-#path to configs
-# sys.path.append('/home/jonah/Documents/opensmile-2.3.0/config/')
-sys.path.append('/home/tim/opensmile-2.3.0/config/')
-#path to input files
-search_path = '/home/tim/Work/Cacophony/opensmile_weka/TestAudioInput'
-#path to where we want the output
-arff_path = '/home/tim/Work/Cacophony/opensmile_weka/TestAudioOutput'
 
 
-db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2.db"
+
+db_file = "/media/tim/HDD1/Work/Cacophony/audio_analysis/audio_analysis_db3.db"
 # db_file = "/home/tim/Work/Cacophony/Audio_Analysis/audio_analysis_db2_copy.db"
 
 
