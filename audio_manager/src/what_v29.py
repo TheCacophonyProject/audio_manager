@@ -277,14 +277,14 @@ def load_model(model_location):
 def main():   
     model_name = "vgg16_lr0.0004" 
 
-    model_run_name = "2020_10_01_" + model_name + "_1"  # Set image input to 32x32 
+    model_run_name = "2020_10_07_" + model_name + "_1"  # Set image input to 32x32 
     
     saved_mfccs = "version_8_with_separate_noise_files_255x255_unit/"    
            
            
-    binary=False    
+    binary=True    
                        
-    train_a_model=False # False implies it will load a trained model from disk
+    train_a_model=True # False implies it will load a trained model from disk
     load_model_from_checkpoints = True # If train_a_model is False, and this is True, model will load from check_point, otherwise from a saved_model
     save_model=True # Only applies if model is trained
     create_data=False # If True, creates mfccs from original audio files; if false loads previously saved mfccs files (created for each confirmed training onset)
@@ -332,7 +332,7 @@ def main():
         val_labels_decoded = tf.argmax(val_labels, 1) # Returns the index with the largest value across axes of a tensor. - https://www.tensorflow.org/api_docs/python/tf/math/argmax
         print("val_labels", val_labels)
             
-        model = create_model_vgg16(binary, number_of_distinct_labels)
+    model = create_model_vgg16(binary, number_of_distinct_labels)
     
     
     

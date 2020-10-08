@@ -39,29 +39,16 @@ devices_endpoint = '/api/v1/devices'
 
 #### Local File Structure Configuration
 
-#downloaded_recordings_folder = '/home/tim/Work/Cacophony/downloaded_recordings/all_recordings'
 
 base_folder = '/home/tim/Work/Cacophony'
 base_folder_for_recordings = '/media/tim/HDD1/Work/Cacophony'
-
-
 downloaded_recordings_folder = 'audio_analysis/downloaded_recordings/all_recordings' # All the recordings
-# downloaded_recordings_folder = 'downloaded_recordings/temp_for_testing' # Use this if doing a test
-#run_folder = 'Analysis_5' # Change this when doing a new analyis
-
-
 run_folder = 'Audio_Analysis/audio_classifier_runs' + '/' + model_run_name
+
 # exported_jars_folder = 'exported_jars'
 single_spectrogram_for_classification_folder = 'images'
 temp_folder = 'Temp'
-# arff_folder_for_next_run = 'arff_folder_for_next_run'
 
-# relation_name = model_run_name
-# class_names = 'morepork_more-pork,unknown,siren,dog,duck,dove,human,bird,car,rumble,white_noise,cow,buzzy_insect,plane,hammering,frog,morepork_more-pork_part,chainsaw,crackle,car_horn,water,fire_work,maybe_morepork_more-pork,music,hand_saw'
-
-
-onset_pairs_folder = 'onset_pairs'
-# mel_spectrograms_folder = 'mel_spectrograms'
 temp_display_images_folder = 'temp_display_images'
 spectrograms_for_model_creation_folder = 'spectrograms_for_model_creation'
 spectrograms_for_model_testing_folder = 'spectrograms_for_model_testing'
